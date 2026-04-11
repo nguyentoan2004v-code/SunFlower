@@ -12,7 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('sanpham', function (Blueprint $table) {
-            //
+            // Thêm cột 'hinhanh', cho phép rỗng (nullable) để tránh lỗi nếu chưa có ảnh
+            $table->string('hinhanh', 255)->nullable()->after('mota');
         });
     }
 
