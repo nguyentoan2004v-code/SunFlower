@@ -28,4 +28,11 @@ class DonHang extends Model
         // hasOne(Tên_Model_Con, 'Tên_khóa_ngoại', 'Tên_khóa_chính')
         return $this->hasOne(HoaDon::class, 'madon', 'madon');
     }
+    // Quan hệ N-N: 1 Đơn hàng có NHIỀU Sản phẩm (thông qua bảng trung gian chitietdonhang)
+    public function sanphams()
+    {
+        return $this->belongsToMany(SanPham::class, 'chitietdonhang', 'madon', 'masp')
+                    ->withPivot('soluong', 'dongia') // Lấy thêm cột phụ từ bảng trung gian
+                    ->withTimestamps();
+    }
 }

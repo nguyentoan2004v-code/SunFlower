@@ -24,4 +24,11 @@ class SanPham extends Model
         // belongsTo(Tên_Model_Cha, 'Tên_khóa_ngoại', 'Tên_khóa_chính_của_cha')
         return $this->belongsTo(DanhMuc::class, 'madm', 'madm');
     }
+    // Quan hệ N-N: 1 Sản phẩm nằm trong NHIỀU Đơn hàng
+    public function donhangs()
+    {
+        return $this->belongsToMany(DonHang::class, 'chitietdonhang', 'masp', 'madon')
+                    ->withPivot('soluong', 'dongia')
+                    ->withTimestamps();
+    }
 }
