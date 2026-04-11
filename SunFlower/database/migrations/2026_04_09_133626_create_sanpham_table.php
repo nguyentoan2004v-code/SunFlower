@@ -24,6 +24,9 @@ return new class extends Migration
             // Cột mota: Chuỗi 255 ký tự, bắt buộc
             $table->string('mota', 255);
             
+            // Thêm cột 'hinhanh', cho phép rỗng (nullable) để tránh lỗi nếu chưa có ảnh
+            $table->string('hinhanh', 255)->nullable()->after('mota');
+            
             // Cột giakm: Kiểu số thập phân, cho phép rỗng (nullable) vì không phải lúc nào cũng có khuyến mãi
             $table->decimal('giakm', 12, 2)->nullable();
             
