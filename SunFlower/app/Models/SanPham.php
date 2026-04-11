@@ -16,7 +16,7 @@ class SanPham extends Model
     protected $keyType = 'string';
 
     // 2. Khai báo các cột được phép nhập
-    protected $fillable = ['masp', 'tensp', 'giaban', 'mota', 'giakm', 'madm'];
+    protected $fillable = ['masp', 'tensp', 'giaban', 'mota','hinhanh', 'giakm', 'madm'];
 
     // 3. THIẾT LẬP MỐI QUAN HỆ (1 Sản phẩm THUỘC VỀ 1 Danh mục)
     public function danhmuc()
