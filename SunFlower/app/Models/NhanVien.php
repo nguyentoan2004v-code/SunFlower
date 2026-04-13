@@ -35,4 +35,9 @@ class NhanVien extends Model
                     ->withPivot('nhiemvu', 'trangthai') // Các cột phụ trong bảng phân công
                     ->withTimestamps();
     }
+    public function vaitros()
+    {
+        return $this->belongsToMany(VaiTro::class, 'vaitro_nhanvien', 'manv', 'mavt')
+                    ->withTimestamps();
+    }
 }
