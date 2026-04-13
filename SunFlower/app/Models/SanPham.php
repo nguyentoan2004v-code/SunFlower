@@ -31,4 +31,15 @@ class SanPham extends Model
                     ->withPivot('soluong', 'dongia')
                     ->withTimestamps();
     }
+    // 1 Sản phẩm có NHIỀU mốc Lịch sử giá
+    public function lichsugias()
+    {
+        return $this->hasMany(LichSuGia::class, 'masp', 'masp');
+    }
+
+    // 1 Sản phẩm nằm trong NHIỀU Lô hàng nhập
+    public function lohangs()
+    {
+        return $this->hasMany(LoHang::class, 'masp', 'masp');
+    }
 }

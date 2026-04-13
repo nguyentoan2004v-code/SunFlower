@@ -21,4 +21,9 @@ class HoaDon extends Model
     {
         return $this->belongsTo(DonHang::class, 'madon', 'madon');
     }
+    // 1 Hóa đơn có NHIỀU Chi tiết
+    public function chitiets()
+    {
+        return $this->hasMany(ChiTietHoaDon::class, 'mahd', 'mahd');
+    }
 }
