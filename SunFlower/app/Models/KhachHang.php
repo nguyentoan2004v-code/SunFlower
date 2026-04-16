@@ -2,23 +2,19 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class KhachHang extends Model
+class KhachHang extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens;
 
     protected $table = 'khachhang';
     protected $primaryKey = 'makh';
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['makh', 'hoten', 'ngaysinh', 'sdt', 'diachi'];
+    protected $fillable = ['makh', 'hoten', 'email', 'sdt', 'diachi', 'password'];
 
-    // 1 Khách hàng có NHIỀU Đơn hàng (1-N)
-    public function donhangs()
-    {
-        return $this->hasMany(DonHang::class, 'makh', 'makh');
-    }
+    protected $hidden = ['password'];
 }

@@ -14,7 +14,8 @@ class DonHang extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['madon', 'ngaydat', 'tongtien', 'trangthai', 'makh'];
+    protected $fillable = ['madon', 'ngaydat', 'tongtien', 'trangthai', 'makh', 
+    'sdt_nhan', 'diachi_giao', 'ghichu'];
 
     // Đơn hàng THUỘC VỀ 1 Khách hàng (N-1)
     public function khachhang()
@@ -31,8 +32,8 @@ class DonHang extends Model
     // Quan hệ N-N: 1 Đơn hàng có NHIỀU Sản phẩm (thông qua bảng trung gian chitietdonhang)
     public function sanphams()
     {
-        return $this->belongsToMany(SanPham::class, 'chitietdonhang', 'madon', 'masp')
-                    ->withPivot('soluong', 'dongia') // Lấy thêm cột phụ từ bảng trung gian
+        return $this->belongsToMany(SanPham::class, 'chitiet_donhang', 'madon', 'masp')
+                    ->withPivot('soluong', 'giaban') // Lấy thêm cột phụ từ bảng trung gian
                     ->withTimestamps();
     }
 }

@@ -17,12 +17,18 @@ return new class extends Migration
             
             // Cột hoten: Bắt buộc
             $table->string('hoten', 40);
-            
+
+            // THÊM CỘT NÀY: Email để đăng nhập
+            $table->string('email', 100)->unique();
+
             // Cột ngaysinh: Bắt buộc (Backend sẽ xử lý logic tuổi >= 18 sau)
             $table->date('ngaysinh');
             
             // Cột sdt: Bắt buộc, duy nhất
             $table->char('sdt', 15)->unique();
+
+            //  DÒNG NÀY: Cột lưu mật khẩu đã mã hóa
+            $table->string('password');
             
             // Cột luong: Bắt buộc, lớn hơn 0
             $table->decimal('luong', 12, 2);
