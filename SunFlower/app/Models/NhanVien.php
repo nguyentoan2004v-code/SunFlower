@@ -3,19 +3,24 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
-class NhanVien extends Model
+
+class NhanVien extends Authenticatable
 {
-    use HasFactory;
+    use HasApiTokens,HasFactory;    
 
     protected $table = 'nhanvien';
     protected $primaryKey = 'manv';
     public $incrementing = false;
     protected $keyType = 'string';
 
-    // 1. ĐÃ SỬA: Xóa 'chucvu', thêm 'ngaysinh', 'luong', đổi 'ma_ql' thành 'maquanly'
-    protected $fillable = ['manv', 'hoten', 'ngaysinh', 'sdt', 'luong', 'maquanly'];
+    protected $fillable = ['manv', 'hoten', 'email', 'ngaysinh', 'sdt', 'luong', 'maquanly', 'password'];
+
+    protected $hidden = [
+        'password',
+    ];
 
     
     public function quanly()

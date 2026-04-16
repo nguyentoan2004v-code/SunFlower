@@ -11,6 +11,7 @@ use App\Models\VaiTroNhanVien;
 use App\Models\LichSuGia;
 use App\Models\LoHang;
 use App\Models\PhieuHuyHang;
+use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
 class DatabaseSeeder extends Seeder
@@ -27,9 +28,28 @@ class DatabaseSeeder extends Seeder
         foreach ($vaitros as $vt) VaiTro::create($vt);
 
         $nhanviens = [
-            ['manv' => 'NV00000001', 'hoten' => 'Trần Văn Sếp', 'ngaysinh' => '1990-05-20', 'sdt' => '0900111222', 'luong' => 25000000, 'maquanly' => null],
-            ['manv' => 'NV00000002', 'hoten' => 'Nguyễn Thị Bán Hoa', 'ngaysinh' => '1998-10-15', 'sdt' => '0900333444', 'luong' => 12000000, 'maquanly' => 'NV00000001'],
+            [
+                'manv' => 'NV00000001', 
+                'hoten' => 'Trần Văn Sếp', 
+                'email' => 'sep@sunflower.vn', 
+                'ngaysinh' => '1990-05-20', 
+                'sdt' => '0900111222', 
+                'luong' => 25000000, 
+                'maquanly' => null,
+                'password' => Hash::make('123456')
+            ],
+            [
+                'manv' => 'NV00000002', 
+                'hoten' => 'Nguyễn Thị Bán Hoa', 
+                'email' => 'nhanvien@sunflower.vn',
+                'ngaysinh' => '1998-10-15', 
+                'sdt' => '0900333444', 
+                'luong' => 12000000, 
+                'maquanly' => 'NV00000001',
+                'password' => Hash::make('123456')
+            ],
         ];
+
         foreach ($nhanviens as $nv) NhanVien::create($nv);
 
         VaiTroNhanVien::create(['manv' => 'NV00000001', 'mavt' => 'VT00000001']);
