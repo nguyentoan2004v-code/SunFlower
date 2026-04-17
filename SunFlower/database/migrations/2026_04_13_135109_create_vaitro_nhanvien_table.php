@@ -12,8 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vaitro_nhanvien', function (Blueprint $table) {
-           $table->string('manv', 10);
-            $table->string('mavt', 10);
+          // SỬA string THÀNH char ĐỂ KHỚP VỚI BẢNG GỐC
+            $table->char('manv', 10);
+            $table->char('mavt', 10); // Lưu ý: bảng vaitro bạn đang để mavt là string, bạn nên sửa bảng vaitro thành char('mavt', 10) luôn nhé.
+
+            // THÊM: Khóa chính kép
+            $table->primary(['manv', 'mavt']);
+
+            // THÊM: Khóa ngoại
+            $table->foreign('manv')->references('manv')->on('nhanvien')->onDelete('cascade');
+            $table->foreign('mavt')->references('mavt')->on('vaitro')->onDelete('cascade');
+            
             $table->timestamps();
         });
     }

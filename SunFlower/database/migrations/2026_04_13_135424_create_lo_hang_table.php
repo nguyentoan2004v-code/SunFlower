@@ -12,12 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('lo_hang', function (Blueprint $table) {
-           $table->string('malo', 10)->primary();
-            $table->string('masp', 10);
+           $table->char('malo', 10)->primary(); // SỬA string THÀNH char
+            $table->char('masp', 10); // SỬA string THÀNH char
+
             $table->integer('soluong_nhap');
             $table->integer('soluong_ton');
             $table->date('ngaynhap');
-            $table->date('ngayhethan'); // Ngày hoa dự kiến sẽ tàn
+            $table->date('ngayhethan'); 
+
+            // THÊM: Khóa ngoại
+            $table->foreign('masp')->references('masp')->on('sanpham')->onDelete('restrict');
+
             $table->timestamps();
         });
     }
