@@ -8,28 +8,27 @@ use Illuminate\Http\Request;
 
 class SanPhamController extends Controller
 {
-   /**
-     * [Giai đoạn 1.1 + 1.4] API Lấy danh sách, Tìm kiếm & Lọc sản phẩm
-     * Phương thức: GET
+    /**
+     * [API index] Lấy danh sách hoa, hỗ trợ Tìm kiếm & Lọc theo giá/danh mục
+     * Dùng cho trang danh sách sản phẩm chính.
      */
     public function index(Request $request)
     {
-        // 1. Khởi tạo câu truy vấn (chưa lấy dữ liệu ngay)
+        // Khởi tạo query kèm thông tin danh mục
         $query = SanPham::with('danhmuc');
 
-        // 2. Nếu Frontend có truyền lên chữ cần tìm (search)
+        // Lọc theo từ khóa (nếu dùng param ?search=...)
         if ($request->has('search')) {
             $tuKhoa = $request->input('search');
-            // Tìm các hoa có tên chứa từ khóa
             $query->where('tensp', 'LIKE', '%' . $tuKhoa . '%');
         }
 
-        // 3. Nếu Frontend muốn lọc theo Danh mục (madm)
+        // Lọc theo mã danh mục (?madm=...)
         if ($request->has('madm')) {
             $query->where('madm', $request->input('madm'));
         }
 
-        // 4. Nếu Frontend lọc theo khoảng giá (min_price, max_price)
+        // Lọc theo khoảng giá (?min_price=...&max_price=...)
         if ($request->has('min_price')) {
             $query->where('giaban', '>=', $request->input('min_price'));
         }
@@ -37,7 +36,6 @@ class SanPhamController extends Controller
             $query->where('giaban', '<=', $request->input('max_price'));
         }
 
-        // 5. Sau khi đã ráp đủ các điều kiện, tiến hành lấy dữ liệu
         $sanphams = $query->get();
 
         return response()->json([
@@ -49,17 +47,15 @@ class SanPhamController extends Controller
     }
 
     /**
-     * [Giai đoạn 1.2] API Lấy chi tiết 1 sản phẩm theo Mã (masp)
-     * Phương thức: GET
+     * [API show] Lấy chi tiết một đóa hoa theo mã sản phẩm (masp)
      */
     public function show($masp)
     {
-        // Lấy sản phẩm theo mã, kèm Danh mục và Lịch sử giá (sắp xếp giá mới nhất lên đầu)
-        $sanpham = SanPham::with(['danhmuc', 'lichsugias' => function($query) {
-            $query->orderBy('ngay_ap_dung', 'desc');
-        }])->find($masp);
+        /** * Lưu ý: Tui đã bỏ 'lichsugias' vì bảng này chưa có trong file SQL của bro.
+         * Khi nào bro tạo bảng đó thì hãy thêm lại vào with().
+         */
+        $sanpham = SanPham::with(['danhmuc'])->find($masp);
 
-        // Bắt lỗi nếu Frontend truyền sai mã hoa
         if (!$sanpham) {
             return response()->json([
                 'status' => 'error',
@@ -73,4 +69,26 @@ class SanPhamController extends Controller
             'data' => $sanpham
         ], 200);
     }
+
+    /**
+     * [API search] Chuyên dụng cho thanh tìm kiếm trên Header
+     * Nhận biến ?query=... từ Frontend.
+     */
+    public function search(Request $request) 
+{
+    // Loại bỏ khoảng trắng thừa
+    $keyword = trim($request->query('query')); 
+    
+    if (empty($keyword)) {
+        return response()->json(['status' => 'success', 'data' => []]);
+    }
+
+    // Tìm kiếm KHÔNG phân biệt hoa thường (LOWER)
+    $sanphams = \App\Models\SanPham::whereRaw('LOWER(tensp) LIKE ?', ['%' . strtolower($keyword) . '%'])->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $sanphams
+    ]);
+}
 }
