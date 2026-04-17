@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SanPham;
 use Illuminate\Http\Request;
+use App\Http\Resources\Api\SanPhamResource;
 
 class SanPhamController extends Controller
 {
@@ -44,7 +45,7 @@ class SanPhamController extends Controller
             'status' => 'success',
             'message' => 'Lấy danh sách hoa thành công!',
             'total' => $sanphams->count(),
-            'data' => $sanphams
+            'data' => SanPhamResource::collection($sanphams)
         ], 200);
     }
 
@@ -70,7 +71,7 @@ class SanPhamController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'Lấy chi tiết sản phẩm thành công!',
-            'data' => $sanpham
+            'data' => new SanPhamResource($sanpham)
         ], 200);
     }
 }

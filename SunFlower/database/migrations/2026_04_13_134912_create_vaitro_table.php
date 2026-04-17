@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('vaitro', function (Blueprint $table) {
-           $table->string('mavt', 10)->primary(); // VD: VT00000001
-            $table->string('tenvt', 100);          // VD: Quản lý, Nhân viên bán hàng
+           $table->char('mavt', 10)->primary(); // Đổi string thành char
+            $table->string('tenvt', 100);          
             $table->string('mota', 255)->nullable();
             $table->timestamps();
         });

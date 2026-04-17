@@ -12,10 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('chitiet_hoadon', function (Blueprint $table) {
-           $table->string('mahd', 10);
-            $table->string('masp', 10);
+            $table->char('mahd', 10);
+            $table->char('masp', 10);
             $table->integer('soluong');
-            $table->integer('dongia'); // Lưu cứng đơn giá lúc xuất hóa đơn
+            $table->decimal('dongia', 12, 2); // Đổi integer thành decimal
+
+            $table->primary(['mahd', 'masp']); // Thêm khóa chính kép
+
+            $table->foreign('mahd')->references('mahd')->on('hoadon')->onDelete('cascade');
+            $table->foreign('masp')->references('masp')->on('sanpham')->onDelete('restrict');
+
             $table->timestamps();
         });
     }
