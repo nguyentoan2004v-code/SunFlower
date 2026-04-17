@@ -95,4 +95,53 @@ class DonHangController extends Controller
             ], 500);
         }
     }
+    /**
+     * Lấy danh sách tất cả đơn hàng của Khách hàng đang đăng nhập
+     * Phương thức: GET
+     */
+    public function myOrders(Request $request)
+    {
+        // Lấy mã khách hàng từ Thẻ từ (Token)
+        $makh = $request->user()->makh;
+
+        // Ma thuật Laravel: Lấy đơn hàng, sắp xếp mới nhất lên đầu,
+        // và tự động gom luôn danh sách sản phẩm bên trong mỗi đơn hàng (nhờ hàm with)
+        $donhangs = DonHang::with('sanphams')
+                           ->where('makh', $makh)
+                           ->orderBy('ngaydat', 'desc')
+                           ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Lấy lịch sử đơn hàng thành công',
+            'data' => $donhangs
+        ], 200);
+    }
+
+    /**
+     * Xem chi tiết 1 đơn hàng cụ thể
+     * Phương thức: GET
+     */
+    public function showOrderDetails(Request $request, $madon)
+    {
+        $makh = $request->user()->makh;
+
+        // Tìm đơn hàng theo mã đơn VÀ phải là của đúng ông khách này (Bảo mật)
+        $donhang = DonHang::with('sanphams')
+                          ->where('madon', $madon)
+                          ->where('makh', $makh)
+                          ->first();
+
+        if (!$donhang) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Không tìm thấy đơn hàng hoặc bạn không có quyền xem'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $donhang
+        ], 200);
+    }
 }

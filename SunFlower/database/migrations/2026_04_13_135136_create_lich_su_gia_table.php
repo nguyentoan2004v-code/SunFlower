@@ -12,10 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('lich_su_gia', function (Blueprint $table) {
-           $table->string('magia', 10)->primary(); 
-            $table->string('masp', 10);
-            $table->integer('giaban'); // Giá bán tại thời điểm đó
-            $table->dateTime('ngay_ap_dung'); // Ngày bắt đầu áp dụng giá này
+           $table->char('magia', 10)->primary(); 
+            $table->char('masp', 10); // SỬA string THÀNH char
+
+            $table->integer('giaban'); 
+            $table->dateTime('ngay_ap_dung'); 
+
+            // THÊM: Khóa ngoại
+            $table->foreign('masp')->references('masp')->on('sanpham')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

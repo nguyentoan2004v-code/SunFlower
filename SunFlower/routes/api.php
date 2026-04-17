@@ -26,9 +26,13 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Route yêu cầu khách phải đăng nhập
     Route::get('/customer/me', [KhachHangAuthController::class, 'me']);
-    
+
     // THÊM DÒNG NÀY: API cập nhật thông tin cá nhân (Dùng PUT vì là hành động Sửa)
     Route::put('/customer/profile', [KhachHangAuthController::class, 'updateProfile']);
+
+    // xem lịch sử mua hàng và chi tiết đơn hàng
+    Route::get('/customer/orders', [\App\Http\Controllers\Api\DonHangController::class, 'myOrders']);
+    Route::get('/customer/orders/{madon}', [\App\Http\Controllers\Api\DonHangController::class, 'showOrderDetails']);
 });
 // Route công khai cho khách
 Route::post('/customer/register', [KhachHangAuthController::class, 'register']);
