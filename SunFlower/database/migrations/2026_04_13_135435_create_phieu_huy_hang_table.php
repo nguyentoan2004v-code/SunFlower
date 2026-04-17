@@ -12,12 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('phieu_huy_hang', function (Blueprint $table) {
-           $table->string('maphieu', 10)->primary();
-            $table->string('malo', 10);
-            $table->string('masp', 10);
+            $table->char('maphieu', 10)->primary(); // SỬA string THÀNH char
+            $table->char('malo', 10); // SỬA string THÀNH char
+            $table->char('masp', 10); // SỬA string THÀNH char
+
             $table->integer('soluong_huy');
             $table->date('ngayhuy');
-            $table->string('lydo', 255); // VD: Hoa héo, dập nát do vận chuyển
+            $table->string('lydo', 255); 
+
+            // THÊM: Khóa ngoại
+            $table->foreign('malo')->references('malo')->on('lo_hang')->onDelete('cascade');
+            $table->foreign('masp')->references('masp')->on('sanpham')->onDelete('cascade');
+
             $table->timestamps();
         });
     }

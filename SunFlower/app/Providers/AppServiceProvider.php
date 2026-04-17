@@ -19,7 +19,14 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot(): void
-    {
-        Schema::defaultStringLength(191); // Thêm dòng này vào đây
-    }
+
+{
+    // Chia sẻ biến $categories cho file partials.header
+    // TẠM TẮT: Tránh gọi DB trực tiếp vì dự án đang dùng kiến trúc gọi qua API. 
+    // Hơn nữa trong partials/header.blade.php hiện tại không sử dụng biến $categories này.
+    // view()->composer('partials.header', function ($view) {
+    //     $view->with('categories', \App\Models\DanhMuc::all());
+    // });
 }
+}
+
