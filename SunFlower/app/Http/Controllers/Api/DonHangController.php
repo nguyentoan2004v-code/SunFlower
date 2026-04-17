@@ -9,21 +9,12 @@ use App\Models\DonHang;
 use App\Models\KhachHang; // Bổ sung Model này để tự tạo Khách vãng lai
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use App\Http\Requests\Api\CheckoutRequest; 
 
 class DonHangController extends Controller
 {
-    public function checkout(Request $request)
+    public function checkout(CheckoutRequest $request)
     {
-        // 1. Validate Dữ liệu 
-        // Bổ sung thêm 'hoten_nguoi_nhan' vì khách vãng lai chưa có tên trong hệ thống
-        $request->validate([
-            'hoten_nguoi_nhan' => 'required|string', 
-            'sdt_nhan' => 'required|string',
-            'diachi_giao' => 'required|string',
-            'tongtien' => 'required|numeric',
-            'cart' => 'required|array', 
-        ]);
-
         // 2. PHÂN LOẠI KHÁCH HÀNG (Logic cốt lõi của Hybrid)
         // Lệnh này sẽ âm thầm lục túi khách xem có Token không, không có thì trả về null
         $user = auth('sanctum')->user(); 
@@ -46,10 +37,10 @@ class DonHangController extends Controller
                 ['sdt' => $request->sdt_nhan], // Tìm theo số điện thoại
                 [
                     // Nếu chưa có, tự tạo mới với thông tin mặc định
-                    'makh' => 'KVL' . rand(10000, 99999), // KVL = Khách Vãng Lai (Giới hạn độ dài để không dính lỗi cũ)
+                    'makh' => 'KVL' . rand(10000, 99999), // KVL = Khách Vãng Lai
                     'hoten' => $request->hoten_nguoi_nhan,
                     'email' => $request->sdt_nhan . '@guest.sunflower.vn', // Email giả chống lỗi unique
-                    'password' => Hash::make(Str::random(10)), // Mật khẩu ngẫu nhiên không ai biết
+                    'password' => Hash::make(Str::random(10)), // Mật khẩu ngẫu nhiên
                 ]
             );
             $makh = $khach_vang_lai->makh;
@@ -81,6 +72,37 @@ class DonHangController extends Controller
             $donhang->sanphams()->attach($chiTietData);
 
             DB::commit();
+            // --- BẮT ĐẦU LOGIC TỰ ĐỘNG SINH HÓA ĐƠN ---
+            $mahd = 'HD' . rand(10000000, 99999999);
+            $thueRate = 0.08; // Thuế VAT 8%
+            $tienThue = $request->tongtien * $thueRate;
+
+            $hoadon = HoaDon::create([
+                'mahd' => $mahd,
+                'madon' => $donhang->madon,
+                'ngayxuat' => now(),
+                'tongtien' => $request->tongtien + $tienThue,
+                'thue' => $tienThue,
+                'ptthanhtoan' => 'Tiền mặt' // Mặc định, FE có thể gửi lên sau
+            ]);
+
+            // Sao chép dữ liệu từ giỏ hàng sang chi tiết hóa đơn
+            foreach ($request->cart as $item) {
+                ChiTietHoaDon::create([
+                    'mahd' => $mahd,
+                    'masp' => $item['masp'],
+                    'soluong' => $item['soluong'],
+                    'dongia' => $item['dongia']
+                ]);
+            }
+            // --- KẾT THÚC LOGIC ---
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Đặt hoa và xuất hóa đơn thành công!',
+                'madon' => $donhang->madon,
+                'mahd' => $mahd
+            ], 201);
 
             return response()->json([
                 'status' => 'success',
