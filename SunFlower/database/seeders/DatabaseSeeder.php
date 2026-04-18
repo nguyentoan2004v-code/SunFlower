@@ -65,11 +65,11 @@ class DatabaseSeeder extends Seeder
 
         // 3. SẢN PHẨM (Tổng cộng 5 sp)
         $sanphams = [
-            ['masp' => 'SP00000001', 'tensp' => 'Bó Hồng 99 Bông', 'giaban' => 990000, 'mota' => 'Biểu tượng tình yêu vĩnh cửu', 'hinhanh' => 'bo-hong-99.jpg', 'madm' => 'DM00000001'],
-            ['masp' => 'SP00000002', 'tensp' => 'Chậu Lan Hồ Điệp Trắng', 'giaban' => 2500000, 'mota' => 'Sang trọng và thanh cao', 'hinhanh' => 'lan-trang.jpg', 'madm' => 'DM00000002'],
-            ['masp' => 'SP00000003', 'tensp' => 'Bó Hướng Dương Hy Vọng', 'giaban' => 450000, 'mota' => 'Tươi sáng và rực rỡ', 'hinhanh' => 'huong-duong.jpg', 'madm' => 'DM00000001'],
-            ['masp' => 'SP00000004', 'tensp' => 'Kệ Hoa Khai Trương Hồng Phát', 'giaban' => 1500000, 'mota' => 'Chúc mừng thành công rực rỡ', 'hinhanh' => 'ke-khai-truong.jpg', 'madm' => 'DM00000003'],
-            ['masp' => 'SP00000005', 'tensp' => 'Giỏ Hoa Tulip Hà Lan', 'giaban' => 850000, 'mota' => 'Vẻ đẹp tinh tế từ Châu Âu', 'hinhanh' => 'tulip.jpg', 'madm' => 'DM00000001'],
+            ['masp' => 'SP00000001', 'tensp' => 'Bó Hồng 99 Bông', 'giaban' => 990000, 'mota' => 'Biểu tượng tình yêu vĩnh cửu', 'hinhanh' => 'products/hoahong99.jpg', 'madm' => 'DM00000001'],
+            ['masp' => 'SP00000002', 'tensp' => 'Chậu Lan Hồ Điệp Trắng', 'giaban' => 2500000, 'mota' => 'Sang trọng và thanh cao', 'hinhanh' => 'products/lanhodiep.jpg', 'madm' => 'DM00000002'],
+            ['masp' => 'SP00000003', 'tensp' => 'Bó Hướng Dương Hy Vọng', 'giaban' => 450000, 'mota' => 'Tươi sáng và rực rỡ', 'hinhanh' => 'products/huongduong.jpg', 'madm' => 'DM00000001'],
+            ['masp' => 'SP00000004', 'tensp' => 'Kệ Hoa Khai Trương Hồng Phát', 'giaban' => 1500000, 'mota' => 'Chúc mừng thành công rực rỡ', 'hinhanh' => 'products/khaitruong.jpg', 'madm' => 'DM00000003'],
+            ['masp' => 'SP00000005', 'tensp' => 'Giỏ Hoa Tulip Hà Lan', 'giaban' => 850000, 'mota' => 'Vẻ đẹp tinh tế từ Châu Âu', 'hinhanh' => 'products/tulip.jpg', 'madm' => 'DM00000001'],
         ];
         foreach ($sanphams as $sp) SanPham::create($sp);
 

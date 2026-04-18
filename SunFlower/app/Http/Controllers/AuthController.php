@@ -1,58 +1,62 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Traits\ApiCaller;
+use App\Models\KhachHang;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
-class AuthController extends Controller {
-    use ApiCaller;
-
-    // Hiện form đăng nhập
+class AuthController extends Controller
+{
     public function showLoginForm() {
         return view('auth.login');
     }
 
-    // Xử lý đăng nhập khách hàng
-  public function login(Request $request) {
-    $result = $this->callApi('/api/customer/login', 'POST', $request->all());
+    public function login(Request $request) {
+        $credentials = $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
 
-    // Xóa dòng dd($result) đi nhé bro
-    
-    if (isset($result['token'])) {
-        // Lưu token vào session
-        session(['api_token' => $result['token']]);
-        session(['user_info' => $result['data']]);
-        
-        // Quan trọng: Ép session lưu xuống đĩa ngay lập tức
-        session()->save(); 
+        // Tìm khách hàng theo email
+        $khachhang = KhachHang::where('email', $credentials['email'])->first();
 
-        return redirect()->route('home')->with('success', 'Đăng nhập thành công!');
+        if ($khachhang && Hash::check($credentials['password'], $khachhang->password)) {
+            // Đăng nhập thủ công vào Session
+            session(['api_token' => 'web_session']); // Giữ lại để các view cũ không bị lỗi
+            session(['user_info' => $khachhang->toArray()]);
+            
+            return redirect()->route('home')->with('success', 'Chào mừng quay trở lại!');
+        }
+
+        return back()->withErrors(['email' => 'Thông tin đăng nhập không chính xác.']);
     }
 
-    return back()->withErrors(['login_error' => 'Thông tin đăng nhập không chính xác.'])->withInput();
-}
-
-    // Hiện form đăng ký
     public function showRegisterForm() {
         return view('auth.register');
     }
 
-    // Xử lý đăng ký
     public function register(Request $request) {
-        $result = $this->callApi('/api/customer/register', 'POST', $request->all());
+        $request->validate([
+            'hoten' => 'required|string|max:255',
+            'email' => 'required|email|unique:khachhang,email',
+            'password' => 'required|min:6|confirmed',
+            'sdt' => 'required',
+        ]);
 
-        if (isset($result['status']) && $result['status'] == 'success') {
-            return redirect()->route('login')->with('success', 'Đăng ký thành công, mời bro đăng nhập!');
-        }
+        $khachhang = KhachHang::create([
+            'makh' => 'KH' . rand(100000, 999999),
+            'hoten' => $request->hoten,
+            'email' => $request->email,
+            'sdt' => $request->sdt,
+            'password' => Hash::make($request->password),
+        ]);
 
-        return back()->withErrors(['msg' => $result['message'] ?? 'Lỗi đăng ký!'])->withInput();
+        return redirect()->route('login')->with('success', 'Đăng ký thành công! Hãy đăng nhập.');
     }
 
-    // Đăng xuất
     public function logout() {
-        $this->callApi('/api/customer/logout', 'POST');
-        session()->forget(['api_token', 'user_info', 'cart']);
+        session()->forget(['api_token', 'user_info']);
         return redirect()->route('home');
     }
 }

@@ -10,12 +10,22 @@ class SanPhamResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'ma_hoa' => $this->masp, // Đổi tên key cho FE dễ đọc
-            'ten_hoa' => $this->tensp,
-            'gia_ban' => (int) $this->giaban, // Ép kiểu về số nguyên cho chuẩn
-            'gia_khuyen_mai' => $this->giakm ? (int) $this->giakm : null,
-            'mo_ta' => $this->mota,
-            // Ẩn created_at và updated_at đi vì FE không cần
+            // Giữ nguyên tên Key để không làm hỏng Frontend & Web Controllers
+            'masp' => $this->masp, 
+            'tensp' => $this->tensp,
+            'giaban' => (int) $this->giaban, 
+            'giakm' => $this->giakm ? (int) $this->giakm : null,
+            'hinhanh' => $this->hinhanh, // QUAN TRỌNG: Phải có ảnh
+            'mota' => $this->mota,
+            'madm' => $this->madm,
+            
+            // Trả về thêm tên danh mục (nếu có eager loading bằng with('danhmuc'))
+            'danhmuc' => $this->whenLoaded('danhmuc', function () {
+                return [
+                    'madm' => $this->danhmuc->madm,
+                    'tendm' => $this->danhmuc->tendm,
+                ];
+            }),
         ];
     }
 }

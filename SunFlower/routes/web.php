@@ -4,6 +4,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
+use App\Http\Controllers\ProfileController;
+
 
 
 
@@ -19,6 +21,17 @@ Route::get('/dang-ky', [AuthController::class, 'showRegisterForm'])->name('regis
 Route::post('/dang-ky', [AuthController::class, 'register']);
 // 4. Đăng xuất
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::prefix('profile')->group(function () {
+    // Trang hiển thị thông tin
+    Route::get('/', [App\Http\Controllers\ProfileController::class, 'index'])->name('profile.index');
+    
+    // Nút lưu cập nhật thông tin (Bắt buộc dùng PUT để khớp với @method('PUT') trong giao diện)
+    Route::put('/update', [App\Http\Controllers\ProfileController::class, 'updateProfile'])->name('profile.update');
+    
+    // Nút lưu đổi mật khẩu (Nếu form đổi mật khẩu của bạn dùng POST thì để POST, dùng PUT thì đổi thành PUT)
+    Route::post('/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
+});
 
 // 5. Trang sản phẩm & chi tiết
 Route::get('/', [HomeController::class, 'index'])->name('home');
