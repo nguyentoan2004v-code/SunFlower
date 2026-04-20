@@ -2,7 +2,11 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\SanPham; // THÊM DÒNG NÀY: Import Model SanPham
+use App\Models\SanPham;
+use App\Models\DonHang;         // Import Model Đơn Hàng
+use App\Models\ChiTietDonHang;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
@@ -97,5 +101,114 @@ class CartController extends Controller
     session()->put('checkout_data', $checkoutItems);
 
     return view('checkout', compact('checkoutItems'));
+    }
+
+
+    public function buyNow($masp)
+    {
+        $product = \App\Models\SanPham::find($masp);
+
+        if (!$product) {
+            return back()->with('error', 'Sản phẩm không tồn tại!');
+        }
+
+        // Kiểm tra giá thực tế (có KM hay không)
+        $gia_thuc_te = (!empty($product->giakm) && $product->giakm > 0) 
+                        ? $product->giakm 
+                        : $product->giaban;
+
+        // Tạo mảng dữ liệu thanh toán ĐỘC LẬP (chỉ chứa 1 món này)
+        $checkoutItems = [
+            $masp => [
+                "name" => $product->tensp,
+                "quantity" => 1,
+                "price" => $gia_thuc_te,
+                "image" => $product->hinhanh
+            ]
+        ];
+
+        // Lưu vào session để trang Checkout đọc
+        session()->put('checkout_data', $checkoutItems);
+
+        // Chuyển thẳng tới giao diện thanh toán
+        return view('checkout', compact('checkoutItems'));
+    }
+
+    public function placeOrder(Request $request)
+    {
+        // 1. Lấy danh sách sản phẩm khách đang muốn thanh toán
+        $checkoutItems = session()->get('checkout_data');
+
+        if (!$checkoutItems || count($checkoutItems) == 0) {
+            return redirect()->route('cart.index')->with('error', 'Đơn hàng của bạn đã hết hạn hoặc không có sản phẩm.');
+        }
+
+        // Tính tổng tiền
+        $tongTien = 0;
+        foreach ($checkoutItems as $item) {
+            $tongTien += $item['price'] * $item['quantity'];
+        }
+
+        // Bắt đầu Transaction để đảm bảo an toàn dữ liệu
+        DB::beginTransaction();
+        try {
+            // 2. Tạo đơn hàng mới trong bảng donhang
+            $donHang = new DonHang();
+            
+            // Nếu khách hàng đã đăng nhập, lưu mã khách hàng
+            if (Auth::guard('khachhang')->check()) {
+                // Đổi 'makh' thành tên cột khóa chính bảng khách hàng của bạn
+                $donHang->makh = Auth::guard('khachhang')->user()->makh; 
+            }
+            
+            $donHang->ten_nguoinhan = $request->ten_nguoinhan;
+            $donHang->sdt_nguoinhan = $request->sdt_nguoinhan;
+            $donHang->diachi_giaohang = $request->diachi_giaohang;
+            $donHang->ghichu = $request->ghichu;
+            $donHang->phuongthuc_thanhtoan = $request->phuongthuc_thanhtoan;
+            $donHang->tongtien = $tongTien;
+            $donHang->trangthai = 'Chờ xác nhận'; // Trạng thái mặc định
+            $donHang->ngaydat = now();
+            $donHang->save();
+
+            // Lấy mã đơn hàng vừa tạo xong
+            // Đổi 'madon' thành tên cột khóa chính bảng donhang của bạn
+            $maDonHangVuaTao = $donHang->madon; 
+
+            // 3. Lưu chi tiết từng sản phẩm vào bảng chitiet_donhang
+            foreach ($checkoutItems as $id => $item) {
+                $chiTiet = new ChiTietDonHang();
+                $chiTiet->madon = $maDonHangVuaTao; // Nối với ID đơn hàng ở trên
+                $chiTiet->masp = $id;               // Mã sản phẩm
+                $chiTiet->soluong = $item['quantity'];
+                $chiTiet->dongia = $item['price'];
+                $chiTiet->thanhtien = $item['price'] * $item['quantity'];
+                $chiTiet->save();
+            }
+
+            // 4. Dọn dẹp Giỏ hàng
+            // Xóa các món đã mua khỏi mảng 'cart' chính
+            $cart = session()->get('cart', []);
+            foreach ($checkoutItems as $id => $item) {
+                if (isset($cart[$id])) {
+                    unset($cart[$id]);
+                }
+            }
+            session()->put('cart', $cart);
+
+            // Xóa session thanh toán tạm
+            session()->forget('checkout_data');
+
+            // Xác nhận lưu DB thành công
+            DB::commit();
+
+            // Chuyển hướng về trang chủ và báo thành công
+            return redirect()->route('home')->with('success', '🎉 Đặt hoa thành công! SunFlower sẽ sớm liên hệ với bạn.');
+
+        } catch (\Exception $e) {
+            // Nếu có lỗi (vd: sai tên cột), hủy toàn bộ thao tác thêm DB ở trên
+            DB::rollBack();
+            return back()->with('error', 'Có lỗi xảy ra khi đặt hàng: ' . $e->getMessage());
+        }
     }
 }

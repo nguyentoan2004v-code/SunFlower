@@ -87,16 +87,23 @@
                                             @endif
                                     </div>
                                     
-                                    <div class="flex gap-2">
-                                        <a href="{{ route('product.show', $product->masp) }}" 
-                                           class="flex-1 bg-gray-50 text-gray-600 text-center py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition">
-                                            Chi tiết
-                                        </a>
-                                        <a href="{{ route('cart.add', $product->masp) }}" 
-                                           class="w-12 h-12 bg-[#FF6B35] text-white flex items-center justify-center rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-100">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                        </a>
-                                    </div>
+                                    <div class="mt-6 pt-4 border-t border-gray-50 flex flex-col gap-3">
+                                        <div class="flex gap-2">
+                                            <a href="{{ route('product.show', $product->masp) }}" 
+                                               class="flex-1 bg-gray-50 text-gray-600 text-center py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition">
+                                                Chi tiết
+                                            </a>
+                                            <a href="{{ route('cart.add', $product->masp) }}" 
+                                               class="w-12 h-12 bg-[#FF6B35] text-white flex items-center justify-center rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-100">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                            </a>
+                                
+                                        </div>
+                                            <a href="{{ route('cart.buyNow', $product->masp) }}" 
+                                               class="w-full h-11 bg-[#FF6B35] text-white flex items-center justify-center rounded-xl font-bold text-sm hover:bg-orange-600 transition shadow-lg shadow-orange-100 active:scale-95">
+                                                Mua ngay
+                                            </a>
+                                    </div> 
                                 </div>
                             </div>
                         @endforeach
