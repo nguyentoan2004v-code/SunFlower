@@ -9,14 +9,14 @@ class ChiTietDonHang extends Model
 {
     use HasFactory;
 
-    protected $table = 'chitietdonhang';
+    protected $table = 'chitiet_donhang';
     
     // Tắt tự tăng vì không dùng id
     public $incrementing = false; 
     
     // Cố tình bỏ qua protected $primaryKey để tránh lỗi khóa kép của Laravel
 
-    protected $fillable = ['madon', 'masp', 'soluong', 'dongia'];
+    protected $fillable = ['madon', 'masp', 'soluong', 'giaban'];
 
     // Chi tiết này thuộc về Đơn hàng nào?
     public function donhang()

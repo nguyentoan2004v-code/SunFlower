@@ -5,6 +5,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\OrderController;
 
 // =====================
 // 1. TRANG CHỦ & SẢN PHẨM
@@ -43,3 +44,11 @@ Route::post('/gio-hang/update', [CartController::class, 'update'])->name('cart.u
 Route::post('/thanh-toan', [CartController::class, 'checkout'])->name('checkout');
 Route::post('/dat-hang', [CartController::class, 'placeOrder'])->name('order.place');
 Route::get('/mua-ngay/{masp}', [CartController::class, 'buyNow'])->name('cart.buyNow');
+Route::get('/dat-hang-thanh-cong', [CartController::class, 'orderSuccess'])->name('checkout.success');
+
+// =====================
+// 5. ĐƠN HÀNG
+// =====================
+Route::get('/lich-su-don-hang', [OrderController::class, 'history'])->name('orders.history');
+Route::get('/don-hang/{madon}', [OrderController::class, 'show'])->name('orders.show');
+Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');

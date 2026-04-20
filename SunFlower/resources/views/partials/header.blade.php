@@ -73,7 +73,7 @@
                                 Thông tin tài khoản
                             </a>
                             
-                            <a href="#" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#FF6B35] flex items-center gap-3 transition-colors">
+                            <a href="{{ route('orders.history') }}" class="px-4 py-2.5 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#FF6B35] flex items-center gap-3 transition-colors">
                                 <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
                                 Lịch sử đơn hàng
                             </a>

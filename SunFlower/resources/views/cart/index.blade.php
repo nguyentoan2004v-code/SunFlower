@@ -2,6 +2,11 @@
 
 @section('content')
 <div class="max-w-7xl mx-auto px-4 py-12">
+    @if(session('error'))
+    <div style="background-color: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold;">
+        LỖI DATABASE: {{ session('error') }}
+    </div>
+@endif
     <form action="{{ route('checkout') }}" method="POST">
         @csrf
         <div class="flex flex-col md:flex-row gap-8">
