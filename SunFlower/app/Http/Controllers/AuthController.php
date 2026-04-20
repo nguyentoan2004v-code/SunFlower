@@ -12,24 +12,41 @@ class AuthController extends Controller
         return view('auth.login');
     }
 
-    public function login(Request $request) {
-        $credentials = $request->validate([
+   public function login(Request $request) {
+        $request->validate([
             'email' => 'required|email',
             'password' => 'required',
         ]);
 
-        // Tìm khách hàng theo email
-        $khachhang = KhachHang::where('email', $credentials['email'])->first();
+        // 1. Kiểm tra xem Email có tồn tại trong CSDL hay không
+        $khachhang = KhachHang::where('email', $request->email)->first();
 
-        if ($khachhang && Hash::check($credentials['password'], $khachhang->password)) {
-            // Đăng nhập thủ công vào Session
-            session(['api_token' => 'web_session']); // Giữ lại để các view cũ không bị lỗi
-            session(['user_info' => $khachhang->toArray()]);
-            
-            return redirect()->route('home')->with('success', 'Chào mừng quay trở lại!');
+        if (!$khachhang) {
+            // Trả về lỗi riêng cho email và GIỮ LẠI email vừa nhập
+            return back()
+                ->withErrors(['email' => 'Tài khoản Email không tồn tại.'])
+                ->withInput($request->only('email'));
         }
 
-        return back()->withErrors(['email' => 'Thông tin đăng nhập không chính xác.']);
+        // 2. Nếu email đúng, tiếp tục kiểm tra mật khẩu
+        if (!Hash::check($request->password, $khachhang->password)) {
+            // Trả về lỗi riêng cho password và GIỮ LẠI email vừa nhập
+            return back()
+                ->withErrors(['password' => 'Mật khẩu không chính xác.'])
+                ->withInput($request->only('email'));
+        }
+
+        // 3. Nếu đúng cả email và mật khẩu -> Tiến hành đăng nhập
+        Auth::guard('khachhang')->login($khachhang);
+        
+        // Tạo lại session để bảo mật
+        $request->session()->regenerate();
+        
+        // Giữ lại session thủ công cũ của bạn
+        session(['api_token' => 'web_session']);
+        session(['user_info' => $khachhang->toArray()]);
+        
+        return redirect()->route('home')->with('success', 'Chào mừng quay trở lại!');
     }
 
     public function showRegisterForm() {
@@ -55,8 +72,17 @@ class AuthController extends Controller
         return redirect()->route('login')->with('success', 'Đăng ký thành công! Hãy đăng nhập.');
     }
 
-    public function logout() {
+    public function logout(Request $request) {
+        // 1. Đăng xuất khỏi hệ thống Auth của Guard
+        Auth::guard('khachhang')->logout();
+        
+        // 2. Hủy toàn bộ token và phiên làm việc (Bảo mật)
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        // 3. Xóa các session thủ công cũ (nếu có)
         session()->forget(['api_token', 'user_info']);
+        
         return redirect()->route('home');
     }
 }

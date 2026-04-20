@@ -52,13 +52,13 @@
                 @endif
             </a>
 
-            @if(session()->has('api_token'))
+            @if(Auth::guard('khachhang')->check())
                 <div class="relative group pl-4 border-l border-gray-200">
                     
                     <button class="flex items-center gap-3 focus:outline-none cursor-pointer">
                         <div class="hidden md:flex flex-col text-right">
                             <span class="text-xs text-gray-400 font-medium">Xin chào,</span>
-                            <span class="text-sm font-bold text-[#FF6B35]">{{ session('user_info')['hoten'] ?? 'Khách hàng' }}</span>
+                            <span class="text-sm font-bold text-[#FF6B35]">{{ Auth::guard('khachhang')->user()->hoten }}</span>
                         </div>
                         <div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center text-[#FF6B35] border border-orange-100 group-hover:bg-[#FF6B35] group-hover:text-white transition-colors">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
@@ -92,9 +92,13 @@
                     </div>
                     
                 </div>
-            @else
-                <div class="pl-4 border-l border-gray-200">
-                    <a href="{{ route('login') }}" class="text-sm font-bold text-gray-600 hover:text-[#FF6B35] transition">Đăng nhập</a>
+           @else
+                <div class="pl-4 border-l border-gray-200 flex items-center">
+                    <a href="{{ route('login') }}" class="text-gray-600 hover:text-[#FF6B35] transition" title="Đăng nhập">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                        </svg>
+                    </a>
                 </div>
             @endif
             
