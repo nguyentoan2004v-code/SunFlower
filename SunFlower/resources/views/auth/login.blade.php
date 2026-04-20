@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="min-h-screen flex items-center justify-center bg-cover bg-center py-12 px-4" 
-     style="background-image: url('{{ asset('images/bg-sunflower.jpg') }}'); background-color: #fffaf0;">
+     style="background-image: url('{{ asset('storage/image/login/nenlogin.png') }}'); background-color: #fffaf0;">
     
     <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 border border-orange-50">
         <div class="text-center mb-10">

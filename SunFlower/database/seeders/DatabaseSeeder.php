@@ -57,9 +57,9 @@ class DatabaseSeeder extends Seeder
 
         // 2. DANH MỤC
         $danhmucs = [
-            ['madm' => 'DM00000001', 'tendm' => 'Hoa Hồng Tình Yêu','hinhanh' => 'categories/hoahong.png'],
-            ['madm' => 'DM00000002', 'tendm' => 'Lan Hồ Điệp','hinhanh' => 'categories/hoahong.png'],
-            ['madm' => 'DM00000003', 'tendm' => 'Hoa Khai Trương','hinhanh' => 'categories/hoahong.png'],
+            ['madm' => 'DM00000001', 'tendm' => 'Hoa Hồng Tình Yêu','hinhanh' => 'category/nenhoahong.png'],
+            ['madm' => 'DM00000002', 'tendm' => 'Lan Hồ Điệp','hinhanh' => 'category/Nenlan.png'],
+            ['madm' => 'DM00000003', 'tendm' => 'Hoa Khai Trương','hinhanh' => 'category/nenkhaitruong.png'],
         ];
         foreach ($danhmucs as $dm) DanhMuc::create($dm);
 

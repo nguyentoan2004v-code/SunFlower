@@ -5,15 +5,86 @@
 @section('content')
 <div class="bg-gray-50 space-y-20 pb-20">
     
-    <section class="relative w-full min-h-[600px] flex items-center bg-cover bg-center"
-             style="background-image: url('{{ $heroImage ?? asset('images/bg-sunflower.jpg') }}');"> <div class="absolute inset-0 bg-black/40"></div>
-        <div class="relative z-10 max-w-7xl mx-auto px-4 text-white">
-            <span class="inline-block bg-[#FF6B35] text-white text-xs font-bold px-4 py-1.5 rounded-full mb-6 uppercase tracking-widest">Premium Collection</span>
-            <h1 class="text-6xl md:text-7xl font-extrabold mb-6 leading-tight">SunFlower<br><span class="text-orange-100">Hoa Tươi Mỗi Ngày</span></h1>
-            <p class="text-lg text-gray-100 mb-10 max-w-xl italic">Gói trọn yêu thương vào từng đóa hoa tươi thắm nhất, giao tận tay người thương chỉ trong 2 giờ.</p>
-            <a href="#products" class="bg-[#FF6B35] hover:bg-orange-600 px-10 py-4 rounded-xl font-bold text-lg shadow-lg shadow-orange-900/20 transition-all active:scale-95 inline-block">Mua Ngay</a>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+
+<section class="relative w-screen left-1/2 -translate-x-1/2 h-[550px] bg-gray-900 overflow-hidden">
+    <div class="swiper heroSwiper w-full h-full">
+        <div class="swiper-wrapper">
+            @if(isset($products) && $products->count() > 0)
+                @foreach($products->take(5) as $product)
+                    @php
+                        $prodImage = !empty($product->hinhanh) 
+                                     ? asset('storage/image/' . $product->hinhanh) 
+                                     : asset('images/bg-sunflower.jpg');
+                    @endphp
+                    <div class="swiper-slide relative w-full h-full flex items-center bg-cover bg-center" style="background-image: url('{{ $prodImage }}');">
+                        <div class="absolute inset-0 bg-black/50"></div> <div class="relative z-10 max-w-7xl mx-auto px-8 md:px-12 w-full flex flex-col items-start justify-center text-white pt-12">
+                            <div class="max-w-2xl text-left"> <span class="inline-block bg-[#FF6B35] text-white text-[10px] font-bold px-3 py-1 rounded-full mb-4 uppercase tracking-widest shadow-sm">
+                                    Sản Phẩm Nổi Bật
+                                </span>
+                                
+                                <h1 class="text-2xl md:text-3xl font-extrabold mb-2 leading-tight drop-shadow-lg uppercase tracking-wide">
+                                    {{ $product->tensp }}
+                                </h1>
+                                
+                                <p class="text-xl md:text-2xl text-orange-200 font-bold mb-8 drop-shadow-md">
+                                    {{ number_format($product->giaban ?? 0, 0, ',', '.') }} ₫
+                                </p>
+                                
+                                <div class="flex flex-wrap gap-3">
+                                    <a href="{{ route('product.show', $product->masp) }}" class="bg-[#FF6B35] hover:bg-orange-600 px-7 py-2.5 rounded-lg font-bold text-sm shadow-md transition-all active:scale-95">
+                                        Xem Chi Tiết
+                                    </a>
+                                    <a href="{{ route('cart.add', $product->masp) }}" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white px-7 py-2.5 rounded-lg font-bold text-sm shadow-md transition-all active:scale-95">
+                                        Thêm Vào Giỏ
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            @else
+                <div class="swiper-slide relative w-full h-full flex items-center bg-cover bg-center" style="background-image: url('{{ asset('images/bg-sunflower.jpg') }}');">
+                    <div class="absolute inset-0 bg-black/40"></div>
+                    <div class="relative z-10 max-w-7xl mx-auto px-8 text-white">
+                        <h1 class="text-3xl md:text-4xl font-extrabold mb-4">SunFlower</h1>
+                        <p class="text-sm italic text-orange-100">Hoa Tươi Mỗi Ngày</p>
+                    </div>
+                </div>
+            @endif
         </div>
-    </section>
+        
+        <div class="swiper-button-next !text-white after:!text-xl w-12 h-12 bg-black/20 hover:bg-[#FF6B35] rounded-full backdrop-blur-sm transition-all hidden md:flex border border-white/10 mr-4"></div>
+        <div class="swiper-button-prev !text-white after:!text-xl w-12 h-12 bg-black/20 hover:bg-[#FF6B35] rounded-full backdrop-blur-sm transition-all hidden md:flex border border-white/10 ml-4"></div>
+        
+        <div class="swiper-pagination !bottom-8"></div>
+    </div>
+</section>
+
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var swiper = new Swiper(".heroSwiper", {
+            loop: true,                 // Trượt vòng lặp vô hạn
+            grabCursor: true,           // Đổi con trỏ thành bàn tay để kéo thả
+            effect: "slide",            // Hiệu ứng trượt (có thể đổi thành "fade" nếu muốn mờ dần)
+            autoplay: {
+                delay: 4000,            // Tự động trượt sau 4 giây
+                disableOnInteraction: false, 
+            },
+            navigation: {
+                nextEl: ".swiper-button-next",
+                prevEl: ".swiper-button-prev",
+            },
+            pagination: {
+                el: ".swiper-pagination",
+                clickable: true,
+                dynamicBullets: true,   // Hiệu ứng thu phóng cho dấu chấm
+            },
+        });
+    });
+</script>
 
     <section class="max-w-7xl mx-auto px-4">
         <div class="flex items-center justify-between mb-10">
@@ -27,7 +98,7 @@
                         
                         @php
                             $catImage = !empty($category->hinhanh) 
-                                        ? asset('storage/' . $category->hinhanh) 
+                                        ? asset('storage/image/' . $category->hinhanh) 
                                         : 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60';
                         @endphp
                         

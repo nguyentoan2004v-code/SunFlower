@@ -15,7 +15,7 @@
             @include('partials.header')
         @endif
 
-        <main class="flex-1 w-full mx-auto p-4 sm:p-6 lg:p-8">
+        <main class="flex-1 w-full mx-auto {{ request()->routeIs('login', 'register') ? '' : 'p-4 sm:p-6 lg:p-8' }}">
             @yield('content')
         </main>
 
