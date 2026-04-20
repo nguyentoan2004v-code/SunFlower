@@ -6,52 +6,38 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 
-
-
-
-// 1. Trang chủ
+// =====================
+// 1. TRANG CHỦ & SẢN PHẨM
+// =====================
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/danh-muc/{madm}', [HomeController::class, 'categoryDetail'])->name('category.show');
+Route::get('/chi-tiet/{masp}', [HomeController::class, 'productDetail'])->name('product.show');
+Route::get('/tat-ca-san-pham', [HomeController::class, 'allCategories'])->name('categories.index');
+Route::get('/search', [HomeController::class, 'search'])->name('search');
 
-// 2. Luồng Đăng nhập (Khớp với /login trên trình duyệt)
+// =====================
+// 2. AUTH (ĐĂNG NHẬP / ĐĂNG KÝ)
+// =====================
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
-Route::get('/danh-muc/{madm}', [HomeController::class, 'categoryDetail'])->name('category.show');
-// 3. Luồng Đăng ký (Khớp với /register trên trình duyệt)
 Route::get('/dang-ky', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/dang-ky', [AuthController::class, 'register']);
-// 4. Đăng xuất
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// =====================
+// 3. PROFILE (HỒ SƠ KHÁCH HÀNG)
+// =====================
 Route::prefix('profile')->group(function () {
-    // Trang hiển thị thông tin
-    Route::get('/', [App\Http\Controllers\ProfileController::class, 'index'])->name('profile.index');
-    
-    // Nút lưu cập nhật thông tin (Bắt buộc dùng PUT để khớp với @method('PUT') trong giao diện)
-    Route::put('/update', [App\Http\Controllers\ProfileController::class, 'updateProfile'])->name('profile.update');
-    
-    // Nút lưu đổi mật khẩu (Nếu form đổi mật khẩu của bạn dùng POST thì để POST, dùng PUT thì đổi thành PUT)
-    Route::post('/password', [App\Http\Controllers\ProfileController::class, 'updatePassword'])->name('profile.password');
+    Route::get('/', [ProfileController::class, 'index'])->name('profile.index');
+    Route::put('/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 });
 
-// 5. Trang sản phẩm & chi tiết
-Route::get('/', [HomeController::class, 'index'])->name('home');
-
-// TRANG DANH MỤC SẢN PHẨM (Sửa lại tên cho đúng lỗi bro gặp)
-// Route này sẽ khớp với {{ route('category.show', $category['madm']) }}
-Route::get('/danh-muc/{madm}', [HomeController::class, 'categoryDetail'])->name('category.show');
-
-// Trang chi tiết sản phẩm
-Route::get('/chi-tiet/{masp}', [HomeController::class, 'productDetail'])->name('product.show');
-
-// Trang tất cả sản phẩm (Nếu bro có dùng)
-Route::get('/tat-ca-san-pham', [HomeController::class, 'allCategories'])->name('categories.index');
-
-
-// Luồng Giỏ Hàng
+// =====================
+// 4. GIỎ HÀNG & THANH TOÁN
+// =====================
 Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
-Route::get('/gio-hang/them/{masp}', [CartController::class, 'add'])->name('cart.add'); // Chính là dòng này!
+Route::get('/gio-hang/them/{masp}', [CartController::class, 'add'])->name('cart.add');
 Route::get('/gio-hang/xoa/{masp}', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/gio-hang/update', [CartController::class, 'update'])->name('cart.update');
 Route::post('/thanh-toan', [CartController::class, 'checkout'])->name('checkout');
-// Route Tìm kiếm
-Route::get('/search', [\App\Http\Controllers\HomeController::class, 'search'])->name('search');
-

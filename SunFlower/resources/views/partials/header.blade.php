@@ -45,7 +45,7 @@
 
         <div class="flex items-center space-x-6">
             
-            <a href="{{ route('cart.index') ?? '#' }}" class="text-gray-600 hover:text-[#FF6B35] relative transition">
+              <a href="{{ route('cart.index') ?? '#' }}" class="text-gray-600 hover:text-[#FF6B35] relative transition">
                 <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 @if(session('cart') && count(session('cart')) > 0)
                     <span class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">{{ count(session('cart')) }}</span>
