@@ -57,7 +57,7 @@
                             
                             @php
                                 $prodImage = !empty($product->hinhanh) 
-                                             ? asset('storage/' . $product->hinhanh) 
+                                             ? asset('storage/image/' . $product->hinhanh) 
                                              : asset('images/bg-sunflower.jpg');
                             @endphp
 
@@ -72,14 +72,25 @@
                             <h3 class="font-bold text-gray-800 text-lg mb-1 group-hover:text-[#FF6B35] transition-colors line-clamp-1" title="{{ $product->tensp }}">
                                 {{ $product->tensp }}
                             </h3>
-                            <div class="flex items-center gap-3 mb-5">
-                                <span class="text-[#FF6B35] font-black text-xl">
-                                    {{ number_format($product->giaban, 0, ',', '.') }} đ
+                           <div class="mt-4 flex items-center justify-between">
+                        <div>
+                            @if(!empty($product->giakm) && $product->giakm < $product->giaban)
+                                <span class="text-xl font-extrabold text-[#FF6B35]">
+                                    {{ number_format($product->giakm, 0, ',', '.') }} ₫
                                 </span>
-                                <span class="text-gray-300 line-through text-xs italic">
-                                    {{ number_format($product->giaban * 1.2, 0, ',', '.') }} đ
+                                <span class="text-xs text-gray-400 line-through ml-2">
+                                    {{ number_format($product->giaban, 0, ',', '.') }} ₫
                                 </span>
-                            </div>
+                            @else
+                                <span class="text-xl font-extrabold text-[#FF6B35]">
+                                    {{ number_format($product->giaban ?? 0, 0, ',', '.') }} ₫
+                                </span>
+                            @endif
+                        </div>
+                        <span class="bg-orange-50 text-[#FF6B35] text-xs font-bold px-2.5 py-1 rounded-lg">
+                            Mới
+                        </span>
+                        </div>
                             
                             <div class="flex gap-2">
                                 <a href="{{ route('product.show', $product->masp) }}" 

@@ -17,7 +17,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-0">
                 
                 <div class="bg-gray-50 p-8 flex items-center justify-center border-r border-gray-100 relative group">
-                    <img src="{{ asset('storage/' . ($product->hinhanh ?? 'images/default-flower.jpg')) }}" 
+                    <img src="{{ asset('storage/image/' . ($product->hinhanh ?? 'images/default-flower.jpg')) }}" 
                          alt="{{ $product->tensp ?? 'Hoa' }}"
                          class="w-full max-w-md h-auto rounded-2xl shadow-sm object-cover aspect-square group-hover:scale-105 transition duration-500">
                     
@@ -29,13 +29,22 @@
                 <div class="p-8 md:p-12 flex flex-col justify-center">
                     <h1 class="text-3xl md:text-4xl font-extrabold text-gray-900 mb-4">{{ $product->tensp ?? 'Tên sản phẩm' }}</h1>
                     
-                    <div class="flex items-center gap-4 mb-6">
-                        <span class="text-4xl font-black text-[#FF6B35]">
-                            {{ number_format($product->giaban ?? 0, 0, ',', '.') }} ₫
-                        </span>
-                        <span class="text-gray-400 line-through text-lg">
-                            {{ number_format(($product->giaban ?? 0) * 1.2, 0, ',', '.') }} ₫
-                        </span>
+                    <div class="flex items-end gap-4 mb-6">
+                        @if(!empty($product->giakm) && $product->giakm < $product->giaban)
+                            <span class="text-4xl font-extrabold text-[#FF6B35]">
+                                {{ number_format($product->giakm, 0, ',', '.') }} ₫
+                            </span>
+                            <span class="text-gray-400 line-through text-lg">
+                                {{ number_format($product->giaban, 0, ',', '.') }} ₫
+                            </span>
+                            <span class="bg-red-100 text-red-600 px-2 py-1 rounded-md text-sm font-bold mb-1">
+                                -{{ round((($product->giaban - $product->giakm) / $product->giaban) * 100) }}%
+                            </span>
+                        @else
+                            <span class="text-4xl font-extrabold text-[#FF6B35]">
+                                {{ number_format($product->giaban ?? 0, 0, ',', '.') }} ₫
+                            </span>
+                        @endif
                     </div>
 
                     <div class="text-gray-600 mb-8 leading-relaxed">

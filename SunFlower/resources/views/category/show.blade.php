@@ -61,7 +61,7 @@
                         @foreach($categoryProducts as $product)
                             <div class="group bg-white border border-gray-100 rounded-3xl p-4 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-1">
                                 <div class="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-5">
-                                    <img src="{{ asset('storage/' . $product->hinhanh) }}" 
+                                    <img src="{{ asset('storage/image/' . $product->hinhanh) }}" 
                                          class="w-full h-full object-cover transition duration-500 group-hover:scale-110" 
                                          alt="{{ $product->tensp }}">
                                     
@@ -73,12 +73,18 @@
                                         {{ $product->tensp }}
                                     </h3>
                                     <div class="flex items-center gap-3 mb-5">
-                                        <span class="text-[#FF6B35] font-black text-xl">
-                                            {{ number_format($product->giaban, 0, ',', '.') }} đ
-                                        </span>
-                                        <span class="text-gray-300 line-through text-xs italic">
-                                            {{ number_format($product->giaban * 1.2, 0, ',', '.') }} đ
-                                        </span>
+                                            @if(!empty($product->giakm) && $product->giakm < $product->giaban)
+                                                <span class="text-[#FF6B35] font-black text-xl">
+                                                    {{ number_format($product->giakm, 0, ',', '.') }} ₫
+                                                </span>
+                                                <span class="text-gray-400 line-through text-xs italic">
+                                                    {{ number_format($product->giaban, 0, ',', '.') }} ₫
+                                                </span>
+                                            @else
+                                                <span class="text-[#FF6B35] font-black text-xl">
+                                                    {{ number_format($product->giaban ?? 0, 0, ',', '.') }} ₫
+                                                </span>
+                                            @endif
                                     </div>
                                     
                                     <div class="flex gap-2">
