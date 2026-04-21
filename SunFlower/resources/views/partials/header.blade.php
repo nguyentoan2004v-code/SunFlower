@@ -5,10 +5,71 @@
 <header class="bg-white shadow-sm sticky top-0 z-50">
     <div class="max-w-7xl mx-auto px-4 h-20 flex justify-between items-center relative">
         
-        <a href="{{ route('home') }}" class="flex items-center gap-2">
-            <div class="w-10 h-10 bg-[#FF6B35] rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-inner">S</div>
-            <span class="font-bold text-2xl text-[#FF6B35] tracking-tight uppercase">SunFlower</span>
-        </a>
+        <a href="{{ route('home') }}" class="flex items-center gap-3">
+
+    <!-- ICON -->
+    <svg width="52" height="52" viewBox="0 0 64 64" class="shrink-0">
+
+        <defs>
+            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#FF6B35"/>
+                <stop offset="100%" stop-color="#FFB800"/>
+            </linearGradient>
+        </defs>
+
+        <!-- petals (clean, đều, không thô) -->
+        <g fill="#FDBA21">
+            <circle cx="32" cy="6" r="5"/>
+            <circle cx="52" cy="12" r="5"/>
+            <circle cx="58" cy="32" r="5"/>
+            <circle cx="52" cy="52" r="5"/>
+            <circle cx="32" cy="58" r="5"/>
+            <circle cx="12" cy="52" r="5"/>
+            <circle cx="6" cy="32" r="5"/>
+            <circle cx="12" cy="12" r="5"/>
+        </g>
+
+        <!-- center -->
+        <circle cx="32" cy="32" r="16" fill="url(#g)"/>
+
+        <!-- S -->
+        <text x="32" y="37" text-anchor="middle"
+              font-size="18" font-weight="700"
+              fill="white" font-family="Poppins, sans-serif">
+            S
+        </text>
+    </svg>
+    <!-- TEXT -->
+    <h1 class="flex items-center text-2xl font-bold tracking-tight">
+
+        <span class="text-orange-500">SUNFL</span>
+
+        <!-- O = FLOWER -->
+        <span class="relative mx-1 w-7 h-7 flex items-center justify-center">
+
+            <!-- center -->
+            <span class="w-4 h-4 bg-gradient-to-br from-orange-500 to-yellow-400 rounded-full z-10"></span>
+
+            <!-- petals -->
+            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full top-0"></span>
+            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full bottom-0"></span>
+            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full left-0"></span>
+            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full right-0"></span>
+
+            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full top-1 left-1"></span>
+            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full top-1 right-1"></span>
+            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full bottom-1 left-1"></span>
+            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full bottom-1 right-1"></span>
+
+        </span>
+
+        <span class="bg-gradient-to-r from-orange-500 to-yellow-400 bg-clip-text text-transparent">
+            WER
+        </span>
+
+    </h1>
+
+</a>
 
         <nav class="hidden md:flex space-x-10 items-center">
             <a href="{{ route('home') }}" class="font-semibold text-gray-700 hover:text-[#FF6B35] transition">Trang chủ</a>

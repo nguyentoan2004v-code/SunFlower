@@ -32,6 +32,11 @@ return [
             'driver' => 'session',
             'provider' => 'khachhangs',
         ],
+
+        'nhanvien' => [
+            'driver' => 'session',
+            'provider' => 'nhanviens',
+        ],
     ],
 
     /*
@@ -56,6 +61,11 @@ return [
         //     'driver' => 'database',
         //     'table' => 'users',
         // ],
+
+        'nhanviens' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\NhanVien::class,
+        ],
     ],
 
     /*

@@ -6,6 +6,13 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\Admin\AuthController as AdminAuthController;
+use App\Http\Controllers\Admin\DashboardController;
+
+
+// =====================
+// USER
+// =====================
 
 // =====================
 // 1. TRANG CHỦ & SẢN PHẨM
@@ -52,3 +59,28 @@ Route::get('/dat-hang-thanh-cong', [CartController::class, 'orderSuccess'])->nam
 Route::get('/lich-su-don-hang', [OrderController::class, 'history'])->name('orders.history');
 Route::get('/don-hang/{madon}', [OrderController::class, 'show'])->name('orders.show');
 Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
+
+
+// =====================
+// ADMIN
+// =====================
+
+
+// =====================
+// 1 . ĐĂNG NHẬP QUẢN TRỊ
+// =====================
+Route::prefix('admin')->name('admin.')->group(function () {
+    // Các route không cần login
+    Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
+
+    // Các route CẦN login admin
+    Route::middleware(['admin.auth'])->group(function () {
+        Route::get('/dashboard', function () {
+            return view('admin.dashboard'); // Bạn sẽ tạo file này sau
+        })->name('dashboard');
+        
+        Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    });
+});
