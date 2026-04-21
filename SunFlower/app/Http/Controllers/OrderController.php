@@ -21,29 +21,54 @@ class OrderController extends Controller
 
         return view('auth.order_history', compact('donHangs'));
     }
-    // Xem chi tiết một đơn hàng cụ thể
+   // Hiển thị chi tiết đơn hàng
     public function show($madon)
     {
         $donHang = DonHang::with('sanphams')
             ->where('madon', $madon)
-            ->where('makh', Auth::guard('khachhang')->id()) // Bảo mật: chỉ chủ đơn mới xem được
             ->firstOrFail();
+
+        // 1. ƯU TIÊN KIỂM TRA THẺ BÀI SESSION (Khách vãng lai vừa đặt đơn)
+        $viewedOrders = session()->get('viewed_orders', []);
+        if (in_array($madon, $viewedOrders)) {
+            // Nếu có thẻ bài -> Cho phép xem thẳng luôn, không cần hỏi nhiều!
+            return view('auth.order_detail', compact('donHang'));
+        }
+
+        // 2. NẾU KHÔNG CÓ THẺ BÀI -> Bắt buộc kiểm tra đăng nhập (Bảo vệ đơn hàng cũ)
+        if ($donHang->makh !== null) {
+            if (!Auth::guard('khachhang')->check() || Auth::guard('khachhang')->user()->makh !== $donHang->makh) {
+                return redirect()->route('home')->with('error', 'Bạn không có quyền xem đơn hàng này!');
+            }
+        }
 
         return view('auth.order_detail', compact('donHang'));
     }
 
-    // Khách hàng tự hủy đơn hàng (nếu đơn vẫn đang ở trạng thái 'Chờ xác nhận')
+    // Xử lý khách hàng tự hủy đơn
     public function cancel($madon)
     {
-        $donHang = DonHang::where('madon', $madon)
-            ->where('makh', Auth::guard('khachhang')->id())
-            ->firstOrFail();
+        $donHang = DonHang::where('madon', $madon)->firstOrFail();
 
+        // 1. BẢO MẬT: Kiểm tra quyền hủy
+        if ($donHang->makh !== null) {
+            // Đơn của thành viên -> Phải đăng nhập đúng
+            if (!Auth::guard('khachhang')->check() || Auth::guard('khachhang')->user()->makh !== $donHang->makh) {
+                return redirect()->route('home')->with('error', 'Bạn không có quyền thao tác trên đơn hàng này!');
+            }
+        }
+
+        // 2. Tiến hành hủy
         if ($donHang->trangthai == 'Chờ xác nhận') {
             $donHang->update(['trangthai' => 'Đã hủy']);
+            
+            // Nếu là thành viên thì đẩy về Lịch sử mua hàng, khách vãng lai thì ở lại trang chi tiết
+            if (Auth::guard('khachhang')->check()) {
+                return redirect()->route('orders.history')->with('success', 'Đã hủy đơn hàng thành công.');
+            }
             return back()->with('success', 'Đã hủy đơn hàng thành công.');
         }
 
-        return back()->with('error', 'Không thể hủy đơn hàng ở trạng thái này.');
+        return back()->with('error', 'Đơn hàng đã được xử lý, không thể hủy.');
     }
 }

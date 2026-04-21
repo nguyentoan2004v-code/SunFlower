@@ -152,15 +152,49 @@ class CartController extends Controller
         try {
             $donHang = new DonHang();
             
-            // 1. Sinh mã đơn hàng (Độ dài 10 ký tự để không bị lỗi Data too long)
+            // 1. Sinh mã đơn hàng (Độ dài 10 ký tự)
             $maDonMoi = 'DH-' . strtoupper(Str::random(7));
             $donHang->madon = $maDonMoi;
             
+            // ==========================================
+            // 2. XỬ LÝ LOGIC KHÁCH HÀNG (CÓ/KHÔNG ĐĂNG NHẬP)
+            // ==========================================
             if (Auth::guard('khachhang')->check()) {
+                // TRƯỜNG HỢP 1: Khách đã đăng nhập
                 $donHang->makh = Auth::guard('khachhang')->user()->makh; 
+            } else {
+                // TRƯỜNG HỢP 2: Khách vãng lai (Chưa đăng nhập)
+                // Tìm xem SĐT này đã từng mua hàng bao giờ chưa
+                $khachTonTai = \App\Models\KhachHang::where('sdt', $request->sdt_nguoinhan)->first();
+                
+                if ($khachTonTai) {
+                    // Nếu SĐT đã tồn tại, lấy mã khách hàng cũ gắn vào đơn này
+                    $donHang->makh = $khachTonTai->makh;
+                } else {
+                    // Nếu SĐT hoàn toàn mới, tự động tạo hồ sơ khách hàng mới
+                    $khachMoi = new \App\Models\KhachHang();
+                    
+                    // Tạo mã KH ngẫu nhiên 10 ký tự (Ví dụ: KVL-A1B2C3D)
+                    $maKhMoi = 'KVL' . strtoupper(Str::random(7)); 
+                    
+                    $khachMoi->makh = $maKhMoi;
+                    $khachMoi->hoten = $request->ten_nguoinhan; // Form gửi lên là ten_nguoinhan, lưu vào cột hoten
+                    $khachMoi->sdt = $request->sdt_nguoinhan;
+                    $khachMoi->diachi = $request->diachi_giaohang;
+                    
+                    $khachMoi->email = $request-> sdt_nguoinhan . '@gmail.com'; 
+                    $khachMoi->password = bcrypt('123456');
+                    
+                    
+                    $khachMoi->save(); // Lưu khách hàng mới vào DB
+                    
+                    // Gắn mã khách hàng vừa tạo cho đơn hàng
+                    $donHang->makh = $maKhMoi;
+                }
             }
+            // ==========================================
             
-            // 2. Khớp 100% với các cột trong DB theo hình ảnh bạn gửi
+            // 3. Khớp cột bảng donhang
             $donHang->sdt_nhan = $request->sdt_nguoinhan;         
             $donHang->diachi_giao = $request->diachi_giaohang;    
             $donHang->ghichu = $request->ghichu;
@@ -169,16 +203,14 @@ class CartController extends Controller
             $donHang->trangthai = 'Chờ xác nhận';
             $donHang->ngaydat = now();
             
-            $donHang->save(); // Sẽ lưu thành công!
+            $donHang->save(); // Lưu đơn hàng thành công!
 
-            // 3. Lưu chi tiết đơn hàng
+            // 4. Lưu chi tiết đơn hàng
             foreach ($checkoutItems as $id => $item) {
                 $chiTiet = new ChiTietDonHang();
                 $chiTiet->madon = $maDonMoi; 
                 $chiTiet->masp = $id;               
                 $chiTiet->soluong = $item['quantity'];
-                
-                // Lưu ý: Đảm bảo Model ChiTietDonHang bạn đã đổi 'dongia' thành 'giaban'
                 $chiTiet->giaban = $item['price']; 
                 
                 $chiTiet->save();
@@ -192,6 +224,9 @@ class CartController extends Controller
             session()->put('cart', $cart);
             session()->forget('checkout_data');
 
+            $viewedOrders = session()->get('viewed_orders', []);
+            $viewedOrders[] = $maDonMoi;
+            session()->put('viewed_orders', $viewedOrders);
             DB::commit();
 
             return redirect()->route('checkout.success')->with('madon_moi', $maDonMoi);
