@@ -57,13 +57,13 @@
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link"><i class="fa-solid fa-box"></i> Sản phẩm</a>
+                    <a href="{{ route('admin.products.index') }}" class="nav-link"><i class="fa-solid fa-box"></i> Sản phẩm</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link"><i class="fa-solid fa-list"></i> Danh mục</a>
+                    <a href="{{ route('admin.categories.index') }}" class="nav-link"><i class="fa-solid fa-list"></i> Danh mục</a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link"><i class="fa-solid fa-cart-shopping"></i> Đơn hàng</a>
+                    <a href="{{ route('admin.orders.index') }}" class="nav-link"><i class="fa-solid fa-cart-shopping"></i> Đơn hàng</a>
                 </li>
                 <li class="nav-item">
                     <a href="#" class="nav-link"><i class="fa-solid fa-users"></i> Nhân viên</a>

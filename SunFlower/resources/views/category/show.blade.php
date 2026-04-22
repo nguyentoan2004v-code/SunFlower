@@ -61,7 +61,7 @@
                         @foreach($categoryProducts as $product)
                             <div class="group bg-white border border-gray-100 rounded-3xl p-4 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-1">
                                 <div class="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-5">
-                                    <img src="{{ asset('storage/image/' . $product->hinhanh) }}" 
+                                    <img src="{{ route('product.image', $product->masp) }}"
                                          class="w-full h-full object-cover transition duration-500 group-hover:scale-110" 
                                          alt="{{ $product->tensp }}">
                                     

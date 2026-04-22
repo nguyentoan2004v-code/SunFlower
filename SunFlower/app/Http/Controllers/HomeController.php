@@ -17,15 +17,15 @@ class HomeController extends Controller {
         $allProducts = SanPham::all(); 
 
         // Lấy 8 sản phẩm đầu tiên (Collection)
-        $products = collect($allProducts)->take(8);
-        
-        // Random ảnh hero một cách an toàn
-        $heroImage = null;
-        if ($products->isNotEmpty()) {
-            $heroImage = route('product.image', $products->random()->masp);
-        }
+        $products = SanPham::orderBy('created_at', 'desc')->paginate(8); 
 
-        return view('home', compact('categories', 'products', 'heroImage'));
+    // Random ảnh hero một cách an toàn (Sửa lại một chút để không bị lỗi với Paginator)
+    $heroImage = null;
+    if ($products->isNotEmpty()) {
+        $heroImage = route('product.image', $products->getCollection()->random()->masp);
+    }
+
+    return view('home', compact('categories', 'products', 'heroImage'));
     }
 
     // 1. Trang Tất cả danh mục / sản phẩm

@@ -47,34 +47,51 @@
                         @endif
                     </div>
 
-                    <div class="text-gray-600 mb-8 leading-relaxed">
-                        @php
-                            $description = $product->mota ?? "Một bó hoa tươi thắm thay cho vạn lời muốn nói.\nSản phẩm bao gồm:\n- Hoa hồng đỏ\n- Giấy gói cao cấp";
-                            $lines = preg_split('/\\r\\n|\\r|\\n/', $description);
-                            $showIcons = false; // Flag để kiểm soát việc hiển thị icon
-                        @endphp
+                    <div class="mb-8">
+                        <style>
+                            /* Trang trí thanh cuộn cho nhỏ gọn và cùng màu với SunFlower */
+                            #desc-container::-webkit-scrollbar { width: 5px; }
+                            #desc-container::-webkit-scrollbar-track { background: #f9fafb; border-radius: 10px; }
+                            #desc-container::-webkit-scrollbar-thumb { background: #fed7aa; border-radius: 10px; }
+                            #desc-container::-webkit-scrollbar-thumb:hover { background: #FF6B35; }
+                        </style>
 
-                        @foreach($lines as $line)
-                            @if(trim($line) === '') @continue @endif
+                        <div id="desc-wrapper" class="relative">
+                            <div id="desc-container" class="text-gray-600 leading-relaxed max-h-24 overflow-hidden transition-all duration-300 pr-2">
+                                @php
+                                    $description = $product->mota ?? "Một bó hoa tươi thắm thay cho vạn lời muốn nói.\nSản phẩm bao gồm:\n- Hoa hồng đỏ\n- Giấy gói cao cấp";
+                                    $lines = preg_split('/\\r\\n|\\r|\\n/', $description);
+                                    $showIcons = false;
+                                @endphp
 
-                            {{-- Kiểm tra xem dòng hiện tại có phải là dòng kích hoạt không --}}
-                            @if(stripos(trim($line), 'sản phẩm bao gồm') !== false)
-                                @php $showIcons = true; @endphp
-                                {{-- Hiển thị dòng kích hoạt không có icon, có thể in đậm --}}
-                                <p class="font-bold text-gray-800 mt-4 mb-3">{{ trim($line) }}</p>
-                            @elseif($showIcons)
-                                {{-- Nếu flag là true, hiển thị dòng với icon --}}
-                                <div class="flex items-start gap-3 mb-2">
-                                    <svg class="w-4 h-4 text-orange-400 mt-1 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                                        <path d="M10.75 1.25a.75.75 0 00-1.5 0v2.55a1 1 0 01-1.485.861l-2.22-1.282a.75.75 0 00-1.061 1.061l1.282 2.22a1 1 0 01-.861 1.485H2.75a.75.75 0 000 1.5h2.55a1 1 0 01.861 1.485l-1.282 2.22a.75.75 0 101.061 1.061l2.22-1.282a1 1 0 011.485.861v2.55a.75.75 0 001.5 0v-2.55a1 1 0 011.485-.861l2.22 1.282a.75.75 0 101.061-1.061l-1.282-2.22a1 1 0 01.861-1.485h2.55a.75.75 0 000-1.5h-2.55a1 1 0 01-.861-1.485l1.282-2.22a.75.75 0 00-1.061-1.061l-2.22 1.282a1 1 0 01-1.485-.861V1.25z" />
-                                    </svg>
-                                    <span>{{ trim($line) }}</span>
-                                </div>
-                            @else
-                                {{-- Nếu flag là false, hiển thị dòng không có icon --}}
-                                <p class="mb-2">{{ trim($line) }}</p>
-                            @endif
-                        @endforeach
+                                @foreach($lines as $line)
+                                    @php $cleanLine = trim($line); @endphp
+                                    @if($cleanLine === '') @continue @endif
+
+                                    @if(stripos($cleanLine, 'sản phẩm bao gồm') !== false || stripos($cleanLine, 'chi tiết sản phẩm') !== false)
+                                        @php $showIcons = true; @endphp
+                                        <p class="font-bold text-gray-900 mt-5 mb-3 text-lg">{{ $cleanLine }}</p>
+                                        
+                                    @elseif($showIcons || str_starts_with($cleanLine, '-') || str_starts_with($cleanLine, '*'))
+                                        <div class="flex items-start gap-3 mb-2.5">
+                                            <svg class="w-4 h-4 text-[#FF6B35] mt-1 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M10.75 1.25a.75.75 0 00-1.5 0v2.55a1 1 0 01-1.485.861l-2.22-1.282a.75.75 0 00-1.061 1.061l1.282 2.22a1 1 0 01-.861 1.485H2.75a.75.75 0 000 1.5h2.55a1 1 0 01.861 1.485l-1.282 2.22a.75.75 0 101.061 1.061l2.22-1.282a1 1 0 011.485.861v2.55a.75.75 0 001.5 0v-2.55a1 1 0 011.485-.861l2.22 1.282a.75.75 0 101.061-1.061l-1.282-2.22a1 1 0 01.861-1.485h2.55a.75.75 0 000-1.5h-2.55a1 1 0 01-.861-1.485l1.282-2.22a.75.75 0 00-1.061-1.061l-2.22 1.282a1 1 0 01-1.485-.861V1.25z" />
+                                            </svg>
+                                            <span class="text-gray-700 leading-relaxed">{{ ltrim($cleanLine, '-* ') }}</span>
+                                        </div>
+                                    @else
+                                        <p class="mb-3 text-gray-700 leading-relaxed">{{ $cleanLine }}</p>
+                                    @endif
+                                @endforeach
+                            </div>
+                            
+                            <div id="desc-fade" class="absolute bottom-0 left-0 w-full h-10 bg-gradient-to-t from-white to-transparent pointer-events-none transition-opacity duration-300"></div>
+                        </div>
+
+                        <button type="button" id="btn-toggle-desc" class="mt-3 text-[#FF6B35] font-bold text-sm hover:text-orange-600 transition flex items-center gap-1">
+                            <span>Xem thêm</span>
+                            <svg id="icon-toggle-desc" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                        </button>
                     </div>
 
                     <hr class="border-gray-100 mb-6">
@@ -143,6 +160,48 @@
                 });
 
                 updateLinks();
+                // ==========================================
+                // XỬ LÝ RÚT GỌN / XEM THÊM MÔ TẢ
+                // ==========================================
+                const descContainer = document.getElementById('desc-container');
+                const descFade = document.getElementById('desc-fade');
+                const btnToggleDesc = document.getElementById('btn-toggle-desc');
+                const iconToggleDesc = document.getElementById('icon-toggle-desc');
+
+                if (descContainer && btnToggleDesc) {
+                    const scrollHeight = descContainer.scrollHeight;
+                    // Đổi 192 thành 96 (tương đương max-h-24)
+                    
+                    if (scrollHeight <= 96) {
+                        btnToggleDesc.style.display = 'none';
+                        descFade.style.display = 'none';
+                        // Đổi max-h-48 thành max-h-24
+                        descContainer.classList.remove('max-h-24', 'overflow-hidden'); 
+                    } else {
+                        btnToggleDesc.addEventListener('click', () => {
+                            const isExpanded = descContainer.classList.contains('overflow-y-auto');
+                            
+                            if (!isExpanded) {
+                                // MỞ RỘNG
+                                // Đổi max-h-48 thành max-h-24
+                                descContainer.classList.remove('max-h-24', 'overflow-hidden');
+                                descContainer.classList.add('max-h-[320px]', 'overflow-y-auto');
+                                descFade.style.opacity = '0';
+                                btnToggleDesc.querySelector('span').innerText = 'Thu gọn';
+                                iconToggleDesc.classList.add('rotate-180');
+                            } else {
+                                // THU GỌN
+                                descContainer.classList.remove('max-h-[320px]', 'overflow-y-auto');
+                                // Đổi max-h-48 thành max-h-24
+                                descContainer.classList.add('max-h-24', 'overflow-hidden');
+                                descFade.style.opacity = '1';
+                                btnToggleDesc.querySelector('span').innerText = 'Xem thêm';
+                                iconToggleDesc.classList.remove('rotate-180');
+                                descContainer.scrollTop = 0;
+                            }
+                        });
+                    }
+                }
             });
         </script>
     @else

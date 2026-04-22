@@ -188,7 +188,12 @@
                     <p class="text-gray-500 italic">Hiện tại chưa có sản phẩm nào được bày bán.</p>
                 </div>
             @endif
+
+        </div> @if($products->hasPages())
+        <div class="mt-8 flex justify-center w-full">
+            {{ $products->appends(request()->query())->links('vendor.pagination.sunflower') }}
         </div>
+        @endif
     </section>
 </div>
 @endsection

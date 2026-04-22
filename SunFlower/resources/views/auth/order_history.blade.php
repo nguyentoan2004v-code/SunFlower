@@ -40,7 +40,7 @@
         <div class="px-6 py-2 divide-y divide-gray-50">
             @foreach($don->sanphams as $sp)
                 <div class="flex items-center gap-6 py-4">
-                    <img src="{{ asset('storage/image/' . $sp->hinhanh) }}" class="w-16 h-16 object-cover rounded-2xl border border-gray-100 shadow-sm">
+                    <img src="{{ route('product.image', $sp->masp) }}" class="w-16 h-16 object-cover rounded-2xl border border-gray-100 shadow-sm">
                     <div class="flex-1">
                         <h4 class="font-bold text-gray-900">{{ $sp->tensp }}</h4>
                         <p class="text-sm text-gray-500 mt-1 font-medium">Số lượng: x{{ $sp->pivot->soluong }}</p>

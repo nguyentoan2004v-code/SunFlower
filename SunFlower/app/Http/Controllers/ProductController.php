@@ -53,7 +53,7 @@ class ProductController extends Controller
         }
         
         // Nếu là file vật lý trong storage (Thêm folder image/ theo cấu trúc lưu trữ)
-        $path = storage_path('app/public/image/' . ltrim($product->hinhanh, '/'));
+        $path = storage_path('app/public/' . ltrim($product->hinhanh, '/'));
         
         // Nếu file không tồn tại thật trong ổ cứng, trả về ảnh mặc định
         if (!file_exists($path) || is_dir($path)) {

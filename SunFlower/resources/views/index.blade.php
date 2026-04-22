@@ -77,7 +77,7 @@
                     
                     <div class="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-4 flex items-center justify-center">
                         @if(!empty($sp->hinhanh))
-                            <img src="{{ asset('storage/image/' . $sp->hinhanh) }}" 
+                            <img src="{{ route('product.image', $product->masp) }}" 
                                  class="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
                                  alt="{{ $sp->tensp }}">
                         @else

@@ -25,9 +25,20 @@
 
     <div class="bg-white rounded-3xl p-8 border border-gray-100 shadow-sm mb-8">
         @php
+            // Mảng các bước hiển thị trên giao diện khách hàng
             $statuses = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao', 'Đã giao'];
-            $currentIndex = array_search($donHang->trangthai, $statuses);
-            $isCancelled = $donHang->trangthai == 'Đã hủy';
+            
+            // Logic khớp trạng thái DB của Admin với giao diện 4 bước
+            $dbStatus = $donHang->trangthai;
+            $currentIndex = 0; // Mặc định Bước 1
+            
+            if ($dbStatus == 'Đang giao') {
+                $currentIndex = 2; // Sáng tới Bước 3
+            } elseif ($dbStatus == 'Đã hoàn thành') {
+                $currentIndex = 3; // Sáng hết Bước 4
+            }
+            
+            $isCancelled = ($dbStatus == 'Đã hủy');
         @endphp
 
         @if($isCancelled)
@@ -43,21 +54,22 @@
 
                 @foreach($statuses as $index => $label)
                     @php
-                        // Màu sắc theo yêu cầu của bạn
+                        // Cấu hình màu sắc các bước
                         $colorClass = 'bg-gray-300';
                         if ($index <= $currentIndex) {
                             $colorClass = match($label) {
                                 'Chờ xác nhận' => 'bg-yellow-400',
-                                'Đã xác nhận' => 'bg-blue-500',
-                                'Đang giao' => 'bg-purple-500',
-                                'Đã giao' => 'bg-green-500',
-                                default => 'bg-gray-300'
+                                'Đã xác nhận'  => 'bg-blue-500',
+                                'Đang giao'    => 'bg-purple-500',
+                                'Đã giao'      => 'bg-green-500',
+                                default        => 'bg-gray-300'
                             };
                         }
                     @endphp
                     <div class="relative z-10 flex flex-col items-center">
-                        <div class="w-10 h-10 {{ $colorClass }} rounded-full flex items-center justify-center text-white shadow-lg transition-colors duration-500">
-                            @if($index < $currentIndex)
+                       <div class="w-10 h-10 {{ $colorClass }} rounded-full flex items-center justify-center text-white shadow-lg transition-colors duration-500">
+                            {{-- Hiện dấu tick nếu là các bước đã qua, HOẶC nếu đơn hàng đã hoàn thành thì tick luôn bước cuối --}}
+                            @if($index <= $currentIndex)
                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                             @else
                                 <span>{{ $index + 1 }}</span>
@@ -89,7 +101,7 @@
             <div class="space-y-4">
                 @foreach($donHang->sanphams as $sp)
                     <div class="flex items-center gap-4">
-                        <img src="{{ asset('storage/image/' . $sp->hinhanh) }}" class="w-16 h-16 object-cover rounded-xl shadow-sm">
+                        <img src="{{ route('product.image', $sp->masp) }}" class="w-16 h-16 object-cover rounded-xl shadow-sm">
                         <div class="flex-1">
                             <p class="font-bold text-gray-900">{{ $sp->tensp }}</p>
                             <p class="text-sm text-gray-500">x{{ $sp->pivot->soluong }}</p>

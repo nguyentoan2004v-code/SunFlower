@@ -13,11 +13,11 @@ class DashboardController extends Controller
     public function index()
     {
         // 1. Thống kê số lượng
-        $donHangMoiCount = DonHang::where('trangthai', 'cho_xac_nhan')->count();
+        $donHangMoiCount = DonHang::where('trangthai', 'Chờ xác nhận')->count();
         
         // Doanh thu ngày hôm nay (giả định cột tongtien và ngaydat)
         $doanhThuNgay = DonHang::whereDate('ngaydat', Carbon::today())
-                                ->where('trangthai', 'da_hoan_thanh')
+                                ->where('trangthai', 'Đã hoàn thành')
                                 ->sum('tongtien');
 
         $tongSanPham = SanPham::count();

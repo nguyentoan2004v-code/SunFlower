@@ -9,6 +9,9 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ProductController as AdminProductController;
+use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;   
 
 
 // =====================
@@ -70,9 +73,6 @@ Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('
 // =====================
 
 
-// =====================
-// 1 . ĐĂNG NHẬP QUẢN TRỊ
-// =====================
 Route::prefix('admin')->name('admin.')->group(function () {
     // Các route không cần login
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
@@ -86,5 +86,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
         
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // --- QUẢN LÝ SẢN PHẨM ---
+        Route::resource('products', AdminProductController::class);
+        // --- QUẢN LÝ DANH MỤC ---
+        Route::resource('categories', AdminCategoryController::class);
+        // --- QUẢN LÝ ĐƠN HÀNG ---
+        Route::resource('orders', AdminOrderController::class)->except(['create', 'store', 'destroy']);
     });
 });

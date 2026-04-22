@@ -7,7 +7,7 @@
     <nav class="text-sm text-gray-500 mb-8">
         <a href="{{ route('home') }}" class="hover:text-[#FF6B35] transition">Trang chủ</a>
         <span class="mx-2">/</span>
-        <span class="font-bold text-gray-800">Cửa hàng</span>
+        <span class="font-bold text-gray-800">Tất cả danh mục</span>
     </nav>
 
     <h2 class="text-3xl font-bold mb-8 text-center text-gray-800">Chọn Hoa Theo Chủ Đề</h2>
@@ -38,7 +38,7 @@
             @foreach($products as $product)
                 <div class="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col group shadow-sm hover:shadow-lg transition duration-300">
                     <a href="{{ route('product.show', $product->masp) }}" class="aspect-square overflow-hidden rounded-xl mb-4 relative">
-                        <img src="{{ asset('storage/image/' . ($product->hinhanh ?? '')) }}" 
+                        <img src="{{ route('product.image', $product->masp) }}" 
                              class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                             <span class="bg-white text-gray-800 px-4 py-2 rounded-full font-semibold text-sm shadow-md">Xem chi tiết</span>
