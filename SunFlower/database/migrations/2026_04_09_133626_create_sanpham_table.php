@@ -22,7 +22,7 @@ return new class extends Migration
             $table->decimal('giaban', 12, 2);
             
             // Cột mota: Chuỗi 255 ký tự, bắt buộc
-            $table->string('mota', 255);
+            $table->text('mota')->nullable();
             
             // Cột hinhanh: Đường dẫn ảnh sản phẩm
             $table->string('hinhanh', 255)->nullable();
