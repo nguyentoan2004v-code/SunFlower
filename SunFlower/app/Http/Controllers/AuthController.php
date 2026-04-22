@@ -36,11 +36,26 @@ class AuthController extends Controller
                 ->withInput($request->only('email'));
         }
 
+
+
+        // 2. Nếu email đúng, tiếp tục kiểm tra mật khẩu
+        if (!Hash::check($request->password, $khachhang->password)) {
+            // Trả về lỗi riêng cho password và GIỮ LẠI email vừa nhập
+            return back()
+                ->withErrors(['password' => 'Mật khẩu không chính xác.'])
+                ->withInput($request->only('email'));
+        }
+
         // 3. Nếu đúng cả email và mật khẩu -> Tiến hành đăng nhập
         Auth::guard('khachhang')->login($khachhang);
         
         // Tạo lại session để bảo mật
         $request->session()->regenerate();
+        
+
+        // Giữ lại session thủ công cũ của bạn
+        session(['api_token' => 'web_session']);
+        session(['user_info' => $khachhang->toArray()]);
         
         return redirect()->route('home')->with('success', 'Chào mừng quay trở lại!');
     }

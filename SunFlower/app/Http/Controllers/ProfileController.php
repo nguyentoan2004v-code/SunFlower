@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Auth;
 
+
 class ProfileController extends Controller
 {
     /**
@@ -24,6 +25,25 @@ class ProfileController extends Controller
         $user = Auth::guard('khachhang')->user();
 
         // 3. Trả về view nằm trong resources/views/auth/profile.blade.php
+        // 1. Kiểm tra xem người dùng đã đăng nhập chưa
+        if (!Session::has('api_token')) {
+            return redirect()->route('login')->withErrors(['error' => 'Vui lòng đăng nhập để xem thông tin tài khoản.']);
+        }
+
+        // 2. Lấy thông tin user hiện tại từ Session
+        $sessionUser = Session::get('user_info');
+        $makh = is_array($sessionUser) ? $sessionUser['makh'] : $sessionUser->makh;
+        
+        // 3. Truy vấn lại DB để lấy dữ liệu mới nhất
+        $user = KhachHang::where('makh', $makh)->first();
+
+        // 4. Nếu không tìm thấy khách hàng (ví dụ tài khoản bị xóa), buộc đăng xuất
+        if (!$user) {
+            Session::forget(['api_token', 'user_info']);
+            return redirect()->route('login')->withErrors(['error' => 'Tài khoản không tồn tại.']);
+        }
+
+        // 5. Trả về view nằm trong resources/views/auth/profile.blade.php
         return view('auth.profile', compact('user'));
     }
 
@@ -46,6 +66,9 @@ class ProfileController extends Controller
 
         // 2. Lấy Khách hàng hiện tại
         $user = Auth::guard('khachhang')->user();
+        $sessionUser = Session::get('user_info');
+        $makh = is_array($sessionUser) ? $sessionUser['makh'] : $sessionUser->makh;
+        $user = KhachHang::where('makh', $makh)->first();
 
         if ($user) {
             // 3. Cập nhật vào Database
@@ -54,6 +77,11 @@ class ProfileController extends Controller
                 'sdt' => $request->sdt,
                 'diachi' => $request->diachi,
             ]);
+
+
+            // 4. Cập nhật lại Session mới nhất để Header hiển thị đúng tên mới
+            Session::put('user_info', $user->toArray());
+
 
             return back()->with('success', 'Đã lưu thay đổi thông tin cá nhân thành công!');
         }
@@ -77,6 +105,9 @@ class ProfileController extends Controller
         ]);
 
         $user = Auth::guard('khachhang')->user();
+        $sessionUser = Session::get('user_info');
+        $makh = is_array($sessionUser) ? $sessionUser['makh'] : $sessionUser->makh;
+        $user = KhachHang::where('makh', $makh)->first();
 
         if (!Hash::check($request->current_password, $user->password)) {
             return back()->withErrors(['current_password' => 'Mật khẩu hiện tại không đúng.']);

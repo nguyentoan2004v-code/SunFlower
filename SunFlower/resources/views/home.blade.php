@@ -15,6 +15,9 @@
                     @php
                         $prodImage = !empty($product->hinhanh)
                                      ? route('product.image', $product->masp)
+
+                        $prodImage = !empty($product->hinhanh) 
+                                     ? asset('storage/image/' . $product->hinhanh) 
                                      : asset('images/bg-sunflower.jpg');
                     @endphp
                     <div class="swiper-slide relative w-full h-full flex items-center bg-cover bg-center" style="background-image: url('{{ $prodImage }}');">
@@ -36,6 +39,8 @@
                                         Xem Chi Tiết
                                     </a>
                                     <a href="{{ route('cart.add', $product->masp) }}" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-orange-100 text-white px-7 py-2.5 rounded-lg font-bold text-sm shadow-md transition-all active:scale-95">
+
+                                    <a href="{{ route('cart.add', $product->masp) }}" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/30 text-white px-7 py-2.5 rounded-lg font-bold text-sm shadow-md transition-all active:scale-95">
                                         Thêm Vào Giỏ
                                     </a>
                                 </div>
@@ -56,6 +61,8 @@
         
         <div class="swiper-button-next !text-white after:!text-xl w-12 h-12 bg-black/20 hover:bg-[#FF6B35] rounded-full backdrop-blur-sm transition-all hidden md:flex border orange-100 mr-4"></div>
         <div class="swiper-button-prev !text-white after:!text-xl w-12 h-12 bg-black/20 hover:bg-[#FF6B35] rounded-full backdrop-blur-sm transition-all hidden md:flex border orange-100 ml-4"></div>
+        <div class="swiper-button-next !text-white after:!text-xl w-12 h-12 bg-black/20 hover:bg-[#FF6B35] rounded-full backdrop-blur-sm transition-all hidden md:flex border border-white/10 mr-4"></div>
+        <div class="swiper-button-prev !text-white after:!text-xl w-12 h-12 bg-black/20 hover:bg-[#FF6B35] rounded-full backdrop-blur-sm transition-all hidden md:flex border border-white/10 ml-4"></div>
         
         <div class="swiper-pagination !bottom-8"></div>
     </div>
@@ -99,6 +106,7 @@
                         @php
                             $catImage = !empty($category->hinhanh) 
                                         ? route('category.image', $category->madm)
+                                        ? asset('storage/image/' . $category->hinhanh) 
                                         : 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60';
                         @endphp
                         
@@ -129,6 +137,9 @@
                             @php
                                 $prodImage = !empty($product->hinhanh)
                                              ? route('product.image', $product->masp)
+
+                                $prodImage = !empty($product->hinhanh) 
+                                             ? asset('storage/image/' . $product->hinhanh) 
                                              : asset('images/bg-sunflower.jpg');
                             @endphp
 

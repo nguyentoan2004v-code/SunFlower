@@ -34,6 +34,8 @@
                                         
                                         <td class="px-6 py-6 flex items-center gap-4">
                                             <img src="{{ route('product.image', $id) }}" class="w-16 h-16 rounded-xl object-cover border border-gray-100">
+
+                                            <img src="{{ asset('storage/image/' . $details['image']) }}" class="w-16 h-16 rounded-xl object-cover border border-gray-100">
                                             <div>
                                                 <p class="font-bold text-gray-900">{{ $details['name'] }}</p>
                                                 <p class="text-[#FF6B35] font-medium">{{ number_format($details['price'], 0, ',', '.') }} ₫</p>

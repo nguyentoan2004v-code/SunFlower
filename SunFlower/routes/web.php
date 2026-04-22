@@ -26,6 +26,8 @@ Route::get('/category/{madm}/image', [HomeController::class, 'showCategoryImage'
 Route::get('/tat-ca-san-pham', [HomeController::class, 'allCategories'])->name('categories.index');
 Route::get('/search', [HomeController::class, 'search'])->name('search');
 Route::get('/gioi-thieu', [HomeController::class, 'about'])->name('about');
+Route::get('/tat-ca-san-pham', [HomeController::class, 'allCategories'])->name('categories.index');
+Route::get('/search', [HomeController::class, 'search'])->name('search');
 
 // =====================
 // 2. AUTH (ĐĂNG NHẬP / ĐĂNG KÝ)

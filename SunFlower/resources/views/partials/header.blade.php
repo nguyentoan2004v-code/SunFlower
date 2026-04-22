@@ -9,6 +9,12 @@
 
     <!-- ICON -->
     <svg width="60" height="60" viewBox="0 0 64 64" class="shrink-0">
+    <div class="max-w-7xl mx-auto px-4 h-20 flex justify-between items-center relative">
+        
+        <a href="{{ route('home') }}" class="flex items-center gap-3">
+
+    <!-- ICON -->
+    <svg width="52" height="52" viewBox="0 0 64 64" class="shrink-0">
 
         <defs>
             <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
@@ -41,6 +47,7 @@
     </svg>
     <!-- TEXT -->
     <h1 class="flex items-center text-3xl font-bold tracking-tight">
+    <h1 class="flex items-center text-2xl font-bold tracking-tight">
 
         <span class="text-orange-500">SUNFL</span>
 
@@ -81,6 +88,33 @@
 
         <form action="{{ route('search') ?? '#' }}" method="GET" class="flex-1 max-w-md mx-8 relative">
             <input type="text" name="query" value="{{ request('query') }}" class="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl bg-gray-50 focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] outline-none transition" placeholder="Tìm kiếm đóa hoa của bạn...">
+        <nav class="hidden md:flex space-x-10 items-center">
+            <a href="{{ route('home') }}" class="font-semibold text-gray-700 hover:text-[#FF6B35] transition">Trang chủ</a>
+            
+            <div class="relative group">
+                <a href="{{ route('categories.index') }}" class="font-semibold text-gray-700 hover:text-[#FF6B35] transition flex items-center gap-1 py-4">
+                    Danh mục
+                    <svg class="w-4 h-4 text-gray-400 group-hover:text-[#FF6B35] transition-transform duration-200 group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                </a>
+                
+                <div class="absolute left-0 mt-0 w-56 bg-white border border-gray-100 rounded-xl shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-left -translate-y-2 group-hover:translate-y-0 z-50">
+                    <div class="py-2">
+                        @if(isset($categories) && $categories->count() > 0)
+                            @foreach($categories as $category)
+                                <a href="{{ route('category.show', $category->madm) }}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-orange-50 hover:text-[#FF6B35] transition-colors">
+                                    {{ $category->tendm }}
+                                </a>
+                            @endforeach
+                        @else
+                            <span class="block px-4 py-3 text-sm text-gray-500 text-center italic">Chưa có danh mục</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <form action="{{ route('search') ?? '#' }}" method="GET" class="flex-1 max-w-md mx-8 relative">
+            <input type="text" name="query" value="{{ request('query') }}" class="w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-gray-50 text-sm focus:ring-2 focus:ring-[#FF6B35]/20 focus:border-[#FF6B35] outline-none transition" placeholder="Tìm kiếm đóa hoa của bạn...">
             
             <button type="submit" class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#FF6B35] p-1 transition cursor-pointer" title="Tìm kiếm">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -104,6 +138,7 @@
             
               <a href="{{ route('cart.index') ?? '#' }}" class="text-gray-600 hover:text-[#FF6B35] relative transition">
                 <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 @if(session('cart') && count(session('cart')) > 0)
                     <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full font-bold shadow-sm">{{ count(session('cart')) }}</span>
                 @endif
@@ -119,6 +154,12 @@
                         </div>
                         <div class="w-12 h-12 bg-orange-50 rounded-full flex items-center justify-center text-[#FF6B35] border border-orange-100 group-hover:bg-[#FF6B35] group-hover:text-white transition-colors">
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+
+                            <span class="text-xs text-gray-400 font-medium">Xin chào,</span>
+                            <span class="text-sm font-bold text-[#FF6B35]">{{ Auth::guard('khachhang')->user()->hoten }}</span>
+                        </div>
+                        <div class="w-10 h-10 bg-orange-50 rounded-full flex items-center justify-center text-[#FF6B35] border border-orange-100 group-hover:bg-[#FF6B35] group-hover:text-white transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                         </div>
                     </button>
 
@@ -153,6 +194,7 @@
                 <div class="pl-4 border-l border-gray-200 flex items-center">
                     <a href="{{ route('login') }}" class="text-gray-600 hover:text-[#FF6B35] transition" title="Đăng nhập">
                         <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                         </svg>
                     </a>

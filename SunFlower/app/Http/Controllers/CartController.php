@@ -42,11 +42,16 @@ class CartController extends Controller
         // Nếu sản phẩm đã có, tăng số lượng
         if (isset($cart[$masp])) {
             $cart[$masp]['quantity'] += $quantity; 
+        // Nếu sản phẩm đã có, tăng số lượng
+        if (isset($cart[$masp])) {
+            $cart[$masp]['quantity']++; 
         } else {
             // Nếu chưa có, thêm mới vào mảng
             $cart[$masp] = [
                 "name" => $product['tensp'],
                 "quantity" => $quantity,
+
+                "quantity" => 1,
                 "price" => $gia_thuc_te,         // Lấy giá thực tế (đã giảm)
                 "old_price" => $product['giaban'], // Lưu thêm giá gốc (nếu sau này bạn muốn hiện gạch chéo trong giỏ hàng)
                 "image" => $product['hinhanh']
@@ -54,6 +59,37 @@ class CartController extends Controller
         }
 
         // 4. Lưu lại vào session
+        session()->put('cart', $cart);
+        
+        // Quay lại trang trước đó để khách hàng có thể mua tiếp
+        return redirect()->back()->with('success', 'Đã thêm vào giỏ hàng!');
+    }
+    public function remove($masp)
+    {
+        // 1. Lấy giỏ hàng hiện tại từ session
+        $cart = session()->get('cart', []);
+
+        // 2. Kiểm tra nếu sản phẩm tồn tại trong giỏ thì xóa nó đi
+        if (isset($cart[$masp])) {
+            unset($cart[$masp]); // Hàm unset dùng để xóa 1 phần tử trong mảng
+            
+            // 3. Lưu mảng giỏ hàng mới (đã xóa) đè lên session cũ
+            session()->put('cart', $cart);
+            
+            return redirect()->back()->with('success', 'Đã xóa sản phẩm khỏi giỏ hàng!');
+        }
+
+        // Nếu không tìm thấy sản phẩm trong giỏ
+        return redirect()->back()->with('error', 'Không tìm thấy sản phẩm để xóa!');
+    }
+    public function update(Request $request)
+        {
+    $cart = session()->get('cart', []);
+    if(isset($cart[$request->id])) {
+        // Cập nhật số lượng mới
+        $cart[$request->id]['quantity'] = $request->quantity;
+        session()->put('cart', $cart);
+        
         session()->put('cart', $cart);
         
         // Quay lại trang trước đó để khách hàng có thể mua tiếp
@@ -110,6 +146,8 @@ class CartController extends Controller
 
 
     public function buyNow(Request $request, $masp)
+
+    public function buyNow($masp)
     {
         $product = \App\Models\SanPham::find($masp);
 
@@ -126,11 +164,14 @@ class CartController extends Controller
         $quantity = (int) $request->query('quantity', 1);
         if ($quantity < 1) $quantity = 1;
 
+
         // Tạo mảng dữ liệu thanh toán ĐỘC LẬP (chỉ chứa 1 món này)
         $checkoutItems = [
             $masp => [
                 "name" => $product->tensp,
                 "quantity" => $quantity,
+
+                "quantity" => 1,
                 "price" => $gia_thuc_te,
                 "image" => $product->hinhanh
             ]

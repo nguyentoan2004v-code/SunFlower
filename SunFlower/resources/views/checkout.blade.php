@@ -79,6 +79,8 @@
                             @php $finalTotal += $item['price'] * $item['quantity']; @endphp
                             <div class="flex items-center gap-4 bg-white p-4 rounded-2xl">
                                 <img src="{{ route('product.image', $id) }}" class="w-16 h-16 rounded-xl object-cover">
+
+                                <img src="{{ asset('storage/image/' . $item['image']) }}" class="w-16 h-16 rounded-xl object-cover">
                                 <div class="flex-1">
                                     <h4 class="font-bold text-sm text-gray-900 line-clamp-1">{{ $item['name'] }}</h4>
                                     <p class="text-xs text-gray-500">Số lượng: {{ $item['quantity'] }}</p>

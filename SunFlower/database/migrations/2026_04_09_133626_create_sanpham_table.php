@@ -27,6 +27,9 @@ return new class extends Migration
             // Cột hinhanh: Đường dẫn ảnh sản phẩm
             $table->string('hinhanh', 255)->nullable();
             
+            // Cột hinhanh: Đường dẫn ảnh sản phẩm
+            $table->string('hinhanh', 255)->nullable();
+            
             // Cột giakm: Kiểu số thập phân, cho phép rỗng (nullable) vì không phải lúc nào cũng có khuyến mãi
             $table->decimal('giakm', 12, 2)->nullable();
             

@@ -95,6 +95,12 @@ class DatabaseSeeder extends Seeder
             Hoa lá phụ: Giữ nguyên vẻ đẹp thanh lịch với lá Tulip xanh mướt tự nhiên.
             Phụ kiện: 1 Bộ giấy gói kiếng trong suốt lót viền lượn sóng điệu đà, nơ ruy băng lụa hồng và tag thiệp xinh xắn.',
              'hinhanh' => 'products/tulip.png', 'madm' => 'DM00000001'],
+
+            ['masp' => 'SP00000001', 'tensp' => 'Bó Hồng 99 Bông', 'giaban' => 990000, 'mota' => 'Biểu tượng tình yêu vĩnh cửu', 'hinhanh' => 'products/hoahong99.png','giakm' => 890000,'madm' => 'DM00000001'],
+            ['masp' => 'SP00000002', 'tensp' => 'Chậu Lan Hồ Điệp Trắng', 'giaban' => 2500000, 'mota' => 'Sang trọng và thanh cao', 'hinhanh' => 'products/lanhodiep.png', 'madm' => 'DM00000002'],
+            ['masp' => 'SP00000003', 'tensp' => 'Bó Hướng Dương Hy Vọng', 'giaban' => 450000, 'mota' => 'Tươi sáng và rực rỡ', 'hinhanh' => 'products/huongduong.png', 'madm' => 'DM00000001'],
+            ['masp' => 'SP00000004', 'tensp' => 'Kệ Hoa Khai Trương Hồng Phát', 'giaban' => 1500000, 'mota' => 'Chúc mừng thành công rực rỡ', 'hinhanh' => 'products/khaitruong.png', 'madm' => 'DM00000003'],
+            ['masp' => 'SP00000005', 'tensp' => 'Giỏ Hoa Tulip Hà Lan', 'giaban' => 850000, 'mota' => 'Vẻ đẹp tinh tế từ Châu Âu', 'hinhanh' => 'products/tulip.png', 'madm' => 'DM00000001'],
         ];
         foreach ($sanphams as $sp) SanPham::create($sp);
 

@@ -24,6 +24,9 @@ class HomeController extends Controller {
         if ($products->isNotEmpty()) {
             $heroImage = route('product.image', $products->random()->masp);
         }
+        $heroImage = $products->isNotEmpty() 
+            ? asset('storage/' . $products->random()->hinhanh) 
+            : null;
 
         return view('home', compact('categories', 'products', 'heroImage'));
     }
@@ -73,6 +76,7 @@ class HomeController extends Controller {
         return view('search.results', compact('products', 'keyword'));
     }
 
+
     // Hàm trả về file hình ảnh theo mã danh mục
     public function showCategoryImage($madm)
     {
@@ -101,4 +105,5 @@ class HomeController extends Controller {
     {
         return view('about');
     }
+
 }
