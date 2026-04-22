@@ -11,11 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('vaitro', function (Blueprint $table) {
-           $table->char('mavt', 10)->primary(); // Đổi string thành char
-            $table->string('tenvt', 100);          
-            $table->string('mota', 255)->nullable();
-            $table->timestamps();
+        Schema::table('danhmuc', function (Blueprint $table) {
+            // Thêm cột hinhanh, cho phép rỗng (nullable) để tránh lỗi dữ liệu cũ
+        $table->string('hinhanh')->nullable()->after('tendm');
         });
     }
 
@@ -24,6 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('vaitro');
+        Schema::table('danhmuc', function (Blueprint $table) {
+            $table->dropColumn('hinhanh');
+        });
     }
 };

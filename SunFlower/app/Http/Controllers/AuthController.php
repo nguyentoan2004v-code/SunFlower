@@ -1,58 +1,84 @@
 <?php
-
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Traits\ApiCaller;
+use App\Models\KhachHang;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Auth;
 
-class AuthController extends Controller {
-    use ApiCaller;
-
-    // Hiện form đăng nhập
+class AuthController extends Controller
+{
     public function showLoginForm() {
         return view('auth.login');
     }
 
-    // Xử lý đăng nhập khách hàng
-  public function login(Request $request) {
-    $result = $this->callApi('/api/customer/login', 'POST', $request->all());
+   public function login(Request $request) {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required',
+        ]);
 
-    // Xóa dòng dd($result) đi nhé bro
-    
-    if (isset($result['token'])) {
-        // Lưu token vào session
-        session(['api_token' => $result['token']]);
-        session(['user_info' => $result['data']]);
+        // 1. Kiểm tra xem Email có tồn tại trong CSDL hay không
+        $khachhang = KhachHang::where('email', $request->email)->first();
+
+        if (!$khachhang) {
+            // Trả về lỗi riêng cho email và GIỮ LẠI email vừa nhập
+            return back()
+                ->withErrors(['email' => 'Tài khoản Email không tồn tại.'])
+                ->withInput($request->only('email'));
+        }
+
+        // 2. Nếu email đúng, tiếp tục kiểm tra mật khẩu
+        if (!Hash::check($request->password, $khachhang->password)) {
+            // Trả về lỗi riêng cho password và GIỮ LẠI email vừa nhập
+            return back()
+                ->withErrors(['password' => 'Mật khẩu không chính xác.'])
+                ->withInput($request->only('email'));
+        }
+
+        // 3. Nếu đúng cả email và mật khẩu -> Tiến hành đăng nhập
+        Auth::guard('khachhang')->login($khachhang);
         
-        // Quan trọng: Ép session lưu xuống đĩa ngay lập tức
-        session()->save(); 
-
-        return redirect()->route('home')->with('success', 'Đăng nhập thành công!');
+        // Tạo lại session để bảo mật
+        $request->session()->regenerate();
+        
+        return redirect()->route('home')->with('success', 'Chào mừng quay trở lại!');
     }
 
-    return back()->withErrors(['login_error' => 'Thông tin đăng nhập không chính xác.'])->withInput();
-}
-
-    // Hiện form đăng ký
     public function showRegisterForm() {
         return view('auth.register');
     }
 
-    // Xử lý đăng ký
     public function register(Request $request) {
-        $result = $this->callApi('/api/customer/register', 'POST', $request->all());
+        $request->validate([
+            'hoten' => 'required|string|max:255',
+            'email' => 'required|email|unique:khachhang,email',
+            'password' => 'required|min:6|confirmed',
+            'sdt' => 'required',
+        ]);
 
-        if (isset($result['status']) && $result['status'] == 'success') {
-            return redirect()->route('login')->with('success', 'Đăng ký thành công, mời bro đăng nhập!');
-        }
+        $khachhang = KhachHang::create([
+            'makh' => 'KH' . rand(100000, 999999),
+            'hoten' => $request->hoten,
+            'email' => $request->email,
+            'sdt' => $request->sdt,
+            'password' => Hash::make($request->password),
+        ]);
 
-        return back()->withErrors(['msg' => $result['message'] ?? 'Lỗi đăng ký!'])->withInput();
+        return redirect()->route('login')->with('success', 'Đăng ký thành công! Hãy đăng nhập.');
     }
 
-    // Đăng xuất
-    public function logout() {
-        $this->callApi('/api/customer/logout', 'POST');
-        session()->forget(['api_token', 'user_info', 'cart']);
+    public function logout(Request $request) {
+        // 1. Đăng xuất khỏi hệ thống Auth của Guard
+        Auth::guard('khachhang')->logout();
+        
+        // 2. Hủy toàn bộ token và phiên làm việc (Bảo mật)
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        
+        // 3. Xóa các session thủ công cũ (nếu có)
+        session()->forget(['api_token', 'user_info']);
+        
         return redirect()->route('home');
     }
 }

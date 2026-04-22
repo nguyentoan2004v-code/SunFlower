@@ -16,7 +16,7 @@ class DanhMuc extends Model
     protected $keyType = 'string';
 
     // 2. Khai báo các cột được phép thêm dữ liệu hàng loạt (Mass Assignment)
-    protected $fillable = ['madm', 'tendm'];
+    protected $fillable = ['madm', 'tendm','hinhanh'];
 
     // 3. THIẾT LẬP MỐI QUAN HỆ (1 Danh mục có NHIỀU Sản phẩm)
     public function sanphams()

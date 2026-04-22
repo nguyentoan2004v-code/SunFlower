@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\Schema; // Thêm dòng này
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\View; 
+use App\Models\DanhMuc; 
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -21,12 +23,10 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
 
 {
-    // Chia sẻ biến $categories cho file partials.header
-    // TẠM TẮT: Tránh gọi DB trực tiếp vì dự án đang dùng kiến trúc gọi qua API. 
-    // Hơn nữa trong partials/header.blade.php hiện tại không sử dụng biến $categories này.
-    // view()->composer('partials.header', function ($view) {
-    //     $view->with('categories', \App\Models\DanhMuc::all());
-    // });
+    View::composer('*', function ($view) {
+            $categories = DanhMuc::all();
+            $view->with('categories', $categories);
+        });
 }
 }
 
