@@ -16,7 +16,7 @@ class OrderController extends Controller
     public function index()
     {
         // Lấy danh sách đơn hàng, mới nhất lên trước
-        $orders = DonHang::orderBy('ngaydat', 'desc')->paginate(10);
+        $orders = DonHang::orderBy('ngaydat', 'desc')->paginate(8);
         return view('admin.orders.index', compact('orders'));
     }
 
@@ -79,6 +79,61 @@ class OrderController extends Controller
             DB::rollBack(); 
             return back()->with('error', 'Có lỗi xảy ra: ' . $e->getMessage());
         }
+    }
+    public function exportInvoice(Request $request, $madon)
+{
+    $order = DonHang::findOrFail($madon);
+
+    // Kiểm tra xem đã có hóa đơn chưa (dù database đã bắt unique, nhưng bắt ở Controller để hiện thông báo đẹp hơn)
+    if (HoaDon::where('madon', $madon)->exists()) {
+        return back()->with('error', 'Đơn hàng này đã được xuất hóa đơn!');
+    }
+
+    try {
+        DB::beginTransaction();
+
+        // Giả sử thuế là 8% VAT trên tổng tiền (Bạn có thể đổi logic này theo nghiệp vụ)
+        $muc_thue = $order->tongtien * 0.08; 
+        
+        // 1. Tạo hóa đơn mới
+        $hoadon = HoaDon::create([
+            'mahd' => 'HD' . strtoupper(Str::random(6)), // Sinh mã HD ngẫu nhiên độ dài 10 char
+            'tongtien' => $order->tongtien + $muc_thue,
+            'thue' => $muc_thue,
+            'ngayxuat' => now()->toDateString(), // Định dạng date
+            'ptthanhtoan' => 'Tiền mặt', // Hoặc lấy từ form request nếu bạn có chọn phương thức
+            'madon' => $order->madon,
+        ]);
+
+        // 2. Sao chép chi tiết từ đơn hàng sang chi tiết hóa đơn
+        foreach ($order->sanphams as $sp) {
+            ChiTietHoaDon::create([
+                'mahd'    => $hoadon->mahd,
+                'masp'    => $sp->masp,
+                'tensp'   => $sp->sanpham->tensp,
+                'soluong' => $sp->pivot->soluong,
+                'dongia'  => $sp->giaban,
+            ]);
+        }
+
+        DB::commit();
+        return back()->with('success', 'Xuất hóa đơn thành công!');
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return back()->with('error', 'Lỗi khi xuất hóa đơn: ' . $e->getMessage());
+    }
+}
+public function printInvoice($mahd)
+    {
+        // Lấy hóa đơn kèm thông tin đơn hàng, khách hàng và chi tiết hóa đơn
+        $hoadon = HoaDon::with([
+            'donhang.khachhang', 
+            'chitiets' // Không cần with('sanpham') nữa vì bạn đã lưu tensp snapshot rồi
+        ])->findOrFail($mahd);
+        
+        // Trả về view in hóa đơn
+        return view('admin.orders.print', compact('hoadon'));
     }
    
 }

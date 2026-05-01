@@ -29,8 +29,8 @@
                                 <div class="row">
                                     <div class="col-md-4 mb-3">
                                         <label for="masp" class="form-label fw-bold">Mã sản phẩm <span class="text-danger">*</span></label>
-                                        <input type="text" name="masp" id="masp" class="form-control @error('masp') is-invalid @enderror" 
-                                               placeholder="Ví dụ: SP001" value="{{ old('masp') }}">
+                                        <input type="text" class="form-control" id="masp" name="masp" value="{{ $newMaSp }}" readonly>
+                                              
                                         @error('masp')
                                             <div class="invalid-feedback">{{ $message }}</div>
                                         @enderror

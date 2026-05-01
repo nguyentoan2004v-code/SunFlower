@@ -14,7 +14,7 @@ class HoaDon extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['mahd', 'tongtien', 'thue', 'ngayxuat', 'ptthanhtoan', 'madon'];
+    protected $fillable = ['mahd', 'tongtien', 'thue', 'ngayxuat', 'ptthanhtoan', 'madon','ten_cong_ty', 'mst', 'dia_chi_cty'];
 
     // Hóa đơn THUỘC VỀ 1 Đơn hàng (1-1)
     public function donhang()

@@ -28,8 +28,7 @@
                             <div class="col-md-7">
                                 <div class="mb-4">
                                     <label for="madm" class="form-label fw-bold">Mã danh mục <span class="text-danger">*</span></label>
-                                    <input type="text" name="madm" id="madm" class="form-control @error('madm') is-invalid @enderror" 
-                                           placeholder="Ví dụ: DM001" value="{{ old('madm') }}">
+                                    <input type="text" class="form-control" id="madm" name="madm" value="{{ $newMaDM }}" readonly>
                                     @error('madm')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

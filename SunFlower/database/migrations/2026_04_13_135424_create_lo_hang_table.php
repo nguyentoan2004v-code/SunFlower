@@ -12,8 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('lo_hang', function (Blueprint $table) {
-           $table->char('malo', 10)->primary(); // SỬA string THÀNH char
+            $table->char('malo', 10)->primary(); // SỬA string THÀNH char
             $table->char('masp', 10); // SỬA string THÀNH char
+            $table->char('manv', 10);
 
             $table->integer('soluong_nhap');
             $table->integer('soluong_ton');
@@ -22,6 +23,7 @@ return new class extends Migration
 
             // THÊM: Khóa ngoại
             $table->foreign('masp')->references('masp')->on('sanpham')->onDelete('restrict');
+            $table->foreign('manv')->references('manv')->on('nhanvien')->onDelete('restrict');
 
             $table->timestamps();
         });

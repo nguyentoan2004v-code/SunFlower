@@ -11,7 +11,9 @@ use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
-use App\Http\Controllers\Admin\OrderController as AdminOrderController;   
+use App\Http\Controllers\Admin\OrderController as AdminOrderController;
+use App\Http\Controllers\Admin\LoHangController;
+use App\Http\Controllers\Admin\PhieuHuyHangController;   
 
 
 // =====================
@@ -93,5 +95,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('categories', AdminCategoryController::class);
         // --- QUẢN LÝ ĐƠN HÀNG ---
         Route::resource('orders', AdminOrderController::class)->except(['create', 'store', 'destroy']);
+        // --- Xuất hóa đơn và in hóa đơn ---
+        Route::post('/orders/{madon}/export-invoice', [AdminOrderController::class, 'exportInvoice'])->name('orders.export-invoice');
+        Route::get('/invoices/{mahd}/print', [AdminOrderController::class, 'printInvoice'])->name('orders.print-invoice');
+        // --- QUẢN LÝ LÔ HÀNG VÀ PHIẾU HỦY HÀNG ---
+        Route::resource('lohang', LoHangController::class);
+        Route::resource('phieuhuyhang', PhieuHuyHangController::class);
     });
 });

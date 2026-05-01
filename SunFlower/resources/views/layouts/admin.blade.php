@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title') - SunFlower Admin</title>
+    <title>@yield('title')  SunFlower Admin</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     
     <style>
         body { font-family: 'Nunito', sans-serif; background-color: #f8f9fa; }
@@ -66,6 +67,9 @@
                     <a href="{{ route('admin.orders.index') }}" class="nav-link"><i class="fa-solid fa-cart-shopping"></i> Đơn hàng</a>
                 </li>
                 <li class="nav-item">
+                    <a href="{{ route('admin.lohang.index') }}" class="nav-link"><i class="fa-solid fa-warehouse"></i> Kho hàng </a>
+                </li>
+                <li class="nav-item">
                     <a href="#" class="nav-link"><i class="fa-solid fa-users"></i> Nhân viên</a>
                 </li>
                 <li class="nav-item mt-5">
@@ -96,5 +100,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 </body>
 </html>

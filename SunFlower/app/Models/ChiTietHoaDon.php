@@ -9,7 +9,9 @@ class ChiTietHoaDon extends Model
     protected $table = 'chitiet_hoadon';
     public $incrementing = false; 
 
-    protected $fillable = ['mahd', 'masp', 'soluong', 'dongia'];
+    protected $fillable = ['mahd', 'masp', 'soluong', 'dongia', 'tensp'];
+
+     // Chi tiết hóa đơn THUỘC VỀ 1 Hóa đơn (N-1)
 
     public function hoadon()
     {

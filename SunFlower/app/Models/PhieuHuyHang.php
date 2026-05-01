@@ -17,4 +17,13 @@ class PhieuHuyHang extends Model
     {
         return $this->belongsTo(LoHang::class, 'malo', 'malo');
     }
+    public function sanpham()
+    {
+        return $this->belongsTo(SanPham::class, 'masp', 'masp');
+    }
+
+    public function nhanvien()
+    {
+        return $this->belongsTo(NhanVien::class, 'manv', 'manv');
+    }
 }

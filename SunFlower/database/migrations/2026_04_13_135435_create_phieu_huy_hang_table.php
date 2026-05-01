@@ -15,6 +15,7 @@ return new class extends Migration
             $table->char('maphieu', 10)->primary(); // SỬA string THÀNH char
             $table->char('malo', 10); // SỬA string THÀNH char
             $table->char('masp', 10); // SỬA string THÀNH char
+            $table->char('manv', 10);
 
             $table->integer('soluong_huy');
             $table->date('ngayhuy');
@@ -23,6 +24,7 @@ return new class extends Migration
             // THÊM: Khóa ngoại
             $table->foreign('malo')->references('malo')->on('lo_hang')->onDelete('cascade');
             $table->foreign('masp')->references('masp')->on('sanpham')->onDelete('cascade');
+            $table->foreign('manv')->references('manv')->on('nhanvien')->onDelete('restrict');
 
             $table->timestamps();
         });

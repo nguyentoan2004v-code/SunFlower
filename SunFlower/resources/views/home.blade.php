@@ -132,7 +132,7 @@
                                              : asset('images/bg-sunflower.jpg');
                             @endphp
 
-                            <img src="{{ $prodImage }}" 
+                            <img src="{{ asset('storage/' . ltrim($product->hinhanh, '/')) }}" 
                                  class="w-full h-full object-cover transition duration-500 group-hover:scale-110" 
                                  alt="{{ $product->tensp }}">
                             

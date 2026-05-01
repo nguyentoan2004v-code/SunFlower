@@ -42,4 +42,11 @@ class SanPham extends Model
     {
         return $this->hasMany(LoHang::class, 'masp', 'masp');
     }
+    protected static function booted()
+    {
+        // Tự động trim khoảng trắng cho masp khi lấy dữ liệu ra
+        static::retrieved(function ($model) {
+            $model->masp = trim($model->masp);
+        });
+    }
 }

@@ -13,14 +13,30 @@ class CategoryController extends Controller
     public function index()
     {
         // Lấy danh sách, danh mục mới tạo lên trước, kèm số lượng sản phẩm
-        $categories = DanhMuc::withCount('sanphams')->orderBy('created_at', 'desc')->paginate(10);
+        $categories = DanhMuc::withCount('sanphams')->orderBy('created_at', 'desc')->paginate(8);
         return view('admin.categories.index', compact('categories'));
     }
 
     // 2. Form thêm mới
     public function create()
     {
-        return view('admin.categories.create');
+        // LOGIC TỰ ĐỘNG TẠO MÃ DANH MỤC (Định dạng: DM + 8 số, tổng 10 ký tự)
+        $lastCategory = DanhMuc::orderBy('madm', 'desc')->first();
+
+        if (!$lastCategory) {
+            // Nếu chưa có danh mục nào, bắt đầu bằng DM00000001
+            $newMaDM = 'DM00000001';
+        } else {
+            // Cắt lấy phần số (bỏ chữ 'DM' ở đầu), cộng thêm 1
+            $lastNumber = intval(substr($lastCategory->madm, 2));
+            $newNumber = $lastNumber + 1;
+            
+            // Ép lại thành chuỗi 8 chữ số có số 0 ở đầu
+            $newMaDM = 'DM' . str_pad($newNumber, 8, '0', STR_PAD_LEFT);
+        }
+
+        // Truyền biến $newMaDM ra ngoài View
+        return view('admin.categories.create', compact('newMaDM'));
     }
 
     // 3. Xử lý lưu danh mục
