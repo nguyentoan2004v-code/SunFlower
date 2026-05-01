@@ -11,7 +11,7 @@ class PhieuHuyHang extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['maphieu', 'malo', 'masp', 'soluong_huy', 'ngayhuy', 'lydo'];
+    protected $fillable = ['maphieu', 'malo', 'masp','manv', 'soluong_huy', 'ngayhuy', 'lydo'];
 
     public function lohang()
     {
@@ -25,5 +25,13 @@ class PhieuHuyHang extends Model
     public function nhanvien()
     {
         return $this->belongsTo(NhanVien::class, 'manv', 'manv');
+    }
+    protected static function booted()
+    {
+        static::retrieved(function ($model) {
+            $model->maphieu = trim($model->maphieu);
+            $model->malo = trim($model->malo);
+            $model->masp = trim($model->masp);
+        });
     }
 }

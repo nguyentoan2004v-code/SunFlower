@@ -101,5 +101,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // --- QUẢN LÝ LÔ HÀNG VÀ PHIẾU HỦY HÀNG ---
         Route::resource('lohang', LoHangController::class);
         Route::resource('phieuhuyhang', PhieuHuyHangController::class);
+        // --- Phiếu hủy hàng ---
+        Route::prefix('phieuhuy')->name('phieuhuy.')->group(function () {
+        Route::get('/', [PhieuHuyHangController::class, 'index'])->name('index');
+        Route::get('/create', [PhieuHuyHangController::class, 'create'])->name('create');
+        Route::post('/store', [PhieuHuyHangController::class, 'store'])->name('store');
+        });
     });
 });

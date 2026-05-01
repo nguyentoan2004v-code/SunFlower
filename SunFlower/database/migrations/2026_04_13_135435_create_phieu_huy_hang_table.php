@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('lydo', 255); 
 
             // THÊM: Khóa ngoại
-            $table->foreign('malo')->references('malo')->on('lo_hang')->onDelete('cascade');
+            $table->foreign('malo')->references('malo')->on('lo_hang')->onDelete('restrict');
             $table->foreign('masp')->references('masp')->on('sanpham')->onDelete('cascade');
             $table->foreign('manv')->references('manv')->on('nhanvien')->onDelete('restrict');
 

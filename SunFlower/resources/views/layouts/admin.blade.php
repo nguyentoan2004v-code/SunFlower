@@ -67,8 +67,33 @@
                     <a href="{{ route('admin.orders.index') }}" class="nav-link"><i class="fa-solid fa-cart-shopping"></i> Đơn hàng</a>
                 </li>
                 <li class="nav-item">
-                    <a href="{{ route('admin.lohang.index') }}" class="nav-link"><i class="fa-solid fa-warehouse"></i> Kho hàng </a>
-                </li>
+    @php
+        // Kiểm tra xem URL hiện tại có thuộc phần Kho hàng không để tự động mở menu
+        $isKhoActive = request()->is('admin/lohang*') || request()->is('admin/phieuhuyhang*');
+    @endphp
+    
+    <!-- Nút Kho hàng chính (bấm vào để xổ xuống) -->
+    <a href="#collapseKhoHang" class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" role="button" aria-expanded="{{ $isKhoActive ? 'true' : 'false' }}">
+        <div><i class="fa-solid fa-warehouse me-1"></i> Kho hàng</div>
+        <i class="fa-solid fa-chevron-down" style="font-size: 0.8em;"></i>
+    </a>
+    
+    <!-- Phần Menu con xổ xuống -->
+    <div class="collapse {{ $isKhoActive ? 'show' : '' }}" id="collapseKhoHang">
+        <ul class="nav flex-column ms-3 mt-1" style="font-size: 0.95em;">
+            <li class="nav-item">
+                <a href="{{ route('admin.lohang.index') }}" class="nav-link {{ request()->is('admin/lohang*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                    <i class="fa-solid fa-boxes-packing me-2"></i> Phiếu nhập kho
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="{{ route('admin.phieuhuyhang.index') }}" class="nav-link {{ request()->is('admin/phieuhuyhang*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                    <i class="fa-solid fa-file-circle-xmark me-2"></i> Phiếu hủy hàng
+                </a>
+            </li>
+        </ul>
+    </div>
+</li>
                 <li class="nav-item">
                     <a href="#" class="nav-link"><i class="fa-solid fa-users"></i> Nhân viên</a>
                 </li>

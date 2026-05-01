@@ -13,11 +13,10 @@ class PhieuHuyHangController extends Controller
 {
     public function store(Request $request)
     {
-        // 1. Validate dữ liệu
+        // 1. Validate dữ liệu (Đã bỏ 'masp' vì sẽ tự động lấy từ Lô hàng)
         $request->validate([
             'maphieu' => 'required|string|max:10|unique:phieu_huy_hang,maphieu',
             'malo' => 'required|exists:lo_hang,malo',
-            'masp' => 'required|exists:sanpham,masp',
             'soluong_huy' => 'required|integer|min:1',
             'ngayhuy' => 'required|date',
             'lydo' => 'required|string|max:255',
@@ -26,12 +25,10 @@ class PhieuHuyHangController extends Controller
         DB::beginTransaction();
 
         try {
-            // 2. Kiểm tra tồn kho của lô hàng đó có đủ để hủy không?
-            // LockForUpdate() để ngăn chặn việc nhiều người cùng hủy một lô hàng cùng lúc
+            // 2. LockForUpdate để tránh đua lệnh (Race condition)
             $loHang = LoHang::where('malo', $request->malo)->lockForUpdate()->firstOrFail();
 
             if ($loHang->soluong_ton < $request->soluong_huy) {
-                // Nếu số lượng muốn hủy vượt quá số lượng còn lại trong lô -> Báo lỗi
                 return back()->with('error', 'Số lượng hủy vượt quá số lượng tồn của lô hàng này (Tồn: ' . $loHang->soluong_ton . ')')->withInput();
             }
 
@@ -39,17 +36,19 @@ class PhieuHuyHangController extends Controller
             $phieuHuy = new PhieuHuyHang();
             $phieuHuy->maphieu = $request->maphieu;
             $phieuHuy->malo = $request->malo;
-            $phieuHuy->masp = $request->masp;
             
-            // Gán mã nhân viên đang đăng nhập lập phiếu hủy
-            $phieuHuy->manv = Auth::user()->manv; 
+            // TỰ ĐỘNG lấy masp từ lô hàng, đảm bảo tính chính xác 100%
+            $phieuHuy->masp = $loHang->masp; 
+            
+            // SỬA LỖI: Gán mã nhân viên vào phiếu hủy (không phải lô hàng)
+            $phieuHuy->manv = Auth::guard('nhanvien')->user()->manv;
             
             $phieuHuy->soluong_huy = $request->soluong_huy;
             $phieuHuy->ngayhuy = $request->ngayhuy;
             $phieuHuy->lydo = $request->lydo;
             $phieuHuy->save();
 
-            // 4. Trừ đi số lượng tồn của lô hàng đó
+            // 4. Trừ đi số lượng tồn của lô hàng
             $loHang->soluong_ton -= $request->soluong_huy;
             $loHang->save();
 
@@ -61,5 +60,28 @@ class PhieuHuyHangController extends Controller
             DB::rollBack();
             return back()->with('error', 'Có lỗi xảy ra khi hủy hàng: ' . $e->getMessage())->withInput();
         }
+    }
+
+    public function index()
+    {
+        $phieuHuys = PhieuHuyHang::with(['lohang', 'sanpham', 'nhanvien'])
+                        ->orderBy('ngayhuy', 'desc')
+                        ->get();
+        return view('admin.phieuhuyhang.index', compact('phieuHuys'));
+    }
+
+    // Giao diện tạo phiếu hủy mới
+    public function create()
+    {
+        // Chỉ lấy những lô hàng CÒN TỒN KHO (> 0) để hiển thị cho nhân viên chọn
+        $loHangs = LoHang::with('sanpham')->where('soluong_ton', '>', 0)->get();
+        
+        // Tạo mã phiếu tự động
+        $lastPhieu = PhieuHuyHang::orderBy('maphieu', 'desc')->first();
+        $newMaPhieu = $lastPhieu 
+            ? 'PH' . str_pad(intval(substr($lastPhieu->maphieu, 2)) + 1, 8, '0', STR_PAD_LEFT) 
+            : 'PH00000001';
+
+        return view('admin.phieuhuyhang.create', compact('loHangs', 'newMaPhieu'));
     }
 }
