@@ -7,11 +7,30 @@ use App\Models\LoHang;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\SanPham;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class LoHangController extends Controller
+class LoHangController extends Controller implements HasMiddleware
 {
+
+    
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(function ($request, $next) {
+                $user = auth()->guard('nhanvien')->user();
+                
+                if (!$user->hasRole('Quản lý Cửa hàng') && !$user->hasRole('Quản lý Kho hàng')) {
+                    abort(403, 'Bạn không có quyền thao tác với Kho hàng!');
+                }
+                
+                return $next($request);
+            }),
+        ];
+    }
     public function store(Request $request)
     {
+        
         // 1. Validate
         $request->validate([
             'malo' => 'required|string|max:10|unique:lo_hang,malo',

@@ -36,15 +36,21 @@ class NhanVien extends Authenticatable
     // 3. QUAN HỆ N-N: Giữ nguyên vì đã chuẩn
     public function lichlamviecs()
     {
-        return $this->belongsToMany(LichLamViec::class, 'phancong', 'manv', 'malich')
-                    ->withPivot('nhiemvu', 'trangthai')
+        return $this->belongsToMany(LichLamViec::class, 'phancong', 'manv', 'maca')
+                    ->withPivot('ngaylam')
                     ->withTimestamps();
-    }
+    }   
 
     // 4. QUAN HỆ N-N VỚI VAI TRÒ: Giữ nguyên vì đã chuẩn
     public function vaitros()
     {
         return $this->belongsToMany(VaiTro::class, 'vaitro_nhanvien', 'manv', 'mavt')
                     ->withTimestamps();
+    }
+    // Hàm kiểm tra xem nhân viên có vai trò cụ thể nào đó không
+    public function hasRole($tenVaiTro)
+    {
+        // Trả về true nếu nhân viên có tên vai trò trùng khớp
+        return $this->vaitros()->where('tenvt', $tenVaiTro)->exists();
     }
 }

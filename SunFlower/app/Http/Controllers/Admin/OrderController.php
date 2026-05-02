@@ -9,9 +9,26 @@ use App\Models\HoaDon;
 use App\Models\ChiTietHoaDon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 
-class OrderController extends Controller
+class OrderController extends Controller implements HasMiddleware
 {
+
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(function ($request, $next) {
+                $user = auth()->guard('nhanvien')->user();
+                
+                if (!$user->hasRole('Quản lý Cửa hàng') && !$user->hasRole('Nhân viên Bán hàng')) {
+                    abort(403, 'Bạn không có quyền thao tác với Đơn hàng!');
+                }
+                
+                return $next($request);
+            }),
+        ];
+    }
     // 1. Danh sách đơn hàng
     public function index()
     {

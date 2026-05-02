@@ -51,52 +51,142 @@
                 <h4 class="fw-bold" style="color: var(--sunflower-orange);">Sun<span class="text-white">Flower</span></h4>
                 <small class="text-muted">Admin Panel</small>
             </div>
+            
+            @php
+                // --- KIỂM TRA QUYỀN TRUY CẬP ---
+                $user = Auth::guard('nhanvien')->user();
+                $isManager = $user->hasRole('Quản lý Cửa hàng');
+                
+                $canAccessProduct = $isManager || $user->hasRole('Quản lý Sản phẩm') || $user->hasRole('Quản lý Sản phẩm & Danh mục');
+                $canAccessOrder = $isManager || $user->hasRole('Nhân viên Bán hàng');
+                $canAccessKho = $isManager || $user->hasRole('Quản lý Kho hàng');
+                $canAccessNhanVien = $isManager; 
+            @endphp
+
             <ul class="nav flex-column mt-3">
+                <!-- TỔNG QUAN -->
                 <li class="nav-item">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->is('admin/dashboard') ? 'active' : '' }}">
                         <i class="fa-solid fa-gauge"></i> Tổng quan
                     </a>
                 </li>
+
+                <!-- LỊCH CỦA TÔI (Ai cũng xem được) -->
                 <li class="nav-item">
-                    <a href="{{ route('admin.products.index') }}" class="nav-link"><i class="fa-solid fa-box"></i> Sản phẩm</a>
+                    <a href="{{ route('admin.lichlamviec.mySchedule') }}" class="nav-link {{ request()->is('admin/lich-cua-toi') ? 'active' : '' }}">
+                        <i class="fa-regular fa-calendar-check"></i> Lịch của tôi
+                    </a>
                 </li>
+                
+                <!-- SẢN PHẨM -->
                 <li class="nav-item">
-                    <a href="{{ route('admin.categories.index') }}" class="nav-link"><i class="fa-solid fa-list"></i> Danh mục</a>
+                    <a href="{{ $canAccessProduct ? route('admin.products.index') : '#' }}" 
+                       class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/products*') ? 'active' : '' }} {{ $canAccessProduct ? '' : 'disabled text-muted' }}"
+                       style="{{ $canAccessProduct ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}"
+                       title="{{ $canAccessProduct ? '' : 'Bạn không có quyền quản lý Sản phẩm' }}">
+                        <div><i class="fa-solid fa-box"></i> Sản phẩm</div>
+                        @if(!$canAccessProduct) <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i> @endif
+                    </a>
                 </li>
+                
+                <!-- DANH MỤC -->
                 <li class="nav-item">
-                    <a href="{{ route('admin.orders.index') }}" class="nav-link"><i class="fa-solid fa-cart-shopping"></i> Đơn hàng</a>
+                    <a href="{{ $canAccessProduct ? route('admin.categories.index') : '#' }}" 
+                       class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/categories*') ? 'active' : '' }} {{ $canAccessProduct ? '' : 'disabled text-muted' }}"
+                       style="{{ $canAccessProduct ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}"
+                       title="{{ $canAccessProduct ? '' : 'Bạn không có quyền quản lý Danh mục' }}">
+                        <div><i class="fa-solid fa-list"></i> Danh mục</div>
+                        @if(!$canAccessProduct) <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i> @endif
+                    </a>
                 </li>
+                
+                <!-- ĐƠN HÀNG -->
                 <li class="nav-item">
-    @php
-        // Kiểm tra xem URL hiện tại có thuộc phần Kho hàng không để tự động mở menu
-        $isKhoActive = request()->is('admin/lohang*') || request()->is('admin/phieuhuyhang*');
-    @endphp
-    
-    <!-- Nút Kho hàng chính (bấm vào để xổ xuống) -->
-    <a href="#collapseKhoHang" class="nav-link d-flex justify-content-between align-items-center" data-bs-toggle="collapse" role="button" aria-expanded="{{ $isKhoActive ? 'true' : 'false' }}">
-        <div><i class="fa-solid fa-warehouse me-1"></i> Kho hàng</div>
-        <i class="fa-solid fa-chevron-down" style="font-size: 0.8em;"></i>
-    </a>
-    
-    <!-- Phần Menu con xổ xuống -->
-    <div class="collapse {{ $isKhoActive ? 'show' : '' }}" id="collapseKhoHang">
-        <ul class="nav flex-column ms-3 mt-1" style="font-size: 0.95em;">
-            <li class="nav-item">
-                <a href="{{ route('admin.lohang.index') }}" class="nav-link {{ request()->is('admin/lohang*') ? 'active' : '' }}" style="padding: 8px 15px;">
-                    <i class="fa-solid fa-boxes-packing me-2"></i> Phiếu nhập kho
-                </a>
-            </li>
-            <li class="nav-item">
-                <a href="{{ route('admin.phieuhuyhang.index') }}" class="nav-link {{ request()->is('admin/phieuhuyhang*') ? 'active' : '' }}" style="padding: 8px 15px;">
-                    <i class="fa-solid fa-file-circle-xmark me-2"></i> Phiếu hủy hàng
-                </a>
-            </li>
-        </ul>
-    </div>
-</li>
-                <li class="nav-item">
-                    <a href="#" class="nav-link"><i class="fa-solid fa-users"></i> Nhân viên</a>
+                    <a href="{{ $canAccessOrder ? route('admin.orders.index') : '#' }}" 
+                       class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/orders*') ? 'active' : '' }} {{ $canAccessOrder ? '' : 'disabled text-muted' }}"
+                       style="{{ $canAccessOrder ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}"
+                       title="{{ $canAccessOrder ? '' : 'Bạn không có quyền quản lý Đơn hàng' }}">
+                        <div><i class="fa-solid fa-cart-shopping"></i> Đơn hàng</div>
+                        @if(!$canAccessOrder) <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i> @endif
+                    </a>
                 </li>
+                
+                <!-- KHO HÀNG -->
+                <li class="nav-item">
+                    @php
+                        $isKhoActive = request()->is('admin/lohang*') || request()->is('admin/phieuhuyhang*');
+                    @endphp
+                    <a href="{{ $canAccessKho ? '#collapseKhoHang' : '#' }}" 
+                       class="nav-link d-flex justify-content-between align-items-center {{ $canAccessKho ? '' : 'disabled text-muted' }}" 
+                       data-bs-toggle="{{ $canAccessKho ? 'collapse' : '' }}" 
+                       role="button" 
+                       aria-expanded="{{ $isKhoActive ? 'true' : 'false' }}"
+                       style="{{ $canAccessKho ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}">
+                        <div><i class="fa-solid fa-warehouse me-1"></i> Kho hàng</div>
+                        @if($canAccessKho)
+                            <i class="fa-solid fa-chevron-down" style="font-size: 0.8em;"></i>
+                        @else
+                            <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i>
+                        @endif
+                    </a>
+                    @if($canAccessKho)
+                    <div class="collapse {{ $isKhoActive ? 'show' : '' }}" id="collapseKhoHang">
+                        <ul class="nav flex-column ms-3 mt-1" style="font-size: 0.95em;">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.lohang.index') }}" class="nav-link {{ request()->is('admin/lohang*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                                    <i class="fa-solid fa-boxes-packing me-2"></i> Phiếu nhập kho
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.phieuhuyhang.index') }}" class="nav-link {{ request()->is('admin/phieuhuyhang*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                                    <i class="fa-solid fa-file-circle-xmark me-2"></i> Phiếu hủy hàng
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    @endif
+                </li>
+                
+                <!-- NHÂN VIÊN (CHỈ QUẢN LÝ) -->
+                <li class="nav-item">
+                    @php
+                        // Cập nhật điều kiện active cho Nhân viên
+                        $isNhanVienActive = request()->is('admin/nhanvien*') || request()->is('admin/vaitro*') || request()->is('admin/lichlamviec*');
+                    @endphp
+                    <a href="{{ $canAccessNhanVien ? '#collapseNhanVien' : '#' }}" 
+                       class="nav-link d-flex justify-content-between align-items-center {{ $canAccessNhanVien ? '' : 'disabled text-muted' }}" 
+                       data-bs-toggle="{{ $canAccessNhanVien ? 'collapse' : '' }}" 
+                       role="button" 
+                       aria-expanded="{{ $isNhanVienActive ? 'true' : 'false' }}"
+                       style="{{ $canAccessNhanVien ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}">
+                        <div><i class="fa-solid fa-users me-1"></i> Nhân viên</div>
+                        @if($canAccessNhanVien)
+                            <i class="fa-solid fa-chevron-down" style="font-size: 0.8em;"></i>
+                        @else
+                            <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i>
+                        @endif
+                    </a>
+                    @if($canAccessNhanVien)
+                    <div class="collapse {{ $isNhanVienActive ? 'show' : '' }}" id="collapseNhanVien">
+                        <ul class="nav flex-column ms-3 mt-1" style="font-size: 0.95em;">
+                            <li class="nav-item">
+                                <a href="{{ route('admin.nhanvien.index') }}" class="nav-link {{ request()->is('admin/nhanvien*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                                    <i class="fa-solid fa-user-shield me-2"></i> Danh sách NV
+                                </a>
+                            </li>
+                            
+                            <!-- Đổi tên thành Quản lý Phân ca -->
+                            <li class="nav-item">
+                                <a href="{{ route('admin.lichlamviec.index') }}" class="nav-link {{ request()->is('admin/lichlamviec*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                                    <i class="fa-solid fa-users-cog me-2"></i> Quản lý Phân ca
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    @endif
+                </li>
+                
+                <!-- ĐĂNG XUẤT -->
                 <li class="nav-item mt-5">
                     <form action="{{ route('admin.logout') }}" method="POST">
                         @csrf

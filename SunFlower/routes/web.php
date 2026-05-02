@@ -13,7 +13,9 @@ use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
 use App\Http\Controllers\Admin\LoHangController;
-use App\Http\Controllers\Admin\PhieuHuyHangController;   
+use App\Http\Controllers\Admin\PhieuHuyHangController;
+use App\Http\Controllers\Admin\NhanVienController;
+use App\Http\Controllers\Admin\LichLamViecController;
 
 
 // =====================
@@ -107,5 +109,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/create', [PhieuHuyHangController::class, 'create'])->name('create');
         Route::post('/store', [PhieuHuyHangController::class, 'store'])->name('store');
         });
+
+        // --- QUẢN LÝ NHÂN VIÊN VÀ PHÂN QUYỀN ---
+        Route::get('/nhanvien', [NhanVienController::class, 'index'])->name('nhanvien.index');
+        Route::get('/nhanvien/{manv}/roles', [NhanVienController::class, 'editRole'])->name('nhanvien.roles');
+        Route::put('/nhanvien/{manv}/roles', [NhanVienController::class, 'updateRole'])->name('nhanvien.updateRoles');
+        Route::get('/nhanvien/create', [NhanVienController::class, 'create'])->name('nhanvien.create');
+        Route::post('/nhanvien', [NhanVienController::class, 'store'])->name('nhanvien.store');
+        Route::get('/nhanvien/{nhanvien}/edit', [NhanVienController::class, 'edit'])->name('nhanvien.edit');
+        Route::put('/nhanvien/{nhanvien}', [NhanVienController::class, 'update'])->name('nhanvien.update');
+        Route::delete('/nhanvien/{nhanvien}', [NhanVienController::class, 'destroy'])->name('nhanvien.destroy');
+       
+        // --- QUẢN LÝ LỊCH LÀM VIỆC VÀ PHÂN CÔNG (THEO MA TRẬN TUẦN) ---
+        
+        // 1. Giao diện xem Xếp lịch theo tuần (Dành cho Quản lý)
+        Route::get('/lichlamviec', [LichLamViecController::class, 'index'])->name('lichlamviec.index');
+        
+        // 2. Xử lý lưu lịch của cả tuần khi bấm nút Lưu (Dành cho Quản lý)
+        Route::post('/lichlamviec/save-weekly', [LichLamViecController::class, 'saveWeekly'])->name('lichlamviec.saveWeekly');
+        
+        // 3. Giao diện xem lịch cá nhân (Dành cho mọi Nhân viên)
+        Route::get('/lich-cua-toi', [LichLamViecController::class, 'mySchedule'])->name('lichlamviec.mySchedule');
     });
 });
