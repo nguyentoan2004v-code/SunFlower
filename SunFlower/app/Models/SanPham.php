@@ -27,7 +27,7 @@ class SanPham extends Model
     // Quan hệ N-N: 1 Sản phẩm nằm trong NHIỀU Đơn hàng
     public function donhangs()
     {
-        return $this->belongsToMany(DonHang::class, 'chitietdonhang', 'masp', 'madon')
+        return $this->belongsToMany(DonHang::class, 'chitiet_donhang', 'masp', 'madon')
                     ->withPivot('soluong', 'dongia')
                     ->withTimestamps();
     }

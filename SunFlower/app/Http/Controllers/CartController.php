@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\SanPham;
 use App\Models\DonHang;         // Import Model Đơn Hàng
 use App\Models\ChiTietDonHang;
+use App\Models\LoHang;          // Thêm Model LoHang
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str; 
@@ -59,6 +60,7 @@ class CartController extends Controller
         // Quay lại trang trước đó để khách hàng có thể mua tiếp
         return redirect()->back()->with('success', 'Đã thêm vào giỏ hàng!');
     }
+    
     public function remove($masp)
     {
         // 1. Lấy giỏ hàng hiện tại từ session
@@ -77,35 +79,37 @@ class CartController extends Controller
         // Nếu không tìm thấy sản phẩm trong giỏ
         return redirect()->back()->with('error', 'Không tìm thấy sản phẩm để xóa!');
     }
-    public function update(Request $request)
-        {
-    $cart = session()->get('cart', []);
-    if(isset($cart[$request->id])) {
-        // Cập nhật số lượng mới
-        $cart[$request->id]['quantity'] = $request->quantity;
-        session()->put('cart', $cart);
-        
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Cập nhật thành công'
-        ]);
-    }
-        }
-    public function checkout(Request $request)
-        {
-    $selectedIds = $request->input('selected_items', []);
-    if (empty($selectedIds)) {
-        return back()->with('error', 'Vui lòng chọn ít nhất một đóa hoa để thanh toán!');
-    }
-
-    $cart = session()->get('cart');
-    // Chỉ lọc ra những sản phẩm nằm trong danh sách được chọn
-    $checkoutItems = array_intersect_key($cart, array_flip($selectedIds));
     
-    // Lưu tạm danh sách mua này vào session riêng để sang trang thanh toán
-    session()->put('checkout_data', $checkoutItems);
+    public function update(Request $request)
+    {
+        $cart = session()->get('cart', []);
+        if(isset($cart[$request->id])) {
+            // Cập nhật số lượng mới
+            $cart[$request->id]['quantity'] = $request->quantity;
+            session()->put('cart', $cart);
+            
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Cập nhật thành công'
+            ]);
+        }
+    }
+    
+    public function checkout(Request $request)
+    {
+        $selectedIds = $request->input('selected_items', []);
+        if (empty($selectedIds)) {
+            return back()->with('error', 'Vui lòng chọn ít nhất một đóa hoa để thanh toán!');
+        }
 
-    return view('checkout', compact('checkoutItems'));
+        $cart = session()->get('cart');
+        // Chỉ lọc ra những sản phẩm nằm trong danh sách được chọn
+        $checkoutItems = array_intersect_key($cart, array_flip($selectedIds));
+        
+        // Lưu tạm danh sách mua này vào session riêng để sang trang thanh toán
+        session()->put('checkout_data', $checkoutItems);
+
+        return view('checkout', compact('checkoutItems'));
     }
 
 
@@ -145,6 +149,20 @@ class CartController extends Controller
 
     public function placeOrder(Request $request)
     {
+
+        $request->validate([
+        'ten_nguoinhan'   => 'required|string|min:2|max:100',
+        'sdt_nguoinhan'   => 'required|digits_between:10,10',
+        'diachi_giaohang' => 'required|string|min:5|max:255',
+        'ghichu'          => 'nullable|string|max:500',
+        ], [
+        'ten_nguoinhan.required'   => 'Vui lòng nhập tên người nhận.',
+        'ten_nguoinhan.min'        => 'Tên người nhận phải có ít nhất 2 ký tự.',
+        'sdt_nguoinhan.required'   => 'Vui lòng nhập số điện thoại.',
+        'sdt_nguoinhan.digits_between' => 'Số điện thoại không hợp lệ (10 số).',
+        'diachi_giaohang.required' => 'Vui lòng nhập địa chỉ giao hàng.',
+        'diachi_giaohang.min'      => 'Địa chỉ phải có ít nhất 5 ký tự.',
+        ]);
         $checkoutItems = session()->get('checkout_data');
 
         if (!$checkoutItems || count($checkoutItems) == 0) {
@@ -213,16 +231,53 @@ class CartController extends Controller
             
             $donHang->save(); // Lưu đơn hàng thành công!
 
-            // 4. Lưu chi tiết đơn hàng
+            
+            // ==========================================
+            // 4. Lưu chi tiết đơn hàng VÀ TRỪ TỒN KHO THEO LÔ (ĐÃ SỬA)
+            // ==========================================
             foreach ($checkoutItems as $id => $item) {
+                // A. Lưu chi tiết đơn hàng
                 $chiTiet = new ChiTietDonHang();
                 $chiTiet->madon = $maDonMoi; 
                 $chiTiet->masp = $id;               
                 $chiTiet->soluong = $item['quantity'];
                 $chiTiet->giaban = $item['price']; 
-                
                 $chiTiet->save();
+
+                // B. LOGIC TRỪ TỒN KHO TRONG BẢNG LO_HANG (FIFO)
+                $qtyNeeded = $item['quantity']; // Số lượng khách mua cần trừ
+
+                // Lấy các lô hàng của sản phẩm này đang còn tồn kho (> 0)
+                // Ưu tiên lô sắp hết hạn ra bán trước (ngayhethan ASC)
+                $loHangs = LoHang::where('masp', $id)
+                            ->where('soluong_ton', '>', 0)
+                            ->orderBy('ngayhethan', 'asc')
+                            ->get();
+
+                // Tùy chọn: Chặn nếu tổng tồn kho không đủ (Có thể bỏ nếu muốn bán âm)
+                if ($loHangs->sum('soluong_ton') < $qtyNeeded) {
+                    throw new \Exception('Sản phẩm ' . $item['name'] . ' không đủ số lượng trong kho!');
+                }
+
+                foreach ($loHangs as $loHang) {
+                    if ($qtyNeeded <= 0) {
+                        break; // Đã trừ đủ số lượng khách mua, thoát vòng lặp
+                    }
+
+                    if ($loHang->soluong_ton >= $qtyNeeded) {
+                        // Nếu số tồn của lô này ĐỦ để trừ
+                        $loHang->soluong_ton -= $qtyNeeded;
+                        $loHang->save();
+                        $qtyNeeded = 0; // Đã trừ xong
+                    } else {
+                        // Nếu số tồn của lô này KHÔNG ĐỦ
+                        $qtyNeeded -= $loHang->soluong_ton;
+                        $loHang->soluong_ton = 0;
+                        $loHang->save();
+                    }
+                }
             }
+            // ==========================================
 
             // Dọn dẹp session
             $cart = session()->get('cart', []);
@@ -235,6 +290,7 @@ class CartController extends Controller
             $viewedOrders = session()->get('viewed_orders', []);
             $viewedOrders[] = $maDonMoi;
             session()->put('viewed_orders', $viewedOrders);
+            
             DB::commit();
 
             return redirect()->route('checkout.success')->with('madon_moi', $maDonMoi);

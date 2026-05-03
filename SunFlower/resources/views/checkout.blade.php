@@ -22,22 +22,32 @@
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Họ và tên</label>
                                 <input type="text" name="ten_nguoinhan" required 
-                                       value="{{ Auth::guard('khachhang')->user()->tenkh ?? '' }}"
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent outline-none">
+                                       value="{{ old('ten_nguoinhan', Auth::guard('khachhang')->user()->hoten ?? '') }}"
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent outline-none @error('ten_nguoinhan') border-red-400 @enderror">
+                                @error('ten_nguoinhan')
+                                    <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                                @enderror
                             </div>
+                            
                             <div>
                                 <label class="block text-sm font-bold text-gray-700 mb-2">Số điện thoại</label>
                                 <input type="text" name="sdt_nguoinhan" required 
-                                       value="{{ Auth::guard('khachhang')->user()->sdt ?? '' }}"
-                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent outline-none">
+                                       value="{{ old('sdt_nguoinhan', Auth::guard('khachhang')->user()->sdt ?? '') }}"
+                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent outline-none @error('sdt_nguoinhan') border-red-400 @enderror">
+                                @error('sdt_nguoinhan')
+                                    <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                                @enderror
                             </div>
                         </div>
 
                         <div>
                             <label class="block text-sm font-bold text-gray-700 mb-2">Địa chỉ giao hàng</label>
                             <textarea name="diachi_giaohang" rows="3" required
-                                      class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent outline-none"
-                                      placeholder="Số nhà, tên đường, phường/xã, quận/huyện...">{{ Auth::guard('khachhang')->user()->diachi ?? '' }}</textarea>
+                                      class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent outline-none @error('diachi_giaohang') border-red-400 @enderror"
+                                      placeholder="Số nhà, tên đường, phường/xã, quận/huyện...">{{ old('diachi_giaohang', Auth::guard('khachhang')->user()->diachi ?? '') }}</textarea>
+                            @error('diachi_giaohang')
+                                <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span>
+                            @enderror
                         </div>
 
                         <div>
@@ -46,6 +56,7 @@
                                       class="w-full px-4 py-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-[#FF6B35] focus:border-transparent outline-none"
                                       placeholder="Ví dụ: Giao vào giờ hành chính, gọi trước khi đến..."></textarea>
                         </div>
+
                     </div>
 
                     <h2 class="text-xl font-bold mt-10 mb-6 flex items-center gap-2">
@@ -116,4 +127,5 @@
         </div>
     </form>
 </div>
+
 @endsection

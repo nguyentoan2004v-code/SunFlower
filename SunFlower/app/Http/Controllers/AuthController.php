@@ -5,6 +5,7 @@ use Illuminate\Http\Request;
 use App\Models\KhachHang;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -57,8 +58,10 @@ class AuthController extends Controller
             'sdt' => 'required',
         ]);
 
+        $makh = 'KH' . strtoupper(Str::random(8));
+
         $khachhang = KhachHang::create([
-            'makh' => 'KH' . rand(100000, 999999),
+            'makh' => $makh,
             'hoten' => $request->hoten,
             'email' => $request->email,
             'sdt' => $request->sdt,
