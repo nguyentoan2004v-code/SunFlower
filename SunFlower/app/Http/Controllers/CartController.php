@@ -152,14 +152,14 @@ class CartController extends Controller
 
         $request->validate([
         'ten_nguoinhan'   => 'required|string|min:2|max:100',
-        'sdt_nguoinhan'   => 'required|digits_between:10,10',
+        'sdt_nguoinhan'   => 'required|digits:10',
         'diachi_giaohang' => 'required|string|min:5|max:255',
         'ghichu'          => 'nullable|string|max:500',
         ], [
         'ten_nguoinhan.required'   => 'Vui lòng nhập tên người nhận.',
         'ten_nguoinhan.min'        => 'Tên người nhận phải có ít nhất 2 ký tự.',
         'sdt_nguoinhan.required'   => 'Vui lòng nhập số điện thoại.',
-        'sdt_nguoinhan.digits_between' => 'Số điện thoại không hợp lệ (10 số).',
+        'sdt_nguoinhan.digits' => 'Số điện thoại không hợp lệ (10 số).',
         'diachi_giaohang.required' => 'Vui lòng nhập địa chỉ giao hàng.',
         'diachi_giaohang.min'      => 'Địa chỉ phải có ít nhất 5 ký tự.',
         ]);

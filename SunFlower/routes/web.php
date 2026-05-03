@@ -84,9 +84,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
     // Các route CẦN login admin
     Route::middleware(['admin.auth'])->group(function () {
-        Route::get('/dashboard', function () {
-            return view('admin.dashboard'); // Bạn sẽ tạo file này sau
-        })->name('dashboard');
+        
         
         Route::post('/logout', [AdminAuthController::class, 'logout'])->name('logout');
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
