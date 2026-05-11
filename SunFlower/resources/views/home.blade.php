@@ -35,9 +35,12 @@
                                     <a href="{{ route('product.show', $product->masp) }}" class="bg-[#FF6B35] hover:bg-orange-600 px-7 py-2.5 rounded-lg font-bold text-sm shadow-md transition-all active:scale-95">
                                         Xem Chi Tiết
                                     </a>
-                                    <a href="{{ route('cart.add', $product->masp) }}" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-orange-100 text-white px-7 py-2.5 rounded-lg font-bold text-sm shadow-md transition-all active:scale-95">
-                                        Thêm Vào Giỏ
-                                    </a>
+                                    <form action="{{ route('cart.add', $product->masp) }}" method="POST">
+                                        @csrf
+                                        <button type="submit" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-orange-100 text-white px-7 py-2.5 rounded-lg font-bold text-sm shadow-md transition-all active:scale-95">
+                                            Thêm Vào Giỏ
+                                        </button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
@@ -169,10 +172,12 @@
                                    class="flex-1 bg-gray-50 text-gray-600 text-center py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition">
                                     Chi tiết
                                 </a>
-                                <a href="{{ route('cart.add', $product->masp) }}" 
-                                   class="w-12 h-12 bg-[#FF6B35] text-white flex items-center justify-center rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-100">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                </a>
+                                <form action="{{ route('cart.add', $product->masp) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="w-12 h-12 bg-[#FF6B35] text-white flex items-center justify-center rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-100">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    </button>
+                                </form>
                                 
                             </div>
                                 <a href="{{ route('cart.buyNow', $product->masp) }}" 

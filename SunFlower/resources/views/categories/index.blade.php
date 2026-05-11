@@ -50,10 +50,12 @@
                     <p class="text-[#FF6B35] font-black text-center text-xl mb-4">
                         {{ number_format($product->giaban ?? 0, 0, ',', '.') }} đ
                     </p>
-                    <a href="{{ route('cart.add', $product->masp) }}" 
-                       class="mt-auto w-full bg-gray-50 text-[#FF6B35] border border-[#FF6B35] hover:bg-[#FF6B35] hover:text-white text-center py-2.5 rounded-xl font-bold transition">
-                        Thêm vào giỏ
-                    </a>
+                    <form action="{{ route('cart.add', $product->masp) }}" method="POST">
+                        @csrf
+                        <button type="submit" class="mt-auto w-full bg-gray-50 text-[#FF6B35] border border-[#FF6B35] hover:bg-[#FF6B35] hover:text-white text-center py-2.5 rounded-xl font-bold transition">
+                            Thêm vào giỏ
+                        </button>
+                    </form>
                 </div>
             @endforeach
         @else

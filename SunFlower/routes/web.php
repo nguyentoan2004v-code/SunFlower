@@ -38,38 +38,40 @@ Route::get('/gioi-thieu', [HomeController::class, 'about'])->name('about');
 // 2. AUTH (ĐĂNG NHẬP / ĐĂNG KÝ)
 // =====================
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
 Route::get('/dang-ky', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/dang-ky', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // =====================
-// 3. PROFILE (HỒ SƠ KHÁCH HÀNG)
+// 3. PROFILE & ĐƠN HÀNG (YÊU CẦU ĐĂNG NHẬP)
 // =====================
-Route::prefix('profile')->group(function () {
-    Route::get('/', [ProfileController::class, 'index'])->name('profile.index');
-    Route::put('/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
-    Route::post('/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+Route::middleware('auth:khachhang')->group(function () {
+
+    // Profile
+    Route::prefix('profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'index'])->name('profile.index');
+        Route::put('/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
+        Route::post('/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+    });
+
+    // Đơn hàng
+    Route::get('/lich-su-don-hang', [OrderController::class, 'history'])->name('orders.history');
 });
+Route::get('/don-hang/{madon}', [OrderController::class, 'show'])->name('orders.show');
+Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
 
 // =====================
 // 4. GIỎ HÀNG & THANH TOÁN
 // =====================
 Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
-Route::get('/gio-hang/them/{masp}', [CartController::class, 'add'])->name('cart.add');
-Route::get('/gio-hang/xoa/{masp}', [CartController::class, 'remove'])->name('cart.remove');
+Route::post('/gio-hang/them/{masp}', [CartController::class, 'add'])->name('cart.add');
+Route::post('/gio-hang/xoa/{masp}', [CartController::class, 'remove'])->name('cart.remove');
 Route::post('/gio-hang/update', [CartController::class, 'update'])->name('cart.update');
 Route::post('/thanh-toan', [CartController::class, 'checkout'])->name('checkout');
 Route::post('/dat-hang', [CartController::class, 'placeOrder'])->name('order.place');
 Route::get('/mua-ngay/{masp}', [CartController::class, 'buyNow'])->name('cart.buyNow');
 Route::get('/dat-hang-thanh-cong', [CartController::class, 'orderSuccess'])->name('checkout.success');
-
-// =====================
-// 5. ĐƠN HÀNG
-// =====================
-Route::get('/lich-su-don-hang', [OrderController::class, 'history'])->name('orders.history');
-Route::get('/don-hang/{madon}', [OrderController::class, 'show'])->name('orders.show');
-Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
 
 
 // =====================
@@ -80,7 +82,7 @@ Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('
 Route::prefix('admin')->name('admin.')->group(function () {
     // Các route không cần login
     Route::get('/login', [AdminAuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post');
+    Route::post('/login', [AdminAuthController::class, 'login'])->name('login.post')->middleware('throttle:5,1');
 
     // Các route CẦN login admin
     Route::middleware(['admin.auth'])->group(function () {
@@ -119,13 +121,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::delete('/nhanvien/{nhanvien}', [NhanVienController::class, 'destroy'])->name('nhanvien.destroy');
        
         // --- QUẢN LÝ LỊCH LÀM VIỆC VÀ PHÂN CÔNG (THEO MA TRẬN TUẦN) ---
-        
         // 1. Giao diện xem Xếp lịch theo tuần (Dành cho Quản lý)
         Route::get('/lichlamviec', [LichLamViecController::class, 'index'])->name('lichlamviec.index');
-        
         // 2. Xử lý lưu lịch của cả tuần khi bấm nút Lưu (Dành cho Quản lý)
         Route::post('/lichlamviec/save-weekly', [LichLamViecController::class, 'saveWeekly'])->name('lichlamviec.saveWeekly');
-        
         // 3. Giao diện xem lịch cá nhân (Dành cho mọi Nhân viên)
         Route::get('/lich-cua-toi', [LichLamViecController::class, 'mySchedule'])->name('lichlamviec.mySchedule');
     });

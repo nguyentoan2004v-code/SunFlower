@@ -15,15 +15,11 @@ class ProfileController extends Controller
      */
     public function index()
     {
-        // 1. Kiểm tra xem người dùng đã đăng nhập chưa bằng Guard
-        if (!Auth::guard('khachhang')->check()) {
-            return redirect()->route('login')->withErrors(['error' => 'Vui lòng đăng nhập để xem thông tin tài khoản.']);
-        }
-
-        // 2. Lấy thông tin user hiện tại từ Guard khachhang
+    
+        //  Lấy thông tin user hiện tại từ Guard khachhang
         $user = Auth::guard('khachhang')->user();
 
-        // 3. Trả về view nằm trong resources/views/auth/profile.blade.php
+        //  Trả về view nằm trong resources/views/auth/profile.blade.php
         return view('auth.profile', compact('user'));
     }
 
