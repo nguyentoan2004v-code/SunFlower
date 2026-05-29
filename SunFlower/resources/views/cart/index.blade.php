@@ -4,7 +4,7 @@
 <div class="max-w-7xl mx-auto px-4 py-12">
     @if(session('error'))
     <div style="background-color: #fee2e2; color: #b91c1c; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-weight: bold;">
-        LỖI DATABASE: {{ session('error') }}
+        {{ session('error') }}
     </div>
 @endif
     <form action="{{ route('checkout') }}" method="POST">
@@ -36,30 +36,30 @@
                                             <img src="{{ route('product.image', $id) }}" class="w-16 h-16 rounded-xl object-cover border border-gray-100">
                                             <div>
                                                 <p class="font-bold text-gray-900">{{ $details['name'] }}</p>
-                                                <p class="text-[#FF6B35] font-medium">{{ number_format($details['price'], 0, ',', '.') }} ₫</p>
+                                                <p class="text-[#FF6B35] font-medium whitespace-nowrap">{{ number_format($details['price'], 0, ',', '.') }} ₫</p>
                                             </div>
                                         </td>
                                         
                                         <td class="px-6 py-6">
                                             <div class="flex items-center justify-center border border-gray-200 rounded-xl w-32 mx-auto overflow-hidden bg-white">
                                                 <button type="button" class="px-3 py-2 hover:bg-gray-100 btn-minus transition text-gray-600 font-bold">-</button>
-                                                <input type="text" class="w-12 text-center border-none focus:ring-0 qty-input font-bold text-gray-700" 
+                                                <input type="text" name="quantities[{{ $id }}]" class="w-12 text-center border-none focus:ring-0 qty-input font-bold text-gray-700" 
                                                        value="{{ $details['quantity'] }}" readonly>
                                                 <button type="button" class="px-3 py-2 hover:bg-gray-100 btn-plus transition text-gray-600 font-bold">+</button>
                                             </div>
                                         </td>
                                         
-                                        <td class="px-6 py-6 text-right font-bold text-gray-900 row-total">
+                                        <td class="px-6 py-6 text-right font-bold text-gray-900 row-total whitespace-nowrap">
                                             {{ number_format($details['price'] * $details['quantity'], 0, ',', '.') }} ₫
                                         </td>
                                         
                                         <td class="px-6 py-6 text-center">
-                                            <form action="{{ route('cart.remove', $id) }}" method="POST" onsubmit="return confirm('Bạn có chắc muốn xóa đóa hoa này khỏi giỏ hàng?')">
-                                                @csrf
-                                                <button type="submit" class="text-gray-400 hover:text-red-500 transition-colors inline-block p-2">
-                                                    <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                </button>
-                                            </form>
+                                            <button type="submit" 
+                                                    formaction="{{ route('cart.remove', $id) }}" 
+                                                    onclick="return confirm('Bạn có chắc muốn xóa đóa hoa này khỏi giỏ hàng?')"
+                                                    class="text-gray-400 hover:text-red-500 transition-colors inline-block p-2">
+                                                <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
                                         </td>
                                     </tr>
                                 @endforeach
@@ -88,17 +88,17 @@
                     <div class="space-y-4 mb-6">
                         <div class="flex justify-between text-gray-600 font-medium">
                             <span>Tạm tính</span>
-                            <span id="temp-total">0 ₫</span>
+                            <span id="temp-total" class="whitespace-nowrap">0 ₫</span>
                         </div>
                         
                         <div class="flex justify-between text-gray-600 font-medium">
                             <span>Phí vận chuyển</span>
-                            <span class="text-green-600">Miễn phí</span>
+                            <span class="text-green-600 whitespace-nowrap">Miễn phí</span>
                         </div>
 
                         <div class="flex justify-between text-gray-600 font-medium">
                             <span>Giảm giá</span>
-                            <span class="text-red-500" id="discount-total">-0 ₫</span>
+                            <span class="text-red-500 whitespace-nowrap" id="discount-total">-0 ₫</span>
                         </div>
 
                         <hr class="border-gray-100 my-4">
@@ -108,7 +108,7 @@
                                 <span class="text-lg font-bold text-gray-900 block">Tổng tiền</span>
                                 <span class="text-[11px] text-gray-400 font-medium italic">(Đã bao gồm VAT nếu có)</span>
                             </div>
-                            <span class="text-2xl font-extrabold text-[#FF6B35]" id="final-total">0 ₫</span>
+                            <span class="text-2xl font-extrabold text-[#FF6B35] whitespace-nowrap ml-4 text-right" id="final-total">0 ₫</span>
                         </div>
                     </div>
 
@@ -154,7 +154,6 @@
     });
 
     // Hàm tính tổng tiền chính
-    // Hàm tính tổng tiền chính
     function updateTotals() {
         let totalToPay = 0;   // Tổng tiền khách phải trả (đã giảm)
         let totalOriginal = 0; // Tổng giá trị gốc của hoa
@@ -169,8 +168,7 @@
             
             const subtotal = qty * price;
             
-            // Cập nhật giá tiền ở cột "Thành tiền" của từng dòng
-            row.querySelector('.row-total').innerText = subtotal.toLocaleString('vi-VN') + ' ₫';
+            row.querySelector('.row-total').innerText = subtotal.toLocaleString('vi-VN') + '\u00A0₫';
             
             // Nếu người dùng có tích chọn vào ô Checkbox thì mới tính vào hóa đơn
             if (row.querySelector('.item-checkbox').checked) {
@@ -182,18 +180,24 @@
         // Tính ra số tiền được giảm giá
         totalDiscount = totalOriginal - totalToPay;
         
-        // Cập nhật lên giao diện
         const tempTotalEl = document.getElementById('temp-total');
-        if(tempTotalEl) tempTotalEl.innerText = totalOriginal.toLocaleString('vi-VN') + ' ₫';
+        if(tempTotalEl) tempTotalEl.innerText = totalOriginal.toLocaleString('vi-VN') + '\u00A0₫';
         
         const discountTotalEl = document.getElementById('discount-total');
-        if(discountTotalEl) discountTotalEl.innerText = '-' + totalDiscount.toLocaleString('vi-VN') + ' ₫';
+        if(discountTotalEl) discountTotalEl.innerText = '-' + totalDiscount.toLocaleString('vi-VN') + '\u00A0₫';
         
         const finalTotalEl = document.getElementById('final-total');
-        if(finalTotalEl) finalTotalEl.innerText = totalToPay.toLocaleString('vi-VN') + ' ₫';
+        if(finalTotalEl) finalTotalEl.innerText = totalToPay.toLocaleString('vi-VN') + '\u00A0₫';
     }
     
     // Gọi hàm một lần khi trang vừa load xong để Checkbox được tính tiền ngay
     updateTotals();
+
+    // ĐÃ SỬA: Thêm sự kiện để ép trình duyệt tải lại trang khi bấm nút "Back"
+    window.addEventListener('pageshow', function(event) {
+        if (event.persisted) {
+            window.location.reload();
+        }
+    });
 </script>
 @endsection

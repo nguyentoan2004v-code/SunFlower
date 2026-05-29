@@ -37,7 +37,7 @@ class CartController extends Controller
                         : $product['giaban'];
 
         // Lấy số lượng từ Request URL (Mặc định là 1 nếu không có)
-        $quantity = (int) $request->query('quantity', 1);
+        $quantity = (int) $request->input('quantity', 1);
         if ($quantity < 1) $quantity = 1;
 
         // Nếu sản phẩm đã có, tăng số lượng
@@ -97,6 +97,15 @@ class CartController extends Controller
     
     public function checkout(Request $request)
     {
+        $quantities = $request->input('quantities', []);
+        $cart = session()->get('cart', []);
+
+        foreach ($quantities as $id => $qty) {
+            if (isset($cart[$id])) {
+                $cart[$id]['quantity'] = (int)$qty;
+            }
+        }
+        session()->put('cart', $cart);
         $selectedIds = $request->input('selected_items', []);
         if (empty($selectedIds)) {
             return back()->with('error', 'Vui lòng chọn ít nhất một đóa hoa để thanh toán!');

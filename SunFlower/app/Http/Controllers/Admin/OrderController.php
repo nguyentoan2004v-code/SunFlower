@@ -64,11 +64,8 @@ class OrderController extends Controller implements HasMiddleware
             // 2. Nếu trạng thái chuyển thành "Đã hoàn thành" và chưa có hóa đơn
             if ($newStatus == 'Đã hoàn thành' && $oldStatus != 'Đã hoàn thành') {
                 
-                // SỬA LỖI 1: Tạo mã HD ngắn gọn 10 ký tự (HD + NămThángNgày + 2 số ngẫu nhiên)
-                // Ví dụ hôm nay 22/04/26 -> HD26042299
                 $mahd = 'HD' . date('ymd') . rand(10, 99);
 
-                // SỬA LỖI 2: Khớp 100% tên cột theo bảng hoadon của Toàn
                 $hoadon = HoaDon::create([
                     'mahd'        => $mahd,
                     'madon'       => $order->madon,
@@ -100,9 +97,8 @@ class OrderController extends Controller implements HasMiddleware
     }
     public function exportInvoice(Request $request, $madon)
 {
-    $order = DonHang::findOrFail($madon);
+    $order = DonHang::with('sanphams')->findOrFail($madon);
 
-    // Kiểm tra xem đã có hóa đơn chưa (dù database đã bắt unique, nhưng bắt ở Controller để hiện thông báo đẹp hơn)
     if (HoaDon::where('madon', $madon)->exists()) {
         return back()->with('error', 'Đơn hàng này đã được xuất hóa đơn!');
     }
@@ -110,27 +106,24 @@ class OrderController extends Controller implements HasMiddleware
     try {
         DB::beginTransaction();
 
-        // Giả sử thuế là 8% VAT trên tổng tiền (Bạn có thể đổi logic này theo nghiệp vụ)
-        $muc_thue = $order->tongtien * 0.08; 
-        
-        // 1. Tạo hóa đơn mới
+        $muc_thue = $order->tongtien * 0.08;
+
         $hoadon = HoaDon::create([
-            'mahd' => 'HD' . strtoupper(Str::random(6)), // Sinh mã HD ngẫu nhiên độ dài 10 char
-            'tongtien' => $order->tongtien + $muc_thue,
-            'thue' => $muc_thue,
-            'ngayxuat' => now()->toDateString(), // Định dạng date
-            'ptthanhtoan' => 'Tiền mặt', // Hoặc lấy từ form request nếu bạn có chọn phương thức
-            'madon' => $order->madon,
+            'mahd'        => 'HD' . strtoupper(Str::random(6)),
+            'tongtien'    => $order->tongtien + $muc_thue,
+            'thue'        => $muc_thue,
+            'ngayxuat'    => now()->toDateString(),
+            'ptthanhtoan' => 'Tiền mặt',
+            'madon'       => $order->madon,
         ]);
 
-        // 2. Sao chép chi tiết từ đơn hàng sang chi tiết hóa đơn
         foreach ($order->sanphams as $sp) {
             ChiTietHoaDon::create([
                 'mahd'    => $hoadon->mahd,
                 'masp'    => $sp->masp,
-                'tensp'   => $sp->sanpham->tensp,
+                'tensp'   => $sp->tensp,           
                 'soluong' => $sp->pivot->soluong,
-                'dongia'  => $sp->giaban,
+                'dongia'  => $sp->pivot->giaban,   
             ]);
         }
 
