@@ -82,6 +82,43 @@
     }
 
     .text-sunflower { color: var(--sunflower-orange, #FF8C00); }
+
+    [data-bs-theme="dark"] .excel-container {
+        background: #212529 !important;
+        border: 1px solid #373b3e;
+    }
+    [data-bs-theme="dark"] .table-excel thead th {
+        background-color: #2c3034 !important;
+        color: #e9ecef !important;
+        border-bottom-color: #373b3e;
+    }
+    [data-bs-theme="dark"] .time-col {
+        background-color: #2c3034 !important;
+        color: #adb5bd !important;
+    }
+    [data-bs-theme="dark"] .table-excel th, [data-bs-theme="dark"] .table-excel td {
+        border-color: #373b3e;
+    }
+    [data-bs-theme="dark"] .cell-active {
+        background-color: rgba(255, 140, 0, 0.2) !important;
+    }
+    [data-bs-theme="dark"] .shift-label {
+        color: #ffa94d !important; /* Màu cam sáng hơn để dễ đọc trên nền tối */
+    }
+    [data-bs-theme="dark"] .today-header {
+        background-color: #342800 !important;
+        color: #ff9f43 !important;
+    }
+    [data-bs-theme="dark"] .text-sunflower {
+        color: #ffa94d !important;
+    }
+    [data-bs-theme="dark"] .btn-outline-secondary {
+        border-color: #495057;
+        color: #dee2e6;
+    }
+    [data-bs-theme="dark"] .btn-outline-secondary:hover {
+        background-color: #495057;
+    }
 </style>
 
 <!-- Giảm margin top/bottom để tiết kiệm không gian màn hình -->

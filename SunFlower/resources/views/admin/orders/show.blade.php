@@ -4,6 +4,28 @@
 @section('page_title', 'CHI TIẾT ĐƠN HÀNG: ' . $order->madon)
 
 @section('content')
+<style>
+    /* ==========================================
+       BỔ SUNG DARK MODE CHO CHI TIẾT ĐƠN HÀNG
+       ========================================== */
+    [data-bs-theme="dark"] .card { background-color: #212529 !important; border: 1px solid #373b3e !important; }
+    [data-bs-theme="dark"] .card-header.bg-white { background-color: #2c3034 !important; border-bottom: 1px solid #373b3e !important; }
+    [data-bs-theme="dark"] .text-dark, [data-bs-theme="dark"] .text-primary, [data-bs-theme="dark"] p strong, [data-bs-theme="dark"] .form-label { color: #e9ecef !important; }
+    [data-bs-theme="dark"] p { color: #dee2e6 !important; }
+    [data-bs-theme="dark"] hr { border-color: #495057 !important; }
+    
+    /* CSS Table */
+    [data-bs-theme="dark"] .table { color: #e9ecef !important; }
+    [data-bs-theme="dark"] .table-light th { background-color: #1a1d20 !important; color: #adb5bd !important; border-bottom: 2px solid #373b3e !important; }
+    [data-bs-theme="dark"] .table td, [data-bs-theme="dark"] .table th { border-color: #373b3e !important; }
+
+    /* Khung Hóa Đơn đã in */
+    [data-bs-theme="dark"] .alert-success { background-color: #051b11 !important; border: 1px solid #0f5132 !important; color: #75b798 !important; }
+    [data-bs-theme="dark"] .alert-success .text-muted { color: #a3b8ac !important; }
+    [data-bs-theme="dark"] .btn-light { background-color: #2c3034 !important; color: #dee2e6 !important; border-color: #495057 !important; }
+    [data-bs-theme="dark"] .btn-light:hover { background-color: #373b3e !important; color: #ffffff !important; }
+</style>
+
 <div class="container-fluid mt-3 pb-5">
     
     @if(session('success'))

@@ -4,6 +4,70 @@
 @section('page_title', 'CHỈNH SỬA SẢN PHẨM')
 
 @section('content')
+<style>
+    /* ==========================================
+       BỔ SUNG DARK MODE (Không ảnh hưởng Light Mode)
+       ========================================== */
+    
+    /* 1. Nền Card và Header */
+    [data-bs-theme="dark"] .card {
+        background-color: #212529 !important;
+        border: 1px solid #373b3e !important;
+    }
+    [data-bs-theme="dark"] .card-header.bg-white {
+        background-color: #2c3034 !important;
+        border-bottom: 1px solid #373b3e !important;
+    }
+
+    /* 2. Màu chữ tiêu đề và Label */
+    [data-bs-theme="dark"] .text-dark,
+    [data-bs-theme="dark"] .text-primary,
+    [data-bs-theme="dark"] .form-label {
+        color: #e9ecef !important;
+    }
+    
+    /* 3. Khung Preview Hình ảnh (bỏ nền sáng) */
+    [data-bs-theme="dark"] .bg-light {
+        background-color: #2c3034 !important;
+        border-color: #495057 !important;
+        color: #e9ecef !important;
+    }
+    
+    /* 4. Các thẻ Input / Textarea / Select */
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] .form-select {
+        background-color: #2c3034 !important;
+        border-color: #495057 !important;
+        color: #e9ecef !important;
+    }
+    [data-bs-theme="dark"] .form-control:focus,
+    [data-bs-theme="dark"] .form-select:focus {
+        background-color: #2c3034 !important;
+        border-color: var(--sunflower-orange) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 0.25rem rgba(255, 140, 0, 0.25) !important;
+    }
+    [data-bs-theme="dark"] .form-control[readonly] {
+        background-color: #1a1d20 !important;
+        color: #adb5bd !important;
+    }
+
+    /* 5. Nút bấm (Buttons) */
+    [data-bs-theme="dark"] .btn-light {
+        background-color: #343a40 !important;
+        color: #dee2e6 !important;
+        border-color: #495057 !important;
+    }
+    [data-bs-theme="dark"] .btn-light:hover {
+        background-color: #495057 !important;
+        color: #ffffff !important;
+    }
+
+    /* 6. CKEditor Dark Mode cơ bản (Ép màu viền) */
+    [data-bs-theme="dark"] .cke_chrome {
+        border-color: #495057 !important;
+    }
+</style>
 <div class="container-fluid mt-3 pb-5">
     <div class="row justify-content-center">
         <div class="col-md-10">
@@ -83,6 +147,14 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+                                <div class="mb-3">
+                                    <label for="mota_chitiet" class="form-label fw-bold">Mô tả chi tiết </label>
+                                    <textarea name="mota_chitiet" id="mota_chitiet" rows="8" class="form-control @error('mota_chitiet') is-invalid @enderror" 
+                                              placeholder="Nhập đầy đủ chi tiết, ý nghĩa sản phẩm, hướng dẫn chăm sóc...">{{ old('mota_chitiet', $product->mota_chitiet) }}</textarea>
+                                    @error('mota_chitiet')
+                                        <div class="invalid-feedback">{{ $message }}</div>
+                                    @enderror
+                                </div>
                             </div>
 
                             <div class="col-md-4">
@@ -118,7 +190,27 @@
     </div>
 </div>
 
+<script src="https://cdn.ckeditor.com/4.22.1/standard/ckeditor.js"></script>
 <script>
+    // Kiểm tra xem web đang ở chế độ Dark Mode hay không
+    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+
+    CKEDITOR.replace('mota_chitiet', {
+        height: 400,
+        versionCheck: false, // Tắt ngay cái bảng cảnh báo đỏ đỏ chướng mắt
+        on: {
+            instanceReady: function(evt) {
+                // Bơm trực tiếp CSS vào lõi iframe của CKEditor khi nó vừa load xong
+                if (isDark) {
+                    evt.editor.document.appendStyleText(
+                        'body { background-color: #2c3034 !important; color: #ffffff !important; }' +
+                        'p, span, li, h1, h2, h3 { color: #ffffff !important; }'
+                    );
+                }
+            }
+        }
+    });
+
     function previewImage(event) {
         const reader = new FileReader();
         reader.onload = function(){

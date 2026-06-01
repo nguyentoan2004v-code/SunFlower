@@ -3,6 +3,27 @@
 @section('title', 'Lịch Sử Hủy Hàng')
 
 @section('content')
+<style>
+    /* ==========================================
+       BỔ SUNG DARK MODE CHO LỊCH SỬ HỦY HÀNG
+       ========================================== */
+    [data-bs-theme="dark"] .card { background-color: #212529 !important; border: 1px solid #373b3e !important; }
+    [data-bs-theme="dark"] .card-header.bg-white { background-color: #2c3034 !important; border-bottom: 1px solid #373b3e !important; }
+    [data-bs-theme="dark"] .text-dark { color: #e9ecef !important; }
+
+    /* CSS Table */
+    [data-bs-theme="dark"] .table { color: #e9ecef !important; }
+    [data-bs-theme="dark"] .table-light th { background-color: #1a1d20 !important; color: #adb5bd !important; border-bottom: 2px solid #373b3e !important; }
+    [data-bs-theme="dark"] .table td, [data-bs-theme="dark"] .table th { border-color: #373b3e !important; }
+    [data-bs-theme="dark"] .table-hover tbody tr:hover td { background-color: rgba(255, 255, 255, 0.05) !important; }
+
+    /* CSS Badge Lý do (Ghi đè bg-light và text-dark) */
+    [data-bs-theme="dark"] .badge.bg-light { 
+        background-color: #2c3034 !important; 
+        border-color: #495057 !important; 
+        color: #e9ecef !important; 
+    }
+</style>
 <div class="container-fluid mt-3">
     
     @if(session('success'))

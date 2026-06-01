@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="vi" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,9 +10,10 @@
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     
     <style>
-        body { font-family: 'Nunito', sans-serif; background-color: #f8f9fa; }
+        body { font-family: 'Nunito', sans-serif; background-color: var(--bs-body-bg); transition: background-color 0.3s, color 0.3s; }
         :root { --sunflower-orange: #FF8C00; --admin-sidebar: #2c3e50; }
         
+        /* Chỉnh sửa Sidebar để tương thích cả 2 chế độ */
         .sidebar {
             min-height: 100vh;
             background: var(--admin-sidebar);
@@ -24,6 +25,7 @@
             padding: 12px 20px;
             border-radius: 5px;
             margin: 5px 15px;
+            transition: all 0.2s;
         }
         .sidebar .nav-link:hover, .sidebar .nav-link.active {
             background: var(--sunflower-orange);
@@ -31,16 +33,62 @@
         }
         .sidebar .nav-link i { width: 25px; }
         
+        /* Topbar linh hoạt theo theme */
         .topbar {
-            background: white;
+            background: var(--bs-body-bg);
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             padding: 15px 30px;
+            transition: background-color 0.3s;
         }
+        
         .content-wrapper { padding: 30px; }
-        .btn-sun { background: var(--sunflower-orange); color: white; }
+        .btn-sun { background: var(--sunflower-orange); color: white; border: none; }
         .btn-sun:hover { background: #e67e00; color: white; }
-        .card-custom { border: none; border-radius: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        
+        /* Card tùy biến */
+        .card-custom { 
+            border: none; 
+            border-radius: 15px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05); 
+            background-color: var(--bs-body-bg);
+        }
+
+        /* --- TÙY CHỈNH RIÊNG KHI BẬT DARK MODE --- */
+        [data-bs-theme="dark"] body {
+            background-color: #1a1d20;
+        }
+        [data-bs-theme="dark"] .sidebar {
+            background: #121416; /* Sidebar tối hơn một chút */
+            border-right: 1px solid #2b3035;
+        }
+        [data-bs-theme="dark"] .topbar {
+            border-bottom: 1px solid #2b3035;
+            box-shadow: none;
+        }
+        [data-bs-theme="dark"] .card-custom {
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            border: 1px solid #2b3035;
+        }
+        /* Nút toggle Dark Mode */
+        .theme-toggle-btn {
+            background: transparent;
+            border: none;
+            color: var(--bs-body-color);
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+        .theme-toggle-btn:hover {
+            background: rgba(128, 128, 128, 0.1);
+        }
     </style>
+
+    <script>
+        const savedTheme = localStorage.getItem('adminTheme') || 'light';
+        document.documentElement.setAttribute('data-bs-theme', savedTheme);
+    </script>
 </head>
 <body>
 
@@ -64,21 +112,18 @@
             @endphp
 
             <ul class="nav flex-column mt-3">
-                <!-- TỔNG QUAN -->
                 <li class="nav-item">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->is('admin/dashboard') ? 'active' : '' }}">
                         <i class="fa-solid fa-gauge"></i> Tổng quan
                     </a>
                 </li>
 
-                <!-- LỊCH CỦA TÔI (Ai cũng xem được) -->
                 <li class="nav-item">
                     <a href="{{ route('admin.lichlamviec.mySchedule') }}" class="nav-link {{ request()->is('admin/lich-cua-toi') ? 'active' : '' }}">
                         <i class="fa-regular fa-calendar-check"></i> Lịch của tôi
                     </a>
                 </li>
                 
-                <!-- SẢN PHẨM -->
                 <li class="nav-item">
                     <a href="{{ $canAccessProduct ? route('admin.products.index') : '#' }}" 
                        class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/products*') ? 'active' : '' }} {{ $canAccessProduct ? '' : 'disabled text-muted' }}"
@@ -89,7 +134,6 @@
                     </a>
                 </li>
                 
-                <!-- DANH MỤC -->
                 <li class="nav-item">
                     <a href="{{ $canAccessProduct ? route('admin.categories.index') : '#' }}" 
                        class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/categories*') ? 'active' : '' }} {{ $canAccessProduct ? '' : 'disabled text-muted' }}"
@@ -100,7 +144,6 @@
                     </a>
                 </li>
                 
-                <!-- ĐƠN HÀNG -->
                 <li class="nav-item">
                     <a href="{{ $canAccessOrder ? route('admin.orders.index') : '#' }}" 
                        class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/orders*') ? 'active' : '' }} {{ $canAccessOrder ? '' : 'disabled text-muted' }}"
@@ -111,7 +154,6 @@
                     </a>
                 </li>
                 
-                <!-- KHO HÀNG -->
                 <li class="nav-item">
                     @php
                         $isKhoActive = request()->is('admin/lohang*') || request()->is('admin/phieuhuyhang*');
@@ -147,10 +189,8 @@
                     @endif
                 </li>
                 
-                <!-- NHÂN VIÊN (CHỈ QUẢN LÝ) -->
                 <li class="nav-item">
                     @php
-                        // Cập nhật điều kiện active cho Nhân viên
                         $isNhanVienActive = request()->is('admin/nhanvien*') || request()->is('admin/vaitro*') || request()->is('admin/lichlamviec*');
                     @endphp
                     <a href="{{ $canAccessNhanVien ? '#collapseNhanVien' : '#' }}" 
@@ -174,8 +214,6 @@
                                     <i class="fa-solid fa-user-shield me-2"></i> Danh sách NV
                                 </a>
                             </li>
-                            
-                            <!-- Đổi tên thành Quản lý Phân ca -->
                             <li class="nav-item">
                                 <a href="{{ route('admin.lichlamviec.index') }}" class="nav-link {{ request()->is('admin/lichlamviec*') ? 'active' : '' }}" style="padding: 8px 15px;">
                                     <i class="fa-solid fa-users-cog me-2"></i> Quản lý Phân ca
@@ -186,7 +224,6 @@
                     @endif
                 </li>
                 
-                <!-- ĐĂNG XUẤT -->
                 <li class="nav-item mt-5">
                     <form action="{{ route('admin.logout') }}" method="POST">
                         @csrf
@@ -201,9 +238,16 @@
         <div class="col-md-10">
             <div class="topbar d-flex justify-content-between align-items-center">
                 <h5 class="m-0 fw-bold">@yield('page_title')</h5>
-                <div class="user-info d-flex align-items-center">
-                    <span class="me-3 fw-semibold">Chào, {{ Auth::guard('nhanvien')->user()->hoten }}</span>
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::guard('nhanvien')->user()->hoten) }}&background=FF8C00&color=fff" class="rounded-circle" width="40" alt="avatar">
+                
+                <div class="user-info d-flex align-items-center gap-3">
+                    <button id="themeToggleBtn" class="theme-toggle-btn" title="Chuyển đổi giao diện Sáng/Tối">
+                        <i class="fa-solid fa-moon"></i>
+                    </button>
+                    
+                    <div class="d-flex align-items-center border-start ps-3">
+                        <span class="me-3 fw-semibold">Chào, {{ Auth::guard('nhanvien')->user()->hoten }}</span>
+                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::guard('nhanvien')->user()->hoten) }}&background=FF8C00&color=fff" class="rounded-circle shadow-sm" width="40" alt="avatar">
+                    </div>
                 </div>
             </div>
 
@@ -217,5 +261,40 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const themeToggleBtn = document.getElementById('themeToggleBtn');
+        const themeIcon = themeToggleBtn.querySelector('i');
+        
+        // Hàm cập nhật icon dựa theo theme hiện tại
+        function updateIcon(theme) {
+            if (theme === 'dark') {
+                themeIcon.classList.remove('fa-moon');
+                themeIcon.classList.add('fa-sun');
+                themeIcon.style.color = '#FFD700'; // Màu vàng cho mặt trời
+            } else {
+                themeIcon.classList.remove('fa-sun');
+                themeIcon.classList.add('fa-moon');
+                themeIcon.style.color = ''; // Reset màu
+            }
+        }
+
+        // Cập nhật icon lúc mới load trang
+        updateIcon(document.documentElement.getAttribute('data-bs-theme'));
+
+        // Sự kiện khi bấm nút
+        themeToggleBtn.addEventListener('click', function() {
+            let currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            let newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            // Áp dụng theme mới
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            localStorage.setItem('adminTheme', newTheme);
+            updateIcon(newTheme);
+        });
+    });
+</script>
+
 </body>
 </html>

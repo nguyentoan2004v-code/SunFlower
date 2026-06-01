@@ -4,6 +4,20 @@
 @section('page_title', 'CHỈNH SỬA DANH MỤC')
 
 @section('content')
+<style>
+    /* ==========================================
+       BỔ SUNG DARK MODE CHO FORM
+       ========================================== */
+    [data-bs-theme="dark"] .card { background-color: #212529 !important; border: 1px solid #373b3e !important; }
+    [data-bs-theme="dark"] .card-header.bg-white { background-color: #2c3034 !important; border-bottom: 1px solid #373b3e !important; }
+    [data-bs-theme="dark"] .text-dark, [data-bs-theme="dark"] .text-primary, [data-bs-theme="dark"] .form-label { color: #e9ecef !important; }
+    [data-bs-theme="dark"] .bg-light { background-color: #2c3034 !important; border-color: #495057 !important; color: #e9ecef !important; }
+    [data-bs-theme="dark"] .form-control { background-color: #2c3034 !important; border-color: #495057 !important; color: #e9ecef !important; }
+    [data-bs-theme="dark"] .form-control:focus { border-color: var(--sunflower-orange) !important; box-shadow: 0 0 0 0.25rem rgba(255, 140, 0, 0.25) !important; }
+    [data-bs-theme="dark"] .form-control[readonly] { background-color: #1a1d20 !important; color: #adb5bd !important; }
+    [data-bs-theme="dark"] .btn-light { background-color: #343a40 !important; color: #dee2e6 !important; border-color: #495057 !important; }
+    [data-bs-theme="dark"] .btn-light:hover { background-color: #495057 !important; color: #ffffff !important; }
+</style>
 <div class="container-fluid mt-3 pb-5">
     <div class="row justify-content-center">
         <div class="col-md-8">

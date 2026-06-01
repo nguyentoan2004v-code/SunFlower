@@ -4,6 +4,107 @@
 @section('page_title', 'DANH SÁCH SẢN PHẨM')
 
 @section('content')
+<style>
+    /* ==========================================
+       BỔ SUNG DARK MODE (Không ảnh hưởng Light Mode)
+       ========================================== */
+    
+    /* 1. Nền Card và Header */
+    [data-bs-theme="dark"] .card {
+        background-color: #212529 !important;
+        border: 1px solid #373b3e !important;
+    }
+    [data-bs-theme="dark"] .card-header.bg-white {
+        background-color: #2c3034 !important;
+        border-bottom: 1px solid #373b3e !important;
+    }
+
+    /* 2. Màu chữ tiêu đề và Label */
+    [data-bs-theme="dark"] .text-dark,
+    [data-bs-theme="dark"] .text-primary,
+    [data-bs-theme="dark"] .form-label {
+        color: #e9ecef !important;
+    }
+    
+    /* 3. Khung Preview Hình ảnh (bỏ nền sáng) */
+    [data-bs-theme="dark"] .bg-light {
+        background-color: #2c3034 !important;
+        border-color: #495057 !important;
+        color: #e9ecef !important;
+    }
+    
+    /* 4. Các thẻ Input / Textarea / Select */
+    [data-bs-theme="dark"] .form-control,
+    [data-bs-theme="dark"] .form-select {
+        background-color: #2c3034 !important;
+        border-color: #495057 !important;
+        color: #e9ecef !important;
+    }
+    [data-bs-theme="dark"] .form-control:focus,
+    [data-bs-theme="dark"] .form-select:focus {
+        background-color: #2c3034 !important;
+        border-color: var(--sunflower-orange) !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 0 0.25rem rgba(255, 140, 0, 0.25) !important;
+    }
+    [data-bs-theme="dark"] .form-control[readonly] {
+        background-color: #1a1d20 !important;
+        color: #adb5bd !important;
+    }
+
+    /* 5. Nút bấm (Buttons) */
+    [data-bs-theme="dark"] .btn-light {
+        background-color: #343a40 !important;
+        color: #dee2e6 !important;
+        border-color: #495057 !important;
+    }
+    [data-bs-theme="dark"] .btn-light:hover {
+        background-color: #495057 !important;
+        color: #ffffff !important;
+    }
+
+    /* 6. CKEditor Dark Mode cơ bản (Ép màu viền) */
+    [data-bs-theme="dark"] .cke_chrome {
+        border-color: #495057 !important;
+    }
+
+    /* 7. CSS Bảng (Table) cho Dark Mode */
+    [data-bs-theme="dark"] .table {
+        color: #e9ecef !important;
+    }
+    [data-bs-theme="dark"] .table-light th {
+        background-color: #1a1d20 !important;
+        color: #adb5bd !important;
+        border-bottom: 2px solid #373b3e !important;
+    }
+    [data-bs-theme="dark"] .table td,
+    [data-bs-theme="dark"] .table th {
+        border-color: #373b3e !important;
+    }
+    [data-bs-theme="dark"] .table-hover tbody tr:hover td {
+        background-color: rgba(255, 255, 255, 0.05) !important; /* Hiệu ứng hover cho hàng */
+    }
+
+    /* 8. Footer và Phân trang (Pagination) */
+    [data-bs-theme="dark"] .card-footer.bg-white {
+        background-color: #212529 !important;
+        border-top: 1px solid #373b3e !important;
+    }
+    [data-bs-theme="dark"] .pagination .page-link {
+        background-color: #2c3034 !important;
+        border-color: #373b3e !important;
+        color: #e9ecef !important;
+    }
+    [data-bs-theme="dark"] .pagination .page-item.active .page-link {
+        background-color: var(--sunflower-orange) !important;
+        border-color: var(--sunflower-orange) !important;
+        color: #ffffff !important;
+    }
+    [data-bs-theme="dark"] .pagination .page-link:hover {
+        background-color: #373b3e !important;
+        color: #ffffff !important;
+    }
+</style>
 <div class="container-fluid mt-3">
     
     @if(session('success'))

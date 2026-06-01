@@ -72,15 +72,17 @@ class DashboardController extends Controller
         // ============================================================
         // 6. TOP SẢN PHẨM BÁN CHẠY 30 NGÀY
         // ============================================================
-        $topProducts30Days = \App\Models\ChiTietHoaDon::join('hoadon', 'chitiet_hoadon.mahd', '=', 'hoadon.mahd')
-            ->join('sanpham', 'chitiet_hoadon.masp', '=', 'sanpham.masp')
-            ->where('hoadon.ngayxuat', '>=', Carbon::today()->subDays(30))
-            ->selectRaw('sanpham.masp, sanpham.tensp, sum(chitiet_hoadon.soluong) as tong_ban, sum(chitiet_hoadon.dongia * chitiet_hoadon.soluong) as doanh_thu')
+        $topProducts30Days = ChiTietDonHang::join('donhang', 'chitiet_donhang.madon', '=', 'donhang.madon')
+            ->join('sanpham', 'chitiet_donhang.masp', '=', 'sanpham.masp')
+            ->where('donhang.ngaydat', '>=', Carbon::today()->subDays(30))
+            ->where('donhang.trangthai', 'Đã hoàn thành')
+            ->selectRaw('sanpham.masp, sanpham.tensp,
+                        SUM(chitiet_donhang.soluong) as tong_ban,
+                        SUM(chitiet_donhang.soluong * chitiet_donhang.giaban) as doanh_thu')
             ->groupBy('sanpham.masp', 'sanpham.tensp')
             ->orderByDesc('tong_ban')
             ->take(5)
             ->get();
- 
         // ============================================================
         // 7. PHÁT HIỆN NGÀY LỄ SẮP TỚI
         // ============================================================
@@ -111,7 +113,7 @@ class DashboardController extends Controller
                 $upcomingHoliday = [
                     'name'     => $name,
                     'date'     => $holidayDate->format('d/m'),
-                    'daysLeft' => $today->diffInDays($holidayDate),
+                    'daysLeft' => (int) $today->diffInDays($holidayDate),
                 ];
                 break;
             }

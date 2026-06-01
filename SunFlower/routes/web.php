@@ -127,6 +127,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/lichlamviec/save-weekly', [LichLamViecController::class, 'saveWeekly'])->name('lichlamviec.saveWeekly');
         // 3. Giao diện xem lịch cá nhân (Dành cho mọi Nhân viên)
         Route::get('/lich-cua-toi', [LichLamViecController::class, 'mySchedule'])->name('lichlamviec.mySchedule');
+        Route::post('/lichlamviec/auto-generate', [App\Http\Controllers\Admin\LichLamViecController::class, 'autoGenerate'])->name('lichlamviec.autoGenerate');
         
         Route::post('/dashboard/refresh-ai', function () {
             \Illuminate\Support\Facades\Cache::forget(

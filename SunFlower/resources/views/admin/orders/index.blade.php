@@ -4,6 +4,25 @@
 @section('page_title', 'DANH SÁCH ĐƠN HÀNG')
 
 @section('content')
+<style>
+    /* ==========================================
+       BỔ SUNG DARK MODE CHO DANH SÁCH ĐƠN HÀNG
+       ========================================== */
+    [data-bs-theme="dark"] .card { background-color: #212529 !important; border: 1px solid #373b3e !important; }
+    [data-bs-theme="dark"] .card-header.bg-white, [data-bs-theme="dark"] .card-footer.bg-white { background-color: #2c3034 !important; border-bottom: 1px solid #373b3e !important; border-top: 1px solid #373b3e !important; }
+    [data-bs-theme="dark"] .text-dark { color: #e9ecef !important; }
+
+    /* CSS Table */
+    [data-bs-theme="dark"] .table { color: #e9ecef !important; }
+    [data-bs-theme="dark"] .table-light th { background-color: #1a1d20 !important; color: #adb5bd !important; border-bottom: 2px solid #373b3e !important; }
+    [data-bs-theme="dark"] .table td, [data-bs-theme="dark"] .table th { border-color: #373b3e !important; }
+    [data-bs-theme="dark"] .table-hover tbody tr:hover td { background-color: rgba(255, 255, 255, 0.05) !important; }
+
+    /* CSS Phân trang */
+    [data-bs-theme="dark"] .pagination .page-link { background-color: #2c3034 !important; border-color: #373b3e !important; color: #e9ecef !important; }
+    [data-bs-theme="dark"] .pagination .page-item.active .page-link { background-color: var(--sunflower-orange) !important; border-color: var(--sunflower-orange) !important; color: #ffffff !important; }
+    [data-bs-theme="dark"] .pagination .page-link:hover { background-color: #373b3e !important; color: #ffffff !important; }
+</style>
 <div class="container-fluid mt-3">
     <div class="card shadow-sm border-0">
         <div class="card-header bg-white py-3 border-bottom">

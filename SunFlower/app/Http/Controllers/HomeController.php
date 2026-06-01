@@ -39,11 +39,16 @@ class HomeController extends Controller {
 
     // 2. Trang Chi tiết 1 Danh mục
     public function categoryDetail($madm) {
+        // Thêm dòng này để lấy tên danh mục hiển thị ra giao diện
+        $category = DanhMuc::where('madm', $madm)->firstOrFail();
+        
         $categories = DanhMuc::all();
         
-        $categoryProducts = \App\Models\SanPham::where('madm', $madm)->get();
+        // Đổi tên biến từ $categoryProducts thành $products để View có thể đọc được
+        $products = \App\Models\SanPham::where('madm', $madm)->get();
         
-        return view('category.show', compact('categoryProducts', 'categories'));
+        // Trả về view kèm $category và $products
+        return view('category.show', compact('categories', 'category', 'products'));
     }
 
     // 3. Trang Chi tiết 1 Sản phẩm
@@ -56,7 +61,13 @@ class HomeController extends Controller {
             abort(404, 'Sản phẩm không tồn tại!'); 
         }
 
-        return view('product.show', compact('product'));
+        // Lấy 4 sản phẩm liên quan (cùng danh mục, loại trừ sản phẩm hiện tại)
+        $relatedProducts = SanPham::where('madm', $product->madm)
+                                  ->where('masp', '!=', $masp)
+                                  ->take(4)
+                                  ->get();
+
+        return view('product.show', compact('product', 'relatedProducts'));
     }
 
     // Xử lý luồng Tìm kiếm

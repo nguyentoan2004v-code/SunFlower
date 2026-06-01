@@ -85,7 +85,9 @@ class ProductController extends Controller implements HasMiddleware
             'giaban' => 'required|numeric|min:0',
             'giakm' => 'nullable|numeric|min:0|lt:giaban',
             'madm' => 'required|exists:danhmuc,madm',
-            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'mota' => 'nullable|string',
+            'mota_chitiet' => 'nullable|string'
         ]);
 
         $data = $request->all();
@@ -124,7 +126,9 @@ class ProductController extends Controller implements HasMiddleware
             'giaban' => 'required|numeric|min:0',
             'giakm' => 'nullable|numeric|min:0|lt:giaban',
             'madm' => 'required|exists:danhmuc,madm',
-            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'mota' => 'nullable|string',
+            'mota_chitiet' => 'nullable|string'
         ]);
 
         $data = $request->except(['masp']); // Không cho phép sửa mã sản phẩm
