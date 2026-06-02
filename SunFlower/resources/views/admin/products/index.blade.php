@@ -143,7 +143,7 @@
                         <tr>
                             <td class="ps-4 fw-bold text-secondary">{{ $sp->masp }}</td>
                             <td>
-                                <img src="{{ route('product.image', $sp->masp) }}" class="rounded shadow-sm" style="width:60px; height:60px; object-fit:cover;">
+                                <img src="{{ str_starts_with($sp->hinhanh, 'http') ? $sp->hinhanh : asset('storage/' . ltrim($sp->hinhanh, '/')) }}" class="rounded shadow-sm" style="width:60px; height:60px; object-fit:cover;">
                             </td>
                             <td class="fw-medium">{{ $sp->tensp }} </td>
                             <td>{{ $sp->danhmuc->tendm ?? 'N/A' }} </td>

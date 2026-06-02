@@ -17,9 +17,9 @@
             <div class="grid grid-cols-1 md:grid-cols-12 gap-0">
                 
                 <div class="md:col-span-5 bg-gray-50 p-8 flex items-center justify-center relative group">
-                    <img src="{{ route('product.image', $product->masp) }}" 
-                         alt="{{ $product->tensp ?? 'Hoa' }}"
-                         class="w-full h-auto object-cover aspect-square rounded-2xl shadow-sm group-hover:scale-105 transition duration-700">
+                    <img src="{{ str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/')) }}" 
+                        alt="{{ $product->tensp ?? 'Hoa' }}"
+                        class="w-full h-auto object-cover aspect-square rounded-2xl shadow-sm group-hover:scale-105 transition duration-700">
                     
                     <div class="absolute top-6 left-6 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md uppercase tracking-wider">
                         Hot Trend
@@ -173,7 +173,8 @@
                 <div id="long-desc-container" class="text-gray-700 text-base leading-relaxed font-sans overflow-hidden product-content max-h-[400px] transition-all duration-700 relative">
                     @if(!empty($product->mota_chitiet))
                         @php
-                            $imgHtml = '<img src="' . route('product.image', $product->masp) . '" alt="' . $product->tensp . '" class="w-full max-w-md mx-auto rounded-2xl shadow-md my-8 block border border-gray-100">';
+                            $imgUrl = str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/'));
+                            $imgHtml = '<img src="' . $imgUrl . '" alt="' . $product->tensp . '" class="w-full max-w-md mx-auto rounded-2xl shadow-md my-8 block border border-gray-100">';
                             $finalContent = str_replace('[anh_hoa]', $imgHtml, $product->mota_chitiet);
                         @endphp
                         {!! $finalContent !!}
@@ -239,9 +240,9 @@
                 @foreach($relatedProducts as $related)
                     <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl transition-all duration-300 group flex flex-col h-full hover:-translate-y-1">
                         <a href="{{ route('product.show', $related->masp) }}" class="relative w-full aspect-square overflow-hidden bg-gray-50 block">
-                            <img src="{{ route('product.image', $related->masp) }}" 
-                                 alt="{{ $related->tensp }}" 
-                                 class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
+                            <img src="{{ str_starts_with($related->hinhanh, 'http') ? $related->hinhanh : asset('storage/' . ltrim($related->hinhanh, '/')) }}" 
+                                alt="{{ $related->tensp }}" 
+                                class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
                             <div class="absolute inset-0 bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                 <span class="bg-white text-gray-900 text-sm font-bold py-2 px-4 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">Xem hoa</span>
                             </div>

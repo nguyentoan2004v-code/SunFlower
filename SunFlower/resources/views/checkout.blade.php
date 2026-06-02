@@ -89,7 +89,14 @@
                         @foreach($checkoutItems as $id => $item)
                             @php $finalTotal += $item['price'] * $item['quantity']; @endphp
                             <div class="flex items-center gap-4 bg-white p-4 rounded-2xl">
-                                <img src="{{ route('product.image', $id) }}" class="w-16 h-16 rounded-xl object-cover">
+                                @php
+                                    $chkProduct = \App\Models\SanPham::find($id);
+                                    $chkImg = asset('images/bg-sunflower.jpg');
+                                    if($chkProduct && !empty($chkProduct->hinhanh)){
+                                        $chkImg = str_starts_with($chkProduct->hinhanh, 'http') ? $chkProduct->hinhanh : asset('storage/' . ltrim($chkProduct->hinhanh, '/'));
+                                    }
+                                @endphp
+                                <img src="{{ $chkImg }}" class="w-16 h-16 rounded-xl object-cover">
                                 <div class="flex-1">
                                     <h4 class="font-bold text-sm text-gray-900 line-clamp-1">{{ $item['name'] }}</h4>
                                     <p class="text-xs text-gray-500">Số lượng: {{ $item['quantity'] }}</p>

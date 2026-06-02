@@ -4,7 +4,7 @@
 
 @section('content')
 <div class="w-[100vw] relative left-1/2 -translate-x-1/2 min-h-screen flex items-center justify-center bg-cover bg-center py-12 px-4" 
-     style="background-image: url('{{ asset('storage/image/login/nenlogin.png') }}'); background-color: #fffaf0;">
+     style="background-image: url('{{ asset('https://res.cloudinary.com/drgrh0yeo/image/upload/v1780328818/sunflower_login/wztpg0fg2zyvp408u6zv.png') }}'); background-color: #fffaf0;">
     
     <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl p-10 border border-orange-50">
         <div class="text-center mb-10">

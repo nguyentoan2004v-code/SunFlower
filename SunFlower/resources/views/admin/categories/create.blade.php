@@ -51,7 +51,7 @@
                                 <div class="mb-4">
                                     <label for="tendm" class="form-label fw-bold">Tên danh mục <span class="text-danger">*</span></label>
                                     <input type="text" name="tendm" id="tendm" class="form-control @error('tendm') is-invalid @enderror" 
-                                           placeholder="Nhập tên loại hoa (vợ, khai trương...)" value="{{ old('tendm') }}">
+                                           placeholder="Nhập tên danh mục" value="{{ old('tendm') }}">
                                     @error('tendm')
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror

@@ -77,9 +77,9 @@
                     
                     <div class="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-4 flex items-center justify-center">
                         @if(!empty($sp->hinhanh))
-                            <img src="{{ route('product.image', $product->masp) }}" 
-                                 class="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
-                                 alt="{{ $sp->tensp }}">
+                            <img src="{{ str_starts_with($sp->hinhanh, 'http') ? $sp->hinhanh : asset('storage/' . ltrim($sp->hinhanh, '/')) }}" 
+                                class="w-full h-full object-cover group-hover:scale-110 transition duration-500" 
+                                alt="{{ $sp->tensp }}">
                         @else
                             <i class="fa-solid fa-seedling text-5xl text-orange-200 group-hover:scale-125 transition duration-700"></i>
                         @endif

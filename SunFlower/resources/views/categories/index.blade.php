@@ -16,8 +16,14 @@
         @if(isset($categories) && $categories->count() > 0)
             @foreach($categories as $category)
                 <a href="{{ route('category.show', $category->madm) }}" class="relative h-56 rounded-2xl overflow-hidden group shadow-sm hover:shadow-md transition block border border-gray-100">
-                    <img src="{{ asset('storage/image/' . ($category->hinhanh ?? 'images/default-flower.jpg')) }}" 
-                         class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="{{ $category->tendm ?? 'Danh mục' }}">
+                    @php
+                        $catImg = asset('images/default-flower.jpg');
+                        if(!empty($category->hinhanh)){
+                            $catImg = str_starts_with($category->hinhanh, 'http') ? $category->hinhanh : asset('storage/' . ltrim($category->hinhanh, '/'));
+                        }
+                    @endphp
+                    <img src="{{ $catImg }}" 
+                        class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="{{ $category->tendm ?? 'Danh mục' }}">
                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
                     <div class="absolute bottom-4 left-4 right-4 text-center">
                         <h3 class="text-white font-bold text-lg drop-shadow-md">{{ $category->tendm ?? 'Danh mục' }}</h3>
@@ -38,8 +44,14 @@
             @foreach($products as $product)
                 <div class="bg-white border border-gray-100 rounded-2xl p-4 flex flex-col group shadow-sm hover:shadow-lg transition duration-300">
                     <a href="{{ route('product.show', $product->masp) }}" class="aspect-square overflow-hidden rounded-xl mb-4 relative">
-                        <img src="{{ route('product.image', $product->masp) }}" 
-                             class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
+                        @php
+                            $pImg = asset('images/bg-sunflower.jpg');
+                            if(!empty($product->hinhanh)){
+                                $pImg = str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/'));
+                            }
+                        @endphp
+                        <img src="{{ $pImg }}" 
+                            class="w-full h-full object-cover group-hover:scale-105 transition duration-500">
                         <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
                             <span class="bg-white text-gray-800 px-4 py-2 rounded-full font-semibold text-sm shadow-md">Xem chi tiết</span>
                         </div>

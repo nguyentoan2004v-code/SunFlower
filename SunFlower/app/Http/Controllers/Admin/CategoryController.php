@@ -8,6 +8,7 @@ use App\Models\DanhMuc;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Cloudinary\Cloudinary;
 
 class CategoryController extends Controller implements HasMiddleware
 {
@@ -67,12 +68,15 @@ class CategoryController extends Controller implements HasMiddleware
 
         $data = $request->all();
 
-        // Xử lý upload ảnh (Chỉ lưu tên file y hệt Sản phẩm)
+        // XỬ LÝ UPLOAD ẢNH LÊN CLOUDINARY
         if ($request->hasFile('hinhanh')) {
-            $file = $request->file('hinhanh');
-            $filename = time() . '_dm_' . $file->getClientOriginalName();
-            $file->storeAs('image', $filename, 'public'); 
-            $data['hinhanh'] = $filename;
+            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+            
+            $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
+                'folder' => 'sunflower_categories' // Lưu vào thư mục danh mục riêng cho gọn
+            ]);
+            
+            $data['hinhanh'] = $result['secure_url'];
         }
 
         DanhMuc::create($data);
@@ -99,16 +103,21 @@ class CategoryController extends Controller implements HasMiddleware
 
         $data = $request->except(['madm']);
 
+        // XỬ LÝ ẢNH MỚI NẾU CÓ
         if ($request->hasFile('hinhanh')) {
-            // Xóa ảnh cũ
+            
+            // Xóa ảnh cũ trên ổ cứng (nếu nó là ảnh local cũ)
             if ($category->hinhanh && !str_starts_with($category->hinhanh, 'http')) {
                 Storage::disk('public')->delete('image/' . $category->hinhanh);
             }
-            // Lưu ảnh mới
-            $file = $request->file('hinhanh');
-            $filename = time() . '_dm_' . $file->getClientOriginalName();
-            $file->storeAs('image', $filename, 'public');
-            $data['hinhanh'] = $filename;
+            
+            // Upload ảnh mới lên Cloudinary
+            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+            $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
+                'folder' => 'sunflower_categories'
+            ]);
+            
+            $data['hinhanh'] = $result['secure_url'];
         }
 
         $category->update($data);

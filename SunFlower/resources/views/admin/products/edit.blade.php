@@ -161,8 +161,14 @@
                                 <div class="mb-3">
                                     <label class="form-label fw-bold d-block">Hình ảnh hiện tại</label>
                                     <div class="border rounded p-2 bg-light mb-3 text-center">
-                                        <img id="img-preview" src="{{ route('product.image', $product->masp) }}" 
-                                             class="img-fluid rounded shadow-sm" style="max-height: 250px;">
+                                        @php
+                                            $editProdImg = asset('images/bg-sunflower.jpg');
+                                            if(!empty($product->hinhanh)){
+                                                $editProdImg = str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/'));
+                                            }
+                                        @endphp
+                                        <img id="img-preview" src="{{ $editProdImg }}" 
+                                            class="img-fluid rounded shadow-sm" style="max-height: 250px;">
                                     </div>
                                     
                                     <label for="hinhanh" class="form-label fw-bold">Thay đổi ảnh mới</label>

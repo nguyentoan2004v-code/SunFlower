@@ -60,9 +60,14 @@
                             <div class="col-md-5">
                                 <label class="form-label fw-bold d-block">Hình ảnh hiện tại</label>
                                 <div class="border rounded p-2 bg-light mb-3 text-center">
-                                    <img id="img-preview" 
-                                         src="{{ $category->hinhanh ? asset('storage/image/' . $category->hinhanh) : asset('images/bg-sunflower.jpg') }}" 
-                                         class="img-fluid rounded shadow-sm" style="max-height: 150px;">
+                                    @php
+                                        $editCatImg = asset('images/bg-sunflower.jpg');
+                                        if(!empty($category->hinhanh)){
+                                            $editCatImg = str_starts_with($category->hinhanh, 'http') ? $category->hinhanh : asset('storage/' . ltrim($category->hinhanh, '/'));
+                                        }
+                                    @endphp
+                                    <img id="img-preview" src="{{ $editCatImg }}" 
+                                        class="img-fluid rounded shadow-sm" style="max-height: 150px;">
                                 </div>
                                 
                                 <label for="hinhanh" class="form-label fw-bold">Thay ảnh mới</label>

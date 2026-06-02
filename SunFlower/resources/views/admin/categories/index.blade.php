@@ -65,10 +65,16 @@
                         <tr>
                             <td class="ps-4 fw-bold text-secondary">{{ $dm->madm }}</td>
                             <td>
-                                <img src="{{ $dm->hinhanh ? asset('storage/image/' . $dm->hinhanh) : asset('images/bg-sunflower.jpg') }}" 
-                                     class="img-thumbnail shadow-sm rounded" 
-                                     style="width: 60px; height: 60px; object-fit: cover;" 
-                                     alt="{{ $dm->tendm }}">
+                                @php
+                                    $dmImg = asset('images/bg-sunflower.jpg');
+                                    if(!empty($dm->hinhanh)){
+                                        $dmImg = str_starts_with($dm->hinhanh, 'http') ? $dm->hinhanh : asset('storage/' . ltrim($dm->hinhanh, '/'));
+                                    }
+                                @endphp
+                                <img src="{{ $dmImg }}" 
+                                    class="img-thumbnail shadow-sm rounded" 
+                                    style="width: 60px; height: 60px; object-fit: cover;" 
+                                    alt="{{ $dm->tendm }}">
                             </td>
                             <td class="fw-medium text-dark">{{ $dm->tendm }}</td>
                             <td>

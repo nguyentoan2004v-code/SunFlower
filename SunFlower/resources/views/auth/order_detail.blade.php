@@ -101,7 +101,13 @@
             <div class="space-y-4">
                 @foreach($donHang->sanphams as $sp)
                     <div class="flex items-center gap-4">
-                        <img src="{{ route('product.image', $sp->masp) }}" class="w-16 h-16 object-cover rounded-xl shadow-sm">
+                        @php
+                            $spKhImg = asset('images/bg-sunflower.jpg');
+                            if(!empty($sp->hinhanh)){
+                                $spKhImg = str_starts_with($sp->hinhanh, 'http') ? $sp->hinhanh : asset('storage/' . ltrim($sp->hinhanh, '/'));
+                            }
+                        @endphp
+                        <img src="{{ $spKhImg }}" class="w-16 h-16 object-cover rounded-xl shadow-sm">
                         <div class="flex-1">
                             <p class="font-bold text-gray-900">{{ $sp->tensp }}</p>
                             <p class="text-sm text-gray-500">x{{ $sp->pivot->soluong }}</p>

@@ -19,9 +19,12 @@
                 <div class="group bg-white border border-gray-100 rounded-3xl p-4 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-1 relative">
                     <div class="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-5">
                         @php
-                            $prodImage = !empty($product->hinhanh)
-                                         ? route('product.image', $product->masp)
-                                         : asset('images/bg-sunflower.jpg');
+                            $prodImage = asset('images/bg-sunflower.jpg');
+                            if (!empty($product->hinhanh)) {
+                                $prodImage = str_starts_with($product->hinhanh, 'http') 
+                                            ? $product->hinhanh 
+                                            : asset('storage/' . ltrim($product->hinhanh, '/'));
+                            }
                         @endphp
 
                         <img src="{{ $prodImage }}" 

@@ -17,7 +17,6 @@ use App\Http\Controllers\Admin\PhieuHuyHangController;
 use App\Http\Controllers\Admin\NhanVienController;
 use App\Http\Controllers\Admin\LichLamViecController;
 
-
 // =====================
 // USER
 // =====================

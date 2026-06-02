@@ -24,7 +24,7 @@
                 <a href="{{ route('product.show', $item->masp) }}" class="group bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 flex flex-col h-full">
                     
                     <div class="relative w-full aspect-square overflow-hidden bg-gray-50 p-4">
-                        <img src="{{ route('product.image', $item->masp) }}" 
+                        <img src="{{ str_starts_with($item->hinhanh, 'http') ? $item->hinhanh : asset('storage/' . ltrim($item->hinhanh, '/')) }}" 
                              alt="{{ $item->tensp }}" 
                              class="absolute inset-0 w-full h-full object-cover rounded-t-3xl group-hover:scale-110 transition-transform duration-700">
                         

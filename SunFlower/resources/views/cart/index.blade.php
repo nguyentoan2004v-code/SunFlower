@@ -33,7 +33,15 @@
                                         </td>
                                         
                                         <td class="px-6 py-6 flex items-center gap-4">
-                                            <img src="{{ route('product.image', $id) }}" class="w-16 h-16 rounded-xl object-cover border border-gray-100">
+                                            @php
+                                                // Tìm sản phẩm trong DB để lấy link ảnh chính xác nhất (vì session có thể không lưu link Cloudinary)
+                                                $cartProduct = \App\Models\SanPham::find($id);
+                                                $cartImg = asset('images/bg-sunflower.jpg');
+                                                if($cartProduct && !empty($cartProduct->hinhanh)){
+                                                    $cartImg = str_starts_with($cartProduct->hinhanh, 'http') ? $cartProduct->hinhanh : asset('storage/' . ltrim($cartProduct->hinhanh, '/'));
+                                                }
+                                            @endphp
+                                            <img src="{{ $cartImg }}" class="w-16 h-16 rounded-xl object-cover border border-gray-100">
                                             <div>
                                                 <p class="font-bold text-gray-900">{{ $details['name'] }}</p>
                                                 <p class="text-[#FF6B35] font-medium whitespace-nowrap">{{ number_format($details['price'], 0, ',', '.') }} ₫</p>

@@ -167,7 +167,13 @@
                                 <tr>
                                     <td class="ps-4">
                                         <div class="d-flex align-items-center">
-                                            <img src="{{ route('product.image', $sp->masp) }}" class="rounded shadow-sm me-3" style="width:50px; height:50px; object-fit:cover;">
+                                            @php
+                                                $spImg = asset('images/bg-sunflower.jpg');
+                                                if(!empty($sp->hinhanh)){
+                                                    $spImg = str_starts_with($sp->hinhanh, 'http') ? $sp->hinhanh : asset('storage/' . ltrim($sp->hinhanh, '/'));
+                                                }
+                                            @endphp
+                                            <img src="{{ $spImg }}" class="rounded shadow-sm me-3" style="width:50px; height:50px; object-fit:cover;">
                                             <span class="fw-medium">{{ $sp->sanpham->tensp ?? $sp->masp }}</span>
                                         </div>
                                     </td>

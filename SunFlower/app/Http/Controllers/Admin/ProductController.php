@@ -9,6 +9,7 @@ use App\Models\DanhMuc;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+use Cloudinary\Cloudinary;
 
 class ProductController extends Controller implements HasMiddleware
 {
@@ -77,7 +78,7 @@ class ProductController extends Controller implements HasMiddleware
     }
 
     // 3. Xử lý lưu sản phẩm mới
-    public function store(Request $request)
+  public function store(Request $request)
     {
         $request->validate([
             'masp' => 'required|string|max:10|unique:sanpham,masp',
@@ -92,18 +93,21 @@ class ProductController extends Controller implements HasMiddleware
 
         $data = $request->all();
 
-        // Xử lý upload hình ảnh
+        // XỬ LÝ UPLOAD HÌNH ẢNH LÊN CLOUDINARY
         if ($request->hasFile('hinhanh')) {
-            // Lưu ảnh vào thư mục storage/app/public/image/products
-            $path = $request->file('hinhanh')->store('image/products', 'public');
+            // Khởi tạo Cloudinary
+            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
             
-            // Lưu đường dẫn vào DB (Khuyên dùng cách này để dễ lấy ảnh sau này)
-            // Sẽ lưu dạng: image/products/ten_file.jpg
-            $data['hinhanh'] = $path; 
+            // Lấy file từ form và đẩy thẳng lên folder 'sunflower_products'
+            $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
+                'folder' => 'sunflower_products'
+            ]);
+            
+            // Lấy đường link bảo mật (https) gán vào DB
+            $data['hinhanh'] = $result['secure_url']; 
         }
 
         SanPham::create($data);
-       
 
         return redirect()->route('admin.products.index')->with('success', 'Thêm sản phẩm thành công!');
     }
@@ -133,18 +137,25 @@ class ProductController extends Controller implements HasMiddleware
 
         $data = $request->except(['masp']); // Không cho phép sửa mã sản phẩm
 
-        // Xử lý ảnh mới nếu có
-       if ($request->hasFile('hinhanh')) {
-            // Xóa ảnh cũ nếu có trong storage
+        // XỬ LÝ ẢNH MỚI NẾU CÓ
+        if ($request->hasFile('hinhanh')) {
+            
+            // 1. Dọn dẹp rác: Nếu ảnh cũ là ảnh local (không có chữ http), thì xóa khỏi ổ cứng máy tính
             if ($product->hinhanh && !str_starts_with($product->hinhanh, 'http')) {
-                // ltrim dùng để xóa dấu '/' ở đầu chuỗi (nếu có) trước khi xóa file
                 $oldPath = ltrim($product->hinhanh, '/'); 
-                Storage::disk('public')->delete($oldPath);
+                if(Storage::disk('public')->exists($oldPath)) {
+                    Storage::disk('public')->delete($oldPath);
+                }
             }
             
-            // Lưu ảnh mới vào thư mục products
-            $path = $request->file('hinhanh')->store('image/products', 'public');
-            $data['hinhanh'] = $path;
+            // 2. Upload ảnh mới thẳng lên Cloudinary
+            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+            $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
+                'folder' => 'sunflower_products'
+            ]);
+            
+            // 3. Ghi đè link mới vào DB
+            $data['hinhanh'] = $result['secure_url'];
         }
 
         $product->update($data);

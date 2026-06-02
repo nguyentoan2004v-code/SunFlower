@@ -13,9 +13,13 @@
             @if(isset($products) && $products->count() > 0)
                 @foreach($products->take(5) as $product)
                     @php
-                        $prodImage = !empty($product->hinhanh)
-                                     ? route('product.image', $product->masp)
-                                     : asset('images/bg-sunflower.jpg');
+                        // SỬA LỖI 1: Ảnh Banner Slider
+                        $prodImage = asset('images/bg-sunflower.jpg'); // Ảnh mặc định
+                        if (!empty($product->hinhanh)) {
+                            $prodImage = str_starts_with($product->hinhanh, 'http') 
+                                        ? $product->hinhanh 
+                                        : asset('storage/' . ltrim($product->hinhanh, '/'));
+                        }
                     @endphp
                     <div class="swiper-slide relative w-full h-full flex items-center bg-cover bg-center" style="background-image: url('{{ $prodImage }}');">
                         <div class="absolute inset-0 bg-black/50"></div> <div class="relative z-10 max-w-7xl mx-auto px-8 md:px-12 w-full flex flex-col items-start justify-center text-white pt-12">
@@ -69,11 +73,11 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         var swiper = new Swiper(".heroSwiper", {
-            loop: true,                 // Trượt vòng lặp vô hạn
-            grabCursor: true,           // Đổi con trỏ thành bàn tay để kéo thả
-            effect: "slide",            // Hiệu ứng trượt (có thể đổi thành "fade" nếu muốn mờ dần)
+            loop: true,
+            grabCursor: true,
+            effect: "slide",
             autoplay: {
-                delay: 4000,            // Tự động trượt sau 4 giây
+                delay: 4000,
                 disableOnInteraction: false, 
             },
             navigation: {
@@ -83,7 +87,7 @@
             pagination: {
                 el: ".swiper-pagination",
                 clickable: true,
-                dynamicBullets: true,   // Hiệu ứng thu phóng cho dấu chấm
+                dynamicBullets: true,
             },
         });
     });
@@ -100,9 +104,13 @@
                     <a href="{{ route('category.show', $category->madm) }}" class="relative h-56 rounded-3xl overflow-hidden group shadow-sm block border border-white">
                         
                         @php
-                            $catImage = !empty($category->hinhanh) 
-                                        ? route('category.image', $category->madm)
-                                        : 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60';
+                            // SỬA LỖI 2: Ảnh Danh Mục
+                            $catImage = 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60'; // Mặc định
+                            if (!empty($category->hinhanh)) {
+                                $catImage = str_starts_with($category->hinhanh, 'http') 
+                                            ? $category->hinhanh 
+                                            : asset('storage/' . ltrim($category->hinhanh, '/'));
+                            }
                         @endphp
                         
                         <img src="{{ $catImage }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="{{ $category->tendm }}">
@@ -130,12 +138,16 @@
                         <div class="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-5">
                             
                             @php
-                                $prodImage = !empty($product->hinhanh)
-                                             ? route('product.image', $product->masp)
-                                             : asset('images/bg-sunflower.jpg');
+                                // SỬA LỖI 3: Ảnh Lưới Sản Phẩm
+                                $gridImage = asset('images/bg-sunflower.jpg');
+                                if (!empty($product->hinhanh)) {
+                                    $gridImage = str_starts_with($product->hinhanh, 'http') 
+                                                ? $product->hinhanh 
+                                                : asset('storage/' . ltrim($product->hinhanh, '/'));
+                                }
                             @endphp
 
-                            <img src="{{ asset('storage/' . ltrim($product->hinhanh, '/')) }}" 
+                            <img src="{{ $gridImage }}" 
                                  class="w-full h-full object-cover transition duration-500 group-hover:scale-110" 
                                  alt="{{ $product->tensp }}">
                             
