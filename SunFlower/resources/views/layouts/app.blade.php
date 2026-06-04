@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'SunFlower - Cửa hàng hoa tươi')</title>
-    
+    <link rel="icon" type="image/png" href="https://res.cloudinary.com/drgrh0yeo/image/upload/v1780496206/5drg92D3VeOdSV5C41Lipg_2k_q40cvj.webp">
+    <link rel="shortcut icon" type="image/png" href="https://res.cloudinary.com/drgrh0yeo/image/upload/v1780496206/5drg92D3VeOdSV5C41Lipg_2k_q40cvj.webp">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body class="min-h-screen bg-background font-sans antialiased text-foreground selection:bg-primary/20">

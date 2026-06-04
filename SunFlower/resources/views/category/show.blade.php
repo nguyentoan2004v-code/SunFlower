@@ -60,9 +60,15 @@
                         @foreach($products as $product)
                             <div class="group bg-white border border-gray-100 rounded-3xl p-4 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-1 flex flex-col h-full">
                                 <div class="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-5">
-                                    <img src="{{ route('product.image', $product->masp) }}" 
-                                         class="w-full h-full object-cover transition duration-500 group-hover:scale-110" 
-                                         alt="{{ $product->tensp }}">
+                                    @php
+                                        $catProdImg = asset('images/bg-sunflower.jpg');
+                                        if(!empty($product->hinhanh)){
+                                            $catProdImg = str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/'));
+                                        }
+                                    @endphp
+                                    <img src="{{ $catProdImg }}" 
+                                        class="w-full h-full object-cover transition duration-500 group-hover:scale-110" 
+                                        alt="{{ $product->tensp }}">
                                     
                                     <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                                 </div>

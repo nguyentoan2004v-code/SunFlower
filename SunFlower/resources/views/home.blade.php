@@ -7,70 +7,42 @@
     
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
-<section class="relative w-screen left-1/2 -translate-x-1/2 h-[550px] bg-gray-900 overflow-hidden">
-    <div class="swiper heroSwiper w-full h-full">
+<section class="relative w-full max-w-7xl mx-auto px-4 mt-8 h-[250px] sm:h-[350px] lg:h-[500px]">
+    
+    <!-- KHÔNG CÒN rounded-[32px] và border, Banner sẽ vuông vức và tràn lề -->
+    <div class="swiper heroSwiper w-full h-full overflow-hidden shadow-xl group">
         <div class="swiper-wrapper">
-            @if(isset($products) && $products->count() > 0)
-                @foreach($products->take(5) as $product)
-                    @php
-                        // SỬA LỖI 1: Ảnh Banner Slider
-                        $prodImage = asset('images/bg-sunflower.jpg'); // Ảnh mặc định
-                        if (!empty($product->hinhanh)) {
-                            $prodImage = str_starts_with($product->hinhanh, 'http') 
-                                        ? $product->hinhanh 
-                                        : asset('storage/' . ltrim($product->hinhanh, '/'));
-                        }
-                    @endphp
-                    <div class="swiper-slide relative w-full h-full flex items-center bg-cover bg-center" style="background-image: url('{{ $prodImage }}');">
-                        <div class="absolute inset-0 bg-black/50"></div> <div class="relative z-10 max-w-7xl mx-auto px-8 md:px-12 w-full flex flex-col items-start justify-center text-white pt-12">
-                            <div class="max-w-2xl text-left"> <span class="inline-block bg-[#FF6B35] text-white text-[10px] font-bold px-3 py-1 rounded-full mb-4 uppercase tracking-widest shadow-sm">
-                                    Sản Phẩm Nổi Bật
-                                </span>
-                                
-                                <h1 class="text-2xl md:text-3xl font-extrabold mb-2 leading-tight drop-shadow-lg uppercase tracking-wide">
-                                    {{ $product->tensp }}
-                                </h1>
-                                
-                                <p class="text-xl md:text-2xl text-orange-200 font-bold mb-8 drop-shadow-md">
-                                    {{ number_format($product->giaban ?? 0, 0, ',', '.') }} ₫
-                                </p>
-                                
-                                <div class="flex flex-wrap gap-3">
-                                    <a href="{{ route('product.show', $product->masp) }}" class="bg-[#FF6B35] hover:bg-orange-600 px-7 py-2.5 rounded-lg font-bold text-sm shadow-md transition-all active:scale-95">
-                                        Xem Chi Tiết
-                                    </a>
-                                    <form action="{{ route('cart.add', $product->masp) }}" method="POST">
-                                        @csrf
-                                        <button type="submit" class="bg-white/10 hover:bg-white/20 backdrop-blur-md border border-orange-100 text-white px-7 py-2.5 rounded-lg font-bold text-sm shadow-md transition-all active:scale-95">
-                                            Thêm Vào Giỏ
-                                        </button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            @else
-                <div class="swiper-slide relative w-full h-full flex items-center bg-cover bg-center" style="background-image: url('{{ asset('images/bg-sunflower.jpg') }}');">
-                    <div class="absolute inset-0 bg-black/40"></div>
-                    <div class="relative z-10 max-w-7xl mx-auto px-8 text-white">
-                        <h1 class="text-3xl md:text-4xl font-extrabold mb-4">SunFlower</h1>
-                        <p class="text-sm italic text-orange-100">Hoa Tươi Mỗi Ngày</p>
-                    </div>
-                </div>
-            @endif
+            
+            <!-- ẢNH BANNER 1 -->
+            <div class="swiper-slide w-full h-full overflow-hidden">
+                <img src="https://res.cloudinary.com/drgrh0yeo/image/upload/v1780499734/Banner2_lbblsf.jpg" 
+                     class="w-full h-full object-cover transform transition-transform duration-[3000ms] ease-out group-hover:scale-105" 
+                     alt="Banner SunFlower 1">
+            </div>
+
+            <!-- ẢNH BANNER 2 -->
+            <div class="swiper-slide w-full h-full overflow-hidden">
+                <img src="https://res.cloudinary.com/drgrh0yeo/image/upload/v1780499543/banner1_j2prs3.jpg" 
+                     class="w-full h-full object-cover transform transition-transform duration-[3000ms] ease-out group-hover:scale-105" 
+                     alt="Banner SunFlower 2">
+            </div>
+
         </div>
         
-        <div class="swiper-button-next !text-white after:!text-xl w-12 h-12 bg-black/20 hover:bg-[#FF6B35] rounded-full backdrop-blur-sm transition-all hidden md:flex border orange-100 mr-4"></div>
-        <div class="swiper-button-prev !text-white after:!text-xl w-12 h-12 bg-black/20 hover:bg-[#FF6B35] rounded-full backdrop-blur-sm transition-all hidden md:flex border orange-100 ml-4"></div>
+        <!-- VÙNG TÀNG HÌNH CHUYỂN SLIDE -->
+        <div id="hover-prev" class="absolute top-0 left-0 w-[10%] h-full z-10 cursor-pointer bg-gradient-to-r from-black/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
         
-        <div class="swiper-pagination !bottom-8"></div>
+        <div id="hover-next" class="absolute top-0 right-0 w-[10%] h-full z-10 cursor-pointer bg-gradient-to-l from-black/5 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500"></div>
+        
+        <!-- Dấu chấm tròn ở dưới -->
+        <div class="swiper-pagination !bottom-5"></div>
     </div>
 </section>
 
 <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
 <script>
+    
     document.addEventListener('DOMContentLoaded', function () {
         var swiper = new Swiper(".heroSwiper", {
             loop: true,
@@ -90,6 +62,13 @@
                 dynamicBullets: true,
             },
         });
+        document.getElementById('hover-next').addEventListener('mouseenter', function() {
+            swiper.slideNext();
+        });
+
+        document.getElementById('hover-prev').addEventListener('mouseenter', function() {
+            swiper.slidePrev();
+        });
     });
 </script>
 
@@ -100,7 +79,7 @@
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
             @if(isset($categories) && $categories->count() > 0)
-                @foreach($categories as $category)
+                @foreach($categories->take(5) as $category)
                     <a href="{{ route('category.show', $category->madm) }}" class="relative h-56 rounded-3xl overflow-hidden group shadow-sm block border border-white">
                         
                         @php

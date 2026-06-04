@@ -5,70 +5,25 @@
 <header class="bg-white shadow-sm sticky top-0 z-50">
     <div class="px-4 sm:px-6 lg:px-8 h-24 flex justify-between items-center relative">
         
-        <a href="{{ route('home') }}" class="flex items-center gap-3 mr-6">
+        <a href="{{ route('home') }}" class="flex items-center gap-3 mr-6 group relative">
+    
+    <div class="absolute left-0 w-[50px] h-[50px] bg-[#FF6B35]/30 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-700 ease-out z-0"></div>
 
-    <!-- ICON -->
-    <svg width="60" height="60" viewBox="0 0 64 64" class="shrink-0">
+    <div class="relative z-10 h-[50px] w-[50px] rounded-full overflow-hidden flex items-center justify-center border-[1.5px] border-orange-100 bg-white shrink-0 transition-all duration-500 ease-out group-hover:border-[#FF6B35]/50 group-hover:shadow-[0_4px_15px_rgba(255,107,53,0.15)]">
+        <img src="https://res.cloudinary.com/drgrh0yeo/image/upload/v1780496206/5drg92D3VeOdSV5C41Lipg_2k_q40cvj.webp"
+             alt="SunFlower Logo"
+             class="w-full h-full object-cover scale-[1.35] group-hover:scale-[1.45] group-hover:rotate-6 transition-all duration-700 ease-out origin-center">
+    </div>
 
-        <defs>
-            <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0%" stop-color="#FF6B35"/>
-                <stop offset="100%" stop-color="#FFB800"/>
-            </linearGradient>
-        </defs>
-
-        <!-- petals (clean, đều, không thô) -->
-        <g fill="#FDBA21">
-            <circle cx="32" cy="6" r="5"/>
-            <circle cx="52" cy="12" r="5"/>
-            <circle cx="58" cy="32" r="5"/>
-            <circle cx="52" cy="52" r="5"/>
-            <circle cx="32" cy="58" r="5"/>
-            <circle cx="12" cy="52" r="5"/>
-            <circle cx="6" cy="32" r="5"/>
-            <circle cx="12" cy="12" r="5"/>
-        </g>
-
-        <!-- center -->
-        <circle cx="32" cy="32" r="16" fill="url(#g)"/>
-
-        <!-- S -->
-        <text x="32" y="37" text-anchor="middle"
-              font-size="18" font-weight="700"
-              fill="white" font-family="Poppins, sans-serif">
-            S
-        </text>
-    </svg>
-    <!-- TEXT -->
-    <h1 class="flex items-center text-3xl font-bold tracking-tight">
-
-        <span class="text-orange-500">SUNFL</span>
-
-        <!-- O = FLOWER -->
-        <span class="relative mx-1 w-7 h-7 flex items-center justify-center">
-
-            <!-- center -->
-            <span class="w-4 h-4 bg-gradient-to-br from-orange-500 to-yellow-400 rounded-full z-10"></span>
-
-            <!-- petals -->
-            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full top-0"></span>
-            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full bottom-0"></span>
-            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full left-0"></span>
-            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full right-0"></span>
-
-            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full top-1 left-1"></span>
-            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full top-1 right-1"></span>
-            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full bottom-1 left-1"></span>
-            <span class="absolute w-2 h-2 bg-yellow-400 rounded-full bottom-1 right-1"></span>
-
-        </span>
-
-        <span class="bg-gradient-to-r from-orange-500 to-yellow-400 bg-clip-text text-transparent">
-            WER
-        </span>
-
-    </h1>
-
+    <div class="hidden sm:flex flex-col justify-center z-10">
+        <div class="flex items-baseline mb-0.5">
+            <span class="text-[30px] font-extrabold text-gray-700 tracking-tight transition-colors duration-300 group-hover:text-gray-900">Sun</span>
+            <span class="text-[25px] font-extrabold text-[#FF6B35] tracking-tight transition-colors duration-300">Flower</span>
+            
+            <span class="w-1.5 h-1.5 rounded-full bg-[#FF6B35] ml-0.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all duration-500 ease-out"></span>
+        </div>
+        <span class="text-[10px] font-medium text-gray-500 tracking-[0.07em] leading-none transition-colors duration-300 group-hover:text-[#FF6B35]">Cửa hàng hoa tươi</span>
+    </div>
 </a>
 
         <nav class="hidden md:flex space-x-12 items-center">

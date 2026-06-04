@@ -70,7 +70,13 @@
                             <td>
                                 @if($phieu->sanpham)
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ route('product.image', $phieu->masp) }}" class="rounded shadow-sm me-2" style="width:40px; height:40px; object-fit:cover;">
+                                        @php
+                                            $huyImg = asset('images/bg-sunflower.jpg');
+                                            if(!empty($phieu->sanpham->hinhanh)){
+                                                $huyImg = str_starts_with($phieu->sanpham->hinhanh, 'http') ? $phieu->sanpham->hinhanh : asset('storage/' . ltrim($phieu->sanpham->hinhanh, '/'));
+                                            }
+                                        @endphp
+                                        <img src="{{ $huyImg }}" class="rounded shadow-sm me-2" style="width:40px; height:40px; object-fit:cover;">
                                         <span>{{ $phieu->sanpham->tensp }}</span>
                                     </div>
                                 @else
