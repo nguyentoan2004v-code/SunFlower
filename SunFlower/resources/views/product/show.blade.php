@@ -32,12 +32,17 @@
                     
                     <div class="flex items-center gap-4 mb-6 pb-6 border-b border-gray-100">
                         <div class="flex items-center text-yellow-400 text-sm">
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            <svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            <span class="text-gray-500 font-medium ml-2 font-sans">(124)</span>
+                            {{-- IN SAO ĐỘNG DỰA TRÊN ĐIỂM TRUNG BÌNH --}}
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= round($avgRating))
+                                    <svg class="w-4 h-4 fill-current text-yellow-400" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                @else
+                                    <svg class="w-4 h-4 fill-current text-gray-300" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                @endif
+                            @endfor
+                            <a href="#danh-gia-khach-hang" class="text-gray-500 hover:text-[#FF6B35] font-medium ml-2 font-sans transition underline decoration-dashed underline-offset-4">
+                                ({{ $totalReviews }} đánh giá)
+                            </a>
                         </div>
                         <div class="h-4 w-px bg-gray-300"></div>
                         <span class="text-sm text-gray-500">Mã SP: <strong class="text-gray-800">{{ $product->masp }}</strong></span>
@@ -106,8 +111,6 @@
                             <span>Xem toàn bộ mô tả</span>
                             <svg id="icon-toggle-desc" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                         </button>
-                        
-                       
                     </div>
                     
                     <div class="flex flex-col xl:flex-row gap-4 mb-8">
@@ -163,6 +166,7 @@
             </div>
         </div>
 
+        {{-- KHỐI MÔ TẢ CHI TIẾT SẢN PHẨM --}}
         <div id="chi-tiet-mo-ta" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12 mb-12 scroll-mt-24">
             <h2 class="text-2xl font-extrabold text-gray-900 mb-6 flex items-center gap-3">
                 <span class="w-2 h-8 bg-[#FF6B35] rounded-full inline-block"></span>
@@ -194,39 +198,138 @@
             </div>
 
             <style>
-                .product-content p {
-                    margin-bottom: 1rem;
-                    line-height: 1.8;
-                }
-                .product-content strong, .product-content b {
-                    color: #1f2937;
-                }
-                .product-content h3, .product-content h4 {
-                    color: #1f2937;
-                    font-weight: 800;
-                    margin-top: 2rem;
-                    margin-bottom: 1rem;
-                    font-size: 1.25rem;
-                }
-                .product-content ul {
-                    margin-left: 1.5rem;
-                    margin-bottom: 1.5rem;
-                    list-style-type: disc;
-                }
-                .product-content li {
-                    margin-bottom: 0.5rem;
-                }
-                /* CSS riêng cho chú thích ảnh (nếu bạn có gõ text ngay dưới ảnh) */
-                .product-content .image-caption {
-                    text-align: center;
-                    font-style: italic;
-                    color: #6b7280;
-                    font-size: 0.875rem;
-                    margin-top: -1rem;
-                    margin-bottom: 2rem;
-                }
-
+                .product-content p { margin-bottom: 1rem; line-height: 1.8; }
+                .product-content strong, .product-content b { color: #1f2937; }
+                .product-content h3, .product-content h4 { color: #1f2937; font-weight: 800; margin-top: 2rem; margin-bottom: 1rem; font-size: 1.25rem; }
+                .product-content ul { margin-left: 1.5rem; margin-bottom: 1.5rem; list-style-type: disc; }
+                .product-content li { margin-bottom: 0.5rem; }
+                .product-content .image-caption { text-align: center; font-style: italic; color: #6b7280; font-size: 0.875rem; margin-top: -1rem; margin-bottom: 2rem; }
             </style>
+        </div>
+
+        {{-- KHU VỰC HIỂN THỊ ĐÁNH GIÁ (CODE MỚI THÊM) --}}
+        <div id="danh-gia-khach-hang" class="bg-white rounded-3xl shadow-sm border border-gray-100 p-8 md:p-12 mb-12 scroll-mt-24">
+            <h2 class="text-2xl font-extrabold text-gray-900 mb-8 flex items-center gap-3">
+                <span class="w-2 h-8 bg-[#FF6B35] rounded-full inline-block"></span>
+                Đánh giá từ khách hàng
+            </h2>
+
+            @if($totalReviews > 0)
+                {{-- Box thống kê chung --}}
+                <div class="flex flex-col md:flex-row items-center gap-8 mb-10 bg-orange-50/40 p-8 rounded-[1rem] border border-orange-200 shadow-sm">
+                    
+                    {{-- Cột Trái: Điểm số --}}
+                    <div class="text-center md:border-r md:border-orange-200 md:pr-10">
+                        <div class="text-[#FF6B35] mb-2">
+                            <span class="text-5xl font-black">{{ $avgRating }}</span>
+                            <span class="text-xl font-bold text-orange-600"> trên 5</span>
+                        </div>
+                        <div class="flex items-center justify-center gap-1.5 mb-2">
+                            @for($i = 1; $i <= 5; $i++)
+                                @if($i <= round($avgRating))
+                                    <svg class="w-6 h-6 fill-current text-[#FF6B35]" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                @else
+                                    <svg class="w-6 h-6 fill-current text-orange-200" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                @endif
+                            @endfor
+                        </div>
+                    </div>
+
+                    {{-- Cột Phải: Các nút Lọc (Filter) --}}
+                    <div class="flex-1 flex flex-wrap gap-3 justify-center md:justify-start">
+                        @php $currentFilter = request('filter'); @endphp
+                        
+                        {{-- Nút Tất cả --}}
+                        <a href="{{ request()->fullUrlWithQuery(['filter' => null]) }}#danh-gia-khach-hang" 
+                           class="px-5 py-2 border rounded-sm text-sm font-medium transition-colors bg-white {{ !$currentFilter ? 'border-[#FF6B35] text-[#FF6B35]' : 'border-gray-200 text-gray-800 hover:border-[#FF6B35]' }}">
+                            Tất Cả
+                        </a>
+                        
+                        {{-- Vòng lặp in nút 5 Sao -> 1 Sao --}}
+                        @foreach([5, 4, 3, 2, 1] as $star)
+                            <a href="{{ request()->fullUrlWithQuery(['filter' => $star]) }}#danh-gia-khach-hang"
+                               class="px-5 py-2 border rounded-sm text-sm font-medium transition-colors bg-white {{ $currentFilter == $star ? 'border-[#FF6B35] text-[#FF6B35]' : 'border-gray-200 text-gray-800 hover:border-[#FF6B35]' }}">
+                                {{ $star }} Sao ({{ $countStars[$star] }})
+                            </a>
+                        @endforeach
+                        
+                        {{-- Nút Có Bình Luận --}}
+                        <a href="{{ request()->fullUrlWithQuery(['filter' => 'comment']) }}#danh-gia-khach-hang"
+                           class="px-5 py-2 border rounded-sm text-sm font-medium transition-colors bg-white {{ $currentFilter === 'comment' ? 'border-[#FF6B35] text-[#FF6B35]' : 'border-gray-200 text-gray-800 hover:border-[#FF6B35]' }}">
+                            Có Bình Luận ({{ $countComments }})
+                        </a>
+                    </div>
+                </div>
+
+                {{-- Danh sách Comment --}}
+                <div class="space-y-6">
+                    @foreach($reviews as $review)
+                        <div class="border-b border-gray-50 pb-8 last:border-0 last:pb-0">
+                            <div class="flex items-start gap-4 mb-3">
+                                {{-- Avatar tạo tự động từ chữ cái đầu của Tên --}}
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-tr from-[#FF6B35] to-orange-300 flex-shrink-0 flex items-center justify-center text-white font-black text-xl shadow-md border-2 border-white">
+                                    {{ substr($review->khachHang->hoten ?? 'K', 0, 1) }}
+                                </div>
+                                
+                                <div class="flex-1">
+                                    <div class="flex justify-between items-start">
+                                        <h4 class="font-bold text-gray-900 text-lg">{{ $review->khachHang->hoten ?? 'Khách hàng ẩn danh' }}</h4>
+                                        <span class="text-xs font-medium text-gray-400 bg-gray-50 px-3 py-1 rounded-full border border-gray-100">
+                                            {{ date('d/m/Y', strtotime($review->created_at)) }}
+                                        </span>
+                                    </div>
+                                    <div class="flex text-yellow-400 mt-1 mb-2">
+                                        @for($i = 1; $i <= 5; $i++)
+                                            @if($i <= $review->so_sao)
+                                                <svg class="w-4 h-4 fill-current text-yellow-400" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                            @else
+                                                <svg class="w-4 h-4 fill-current text-gray-200" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                            @endif
+                                        @endfor
+                                    </div>
+                                    @if(!empty($review->binh_luan))
+                                        <div class="bg-gray-50/80 p-5 rounded-2xl rounded-tl-none border border-gray-100 text-gray-700 leading-relaxed">
+                                            {{ $review->binh_luan }}
+                                        </div>
+                                    @endif
+                                    @if(!empty($review->phan_hoi))
+                                        <div class="mt-4 bg-orange-50/60 p-4 rounded-2xl rounded-tl-none border border-orange-100 ml-4 relative">
+                                            {{-- Dấu mũi tên chỉ lên (Tạo hiệu ứng box chat) --}}
+                                            <div class="absolute -top-3 left-4 text-orange-50/60">
+                                                <svg width="24" height="12" viewBox="0 0 24 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M12 0L24 12H0L12 0Z" />
+                                                </svg>
+                                            </div>
+                                            
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <div class="w-6 h-6 rounded-full bg-[#FF6B35] flex items-center justify-center text-white">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                                                </div>
+                                                <span class="font-bold text-gray-900 text-sm">Phản hồi từ SunFlower</span>
+                                            </div>
+                                            <p class="text-gray-700 text-sm leading-relaxed pl-8">
+                                                {{ $review->phan_hoi }}
+                                            </p>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+                @if($reviews->hasPages())
+                    <div class="mt-10 pt-6 border-t border-gray-100 flex justify-center">
+                        {{-- Vì tôi thấy bạn có file pagination riêng ở resources/views/vendor/pagination/sunflower.blade.php nên bạn có thể gọi tên nó, hoặc dùng mặc định --}}
+                        {{ $reviews->fragment('danh-gia-khach-hang')->links('vendor.pagination.sunflower') }}
+                    </div>
+                @endif
+            @else
+                <div class="text-center py-16 bg-gray-50 rounded-[2rem] border border-dashed border-gray-200">
+                    <svg class="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path></svg>
+                    <h3 class="text-xl font-bold text-gray-700 mb-2">Chưa có đánh giá nào</h3>
+                    <p class="text-gray-500 font-medium">Hãy là người đầu tiên trải nghiệm và chia sẻ cảm nhận về sản phẩm này nhé!</p>
+                </div>
+            @endif
         </div>
 
         @if(isset($relatedProducts) && $relatedProducts->count() > 0)
@@ -310,7 +413,6 @@
                 const iconToggleLongDesc = document.getElementById('icon-toggle-long-desc');
 
                 if (longDescContainer && btnToggleLongDesc) {
-                    // Nếu bài viết dài hơn 400px thì mới hiện nút bấm
                     if (longDescContainer.scrollHeight > 400) {
                         btnToggleLongDesc.classList.remove('hidden');
                     } else {
@@ -318,7 +420,6 @@
                     }
 
                     btnToggleLongDesc.addEventListener('click', () => {
-                        // Max-height: 5000px đảm bảo bài viết dài bao nhiêu cũng mở ra hết
                         const isExpanded = longDescContainer.classList.contains('max-h-[5000px]');
                         
                         if (!isExpanded) {
@@ -336,7 +437,6 @@
                             btnToggleLongDesc.querySelector('span').innerText = 'Xem toàn bộ mô tả';
                             iconToggleLongDesc.classList.remove('rotate-180');
                             
-                            // Tự động cuộn màn hình lên đầu khối mô tả để khách dễ nhìn
                             document.getElementById('chi-tiet-mo-ta').scrollIntoView({ behavior: 'smooth' });
                         }
                     });
@@ -347,7 +447,6 @@
                 const iconToggleDesc = document.getElementById('icon-toggle-desc');
 
                 if (descContainer && btnToggleDesc) {
-                    // Ẩn nút nếu text quá ngắn (không vượt quá 96px - chiều cao h-24)
                     if (descContainer.scrollHeight <= 96) {
                         btnToggleDesc.style.display = 'none';
                         if(descFade) descFade.style.display = 'none';
@@ -357,7 +456,6 @@
                         const isExpanded = descContainer.classList.contains('max-h-[1000px]');
                         
                         if (!isExpanded) {
-                            // Mở rộng mô tả
                             descContainer.classList.remove('max-h-24');
                             descContainer.classList.add('max-h-[1000px]');
                             if(descFade) descFade.style.opacity = '0';
@@ -365,7 +463,6 @@
                             btnToggleDesc.querySelector('span').innerText = 'Thu gọn';
                             iconToggleDesc.classList.add('rotate-180');
                         } else {
-                            // Thu gọn mô tả
                             descContainer.classList.remove('max-h-[1000px]');
                             descContainer.classList.add('max-h-24');
                             if(descFade) descFade.style.opacity = '1';

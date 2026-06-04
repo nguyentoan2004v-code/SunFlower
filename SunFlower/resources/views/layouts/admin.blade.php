@@ -108,7 +108,9 @@
                 $canAccessProduct = $isManager || $user->hasRole('Quản lý Sản phẩm') || $user->hasRole('Quản lý Sản phẩm & Danh mục');
                 $canAccessOrder = $isManager || $user->hasRole('Nhân viên Bán hàng');
                 $canAccessKho = $isManager || $user->hasRole('Quản lý Kho hàng');
-                $canAccessNhanVien = $isManager; 
+                $canAccessNhanVien = $isManager;
+                $canAccessKhachHang = $isManager;
+                $canAccessDanhGia = $isManager;
             @endphp
 
             <ul class="nav flex-column mt-3">
@@ -223,7 +225,24 @@
                     </div>
                     @endif
                 </li>
-                
+                <li class="nav-item">
+                    <a href="{{ $canAccessKhachHang ? route('admin.khachhang.index') : '#' }}" 
+                       class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/khachhang*') ? 'active' : '' }} {{ $canAccessKhachHang ? '' : 'disabled text-muted' }}"
+                       style="{{ $canAccessKhachHang ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}"
+                       title="{{ $canAccessKhachHang ? '' : 'Chỉ Quản lý Cửa hàng mới có quyền xem' }}">
+                        <div><i class="fa-solid fa-users-viewfinder"></i> Khách hàng</div>
+                        @if(!$canAccessKhachHang) <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i> @endif
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ $canAccessDanhGia ? route('admin.danhgia.index') : '#' }}" 
+                       class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/danhgia*') ? 'active' : '' }} {{ $canAccessDanhGia ? '' : 'disabled text-muted' }}"
+                       style="{{ $canAccessDanhGia ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}"
+                       title="{{ $canAccessDanhGia ? '' : 'Chỉ Quản lý Cửa hàng mới có quyền xem' }}">
+                        <div><i class="fa-solid fa-star"></i> Đánh giá & Phản hồi</div>
+                        @if(!$canAccessDanhGia) <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i> @endif
+                    </a>
+                </li>
                 <li class="nav-item mt-5">
                     <form action="{{ route('admin.logout') }}" method="POST">
                         @csrf

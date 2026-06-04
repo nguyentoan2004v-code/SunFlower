@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 // 1. Import các Model cần thiết thay vì dùng ApiCaller
 use App\Models\DanhMuc;
 use App\Models\SanPham;
+use App\Models\DanhGia;
 
 class HomeController extends Controller {
     
@@ -53,21 +54,46 @@ class HomeController extends Controller {
 
     // 3. Trang Chi tiết 1 Sản phẩm
     public function productDetail($masp) {
-        // Lấy 1 sản phẩm kèm luôn thông tin danh mục của nó
-        $product = SanPham::with('danhmuc')->find($masp);
+        $product = \App\Models\SanPham::with('danhmuc')->find($masp);
         
-        // Bắt lỗi nếu người dùng gõ sai mã sản phẩm trên URL
         if (!$product) {
             abort(404, 'Sản phẩm không tồn tại!'); 
         }
 
-        // Lấy 4 sản phẩm liên quan (cùng danh mục, loại trừ sản phẩm hiện tại)
-        $relatedProducts = SanPham::where('madm', $product->madm)
+        $relatedProducts = \App\Models\SanPham::where('madm', $product->madm)
                                   ->where('masp', '!=', $masp)
                                   ->take(4)
                                   ->get();
 
-        return view('product.show', compact('product', 'relatedProducts'));
+       // 1. Tính tổng lượt đánh giá và trung bình sao (CHỈ TÍNH NHỮNG ĐÁNH GIÁ ĐANG HIỆN)
+        $totalReviews = \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->count();
+        $avgRating = $totalReviews > 0 ? round(\App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->avg('so_sao'), 1) : 0;
+
+        // 2. Đếm số lượng cho bộ lọc (Giống Shopee) - (CHỈ TÍNH NHỮNG ĐÁNH GIÁ ĐANG HIỆN)
+        $countStars = [
+            5 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 5)->count(),
+            4 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 4)->count(),
+            3 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 3)->count(),
+            2 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 2)->count(),
+            1 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 1)->count(),
+        ];
+        // Đếm các đánh giá có chữ (không rỗng)
+        $countComments = \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->whereNotNull('binh_luan')->where('binh_luan', '!=', '')->count();
+
+        // 3. Logic lấy danh sách Đánh Giá kèm Bộ Lọc
+        // THÊM ĐIỀU KIỆN where('trang_thai', 1) VÀO ĐÂY
+        $query = \App\Models\DanhGia::with('khachHang')->where('masp', $masp)->where('trang_thai', 1);
+        $filter = request('filter');
+
+        if (in_array($filter, ['1', '2', '3', '4', '5'])) {
+            $query->where('so_sao', $filter);
+        } elseif ($filter === 'comment') {
+            $query->whereNotNull('binh_luan')->where('binh_luan', '!=', '');
+        }
+
+        $reviews = $query->orderBy('created_at', 'desc')->paginate(5)->withQueryString();
+
+        return view('product.show', compact('product', 'relatedProducts', 'reviews', 'totalReviews', 'avgRating', 'countStars', 'countComments'));
     }
 
     // Xử lý luồng Tìm kiếm

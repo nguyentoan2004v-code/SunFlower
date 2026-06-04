@@ -16,7 +16,8 @@ use App\Http\Controllers\Admin\LoHangController;
 use App\Http\Controllers\Admin\PhieuHuyHangController;
 use App\Http\Controllers\Admin\NhanVienController;
 use App\Http\Controllers\Admin\LichLamViecController;
-
+use App\Http\Controllers\DanhGiaController;
+use App\Http\Controllers\Admin\KhachHangController;
 // =====================
 // USER
 // =====================
@@ -52,10 +53,13 @@ Route::middleware('auth:khachhang')->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('profile.index');
         Route::put('/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
         Route::post('/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+        
     });
 
     // Đơn hàng
     Route::get('/lich-su-don-hang', [OrderController::class, 'history'])->name('orders.history');
+    Route::post('/danh-gia', [DanhGiaController::class, 'store'])->name('danhgia.store');
+    
 });
 Route::get('/don-hang/{madon}', [OrderController::class, 'show'])->name('orders.show');
 Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
@@ -118,6 +122,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/nhanvien/{nhanvien}/edit', [NhanVienController::class, 'edit'])->name('nhanvien.edit');
         Route::put('/nhanvien/{nhanvien}', [NhanVienController::class, 'update'])->name('nhanvien.update');
         Route::delete('/nhanvien/{nhanvien}', [NhanVienController::class, 'destroy'])->name('nhanvien.destroy');
+
+        
        
         // --- QUẢN LÝ LỊCH LÀM VIỆC VÀ PHÂN CÔNG (THEO MA TRẬN TUẦN) ---
         // 1. Giao diện xem Xếp lịch theo tuần (Dành cho Quản lý)
@@ -135,5 +141,22 @@ Route::prefix('admin')->name('admin.')->group(function () {
             return redirect()->route('admin.dashboard')
                 ->with('success', 'Đã làm mới gợi ý AI!');
         })->name('dashboard.refresh-ai');
+         
+            Route::prefix('khachhang')->name('khachhang.')->group(function () {
+            Route::get('/', [KhachHangController::class, 'index'])->name('index');
+            Route::get('/{makh}/edit', [KhachHangController::class, 'edit'])->name('edit');
+            Route::put('/{makh}', [KhachHangController::class, 'update'])->name('update');
+            Route::delete('/{makh}', [KhachHangController::class, 'destroy'])->name('destroy');
+            Route::post('/{makh}/reset-password', [KhachHangController::class, 'resetPassword'])->name('resetPassword');
+            Route::get('/{makh}/history', [KhachHangController::class, 'history'])->name('history');
+        });
+
+        Route::prefix('danhgia')->name('danhgia.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\DanhGiaController::class, 'index'])->name('index');
+            Route::post('/{id}/reply', [App\Http\Controllers\Admin\DanhGiaController::class, 'reply'])->name('reply');
+            Route::post('/{id}/toggle', [App\Http\Controllers\Admin\DanhGiaController::class, 'toggleStatus'])->name('toggle');
+            Route::delete('/{id}', [App\Http\Controllers\Admin\DanhGiaController::class, 'destroy'])->name('destroy');
+        });
+        
     });
 });
