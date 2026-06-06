@@ -18,6 +18,7 @@ use App\Http\Controllers\Admin\NhanVienController;
 use App\Http\Controllers\Admin\LichLamViecController;
 use App\Http\Controllers\DanhGiaController;
 use App\Http\Controllers\Admin\KhachHangController;
+use App\Http\Controllers\Admin\VoucherController;
 // =====================
 // USER
 // =====================
@@ -75,7 +76,8 @@ Route::post('/thanh-toan', [CartController::class, 'checkout'])->name('checkout'
 Route::post('/dat-hang', [CartController::class, 'placeOrder'])->name('order.place');
 Route::get('/mua-ngay/{masp}', [CartController::class, 'buyNow'])->name('cart.buyNow');
 Route::get('/dat-hang-thanh-cong', [CartController::class, 'orderSuccess'])->name('checkout.success');
-
+Route::post('/ap-dung-voucher', [CartController::class, 'applyVoucher'])->name('voucher.apply');
+Route::post('/go-voucher', [CartController::class, 'removeVoucher'])->name('voucher.remove');
 
 // =====================
 // ADMIN
@@ -98,6 +100,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('products', AdminProductController::class);
         // --- QUẢN LÝ DANH MỤC ---
         Route::resource('categories', AdminCategoryController::class);
+        // --- QUẢN LÝ MÃ GIẢM GIÁ (VOUCHER) ---
+        Route::resource('vouchers', VoucherController::class);
         // --- QUẢN LÝ ĐƠN HÀNG ---
         Route::resource('orders', AdminOrderController::class)->except(['create', 'store', 'destroy']);
         // --- Xuất hóa đơn và in hóa đơn ---

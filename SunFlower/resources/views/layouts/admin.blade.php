@@ -111,6 +111,7 @@
                 $canAccessNhanVien = $isManager;
                 $canAccessKhachHang = $isManager;
                 $canAccessDanhGia = $isManager;
+                $canAccessVoucher = $isManager;
             @endphp
 
             <ul class="nav flex-column mt-3">
@@ -241,6 +242,15 @@
                        title="{{ $canAccessDanhGia ? '' : 'Chỉ Quản lý Cửa hàng mới có quyền xem' }}">
                         <div><i class="fa-solid fa-star"></i> Đánh giá & Phản hồi</div>
                         @if(!$canAccessDanhGia) <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i> @endif
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{{ $canAccessVoucher ? route('admin.vouchers.index') : '#' }}" 
+                       class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/vouchers*') ? 'active' : '' }} {{ $canAccessVoucher ? '' : 'disabled text-muted' }}"
+                       style="{{ $canAccessVoucher ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}"
+                       title="{{ $canAccessVoucher ? '' : 'Chỉ Quản lý Cửa hàng mới có quyền quản lý Mã giảm giá' }}">
+                        <div><i class="fa-solid fa-ticket"></i> Mã giảm giá</div>
+                        @if(!$canAccessVoucher) <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i> @endif
                     </a>
                 </li>
                 <li class="nav-item mt-5">

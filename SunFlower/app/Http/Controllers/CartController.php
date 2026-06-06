@@ -9,6 +9,7 @@ use App\Models\LoHang;          // Thêm Model LoHang
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str; 
+use App\Models\Voucher;
 
 class CartController extends Controller
 {
@@ -117,8 +118,26 @@ class CartController extends Controller
         
         // Lưu tạm danh sách mua này vào session riêng để sang trang thanh toán
         session()->put('checkout_data', $checkoutItems);
+        
+        $usedVouchers = [];
+        if (Auth::guard('khachhang')->check()) {
+            $makh = Auth::guard('khachhang')->user()->makh;
+            $usedVouchers = \App\Models\DonHang::where('makh', $makh)
+                ->whereNotNull('mavoucher')
+                ->where('trangthai', '!=', 'Đã hủy')
+                ->pluck('mavoucher')
+                ->toArray();
+        }
 
-        return view('checkout', compact('checkoutItems'));
+        $publicVouchers = \App\Models\Voucher::where('trangthai', 1)
+            ->where('hien_thi', 'cong_khai')
+            ->where('ngay_bd', '<=', now())
+            ->where('ngay_kt', '>=', now())
+            ->whereRaw('da_sudung < soluong')
+            ->whereNotIn('mavoucher', $usedVouchers)
+            ->get();
+
+        return view('checkout', compact('checkoutItems', 'publicVouchers'));
     }
 
 
@@ -152,8 +171,25 @@ class CartController extends Controller
         // Lưu vào session để trang Checkout đọc
         session()->put('checkout_data', $checkoutItems);
 
+        $usedVouchers = [];
+        if (Auth::guard('khachhang')->check()) {
+            $makh = Auth::guard('khachhang')->user()->makh;
+            $usedVouchers = \App\Models\DonHang::where('makh', $makh)
+                ->whereNotNull('mavoucher')
+                ->where('trangthai', '!=', 'Đã hủy')
+                ->pluck('mavoucher')
+                ->toArray();
+        }
+
+        $publicVouchers = \App\Models\Voucher::where('trangthai', 1)
+            ->where('hien_thi', 'cong_khai')
+            ->where('ngay_bd', '<=', now())
+            ->where('ngay_kt', '>=', now())
+            ->whereRaw('da_sudung < soluong')
+            ->whereNotIn('mavoucher', $usedVouchers)
+            ->get();
         // Chuyển thẳng tới giao diện thanh toán
-        return view('checkout', compact('checkoutItems'));
+        return view('checkout', compact('checkoutItems', 'publicVouchers'));
     }
 
     public function placeOrder(Request $request)
@@ -181,6 +217,12 @@ class CartController extends Controller
         $tongTien = 0;
         foreach ($checkoutItems as $item) {
             $tongTien += $item['price'] * $item['quantity'];
+        }
+        $tienGiam = 0;
+        $maVoucherCode = null;
+        if (session()->has('voucher')) {
+            $tienGiam = session('voucher')['tien_giam'];
+            $maVoucherCode = session('voucher')['mavoucher'];
         }
 
         DB::beginTransaction();
@@ -234,12 +276,19 @@ class CartController extends Controller
             $donHang->diachi_giao = $request->diachi_giaohang;    
             $donHang->ghichu = $request->ghichu;
             
-            $donHang->tongtien = $tongTien;
+            $donHang->mavoucher = $maVoucherCode;
+            $donHang->tiengiam = $tienGiam;
+            $donHang->tongtien = max(0, $tongTien - $tienGiam);
             $donHang->trangthai = 'Chờ xác nhận';
             $donHang->ngaydat = now();
             
             $donHang->save(); // Lưu đơn hàng thành công!
-
+            if ($maVoucherCode) {
+                $vc = Voucher::find($maVoucherCode);
+                if ($vc) {
+                    $vc->increment('da_sudung');
+                }
+            }
             
             // ==========================================
             // 4. Lưu chi tiết đơn hàng VÀ TRỪ TỒN KHO THEO LÔ (ĐÃ SỬA)
@@ -295,6 +344,7 @@ class CartController extends Controller
             }
             session()->put('cart', $cart);
             session()->forget('checkout_data');
+            session()->forget('voucher');
 
             $viewedOrders = session()->get('viewed_orders', []);
             $viewedOrders[] = $maDonMoi;
@@ -321,5 +371,100 @@ class CartController extends Controller
         }
 
         return view('checkout_success', compact('maDon'));
+    }
+    public function applyVoucher(Request $request)
+    {
+        // 1. Kiểm tra đăng nhập (Bắt buộc)
+        if (!Auth::guard('khachhang')->check()) {
+            return back()->with('error', 'Vui lòng đăng nhập để sử dụng mã giảm giá!');
+        }
+
+        $mavoucher = strtoupper($request->mavoucher);
+        $voucher = Voucher::with('danhmucs')->where('mavoucher', $mavoucher)->where('trangthai', 1)->first();
+
+        // 2. Kiểm tra mã tồn tại và thời hạn
+        if (!$voucher || now() < $voucher->ngay_bd || now() > $voucher->ngay_kt) {
+            return back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết hạn!');
+        }
+
+        // 3. Kiểm tra số lượng
+        if ($voucher->soluong > 0 && $voucher->da_sudung >= $voucher->soluong) {
+            return back()->with('error', 'Mã giảm giá đã hết lượt sử dụng!');
+        }
+
+        // 4. Kiểm tra xem người này đã dùng mã này chưa (Chặn 1 người dùng 1 mã nhiều lần)
+        $makh = Auth::guard('khachhang')->user()->makh;
+        $daDung = DonHang::where('makh', $makh)
+                         ->where('mavoucher', $mavoucher)
+                         ->where('trangthai', '!=', 'Đã hủy')
+                         ->exists();
+        if ($daDung) {
+            return back()->with('error', 'Bạn đã sử dụng mã giảm giá này rồi (Mỗi khách chỉ được dùng 1 lần)!');
+        }
+
+        // Lấy dữ liệu sản phẩm CHUẨN BỊ THANH TOÁN
+        $checkoutItems = session()->get('checkout_data', []);
+        if (empty($checkoutItems)) {
+            return back()->with('error', 'Không có sản phẩm nào để áp dụng!');
+        }
+
+        // 5. Tính toán tổng tiền hợp lệ (dựa trên Danh mục hoặc Tất cả)
+        $tongTienHopLe = 0;
+        if ($voucher->loai_ap_dung === 'tat_ca') {
+            foreach ($checkoutItems as $item) {
+                $tongTienHopLe += $item['price'] * $item['quantity'];
+            }
+        } else {
+            // Loại danh mục: Quét từng sản phẩm xem có khớp danh mục cho phép không
+            $danhMucIds = $voucher->danhmucs->pluck('madm')->toArray();
+            foreach ($checkoutItems as $id => $item) {
+                $sp = SanPham::find($id);
+                if ($sp && in_array($sp->madm, $danhMucIds)) {
+                    $tongTienHopLe += $item['price'] * $item['quantity'];
+                }
+            }
+        }
+
+        // 6. Kiểm tra các điều kiện cuối cùng
+        if ($tongTienHopLe == 0) {
+             return back()->with('error', 'Sản phẩm bạn mua không thuộc danh mục được áp dụng mã này!');
+        }
+        if ($tongTienHopLe < $voucher->don_min) {
+            return back()->with('error', 'Các sản phẩm hợp lệ chưa đạt giá trị tối thiểu (' . number_format($voucher->don_min, 0, ',', '.') . 'đ) để dùng mã này!');
+        }
+
+        // 7. Tiến hành tính số tiền thực tế được giảm
+        $tienGiam = 0;
+        if ($voucher->loai_giam === 'so_tien') {
+            $tienGiam = $voucher->gia_tri_giam;
+        } else {
+            $tienGiam = $tongTienHopLe * ($voucher->gia_tri_giam / 100);
+            if ($voucher->giam_max && $tienGiam > $voucher->giam_max) {
+                $tienGiam = $voucher->giam_max;
+            }
+        }
+        
+        // Tránh lỗi giảm lố làm tổng đơn bị âm
+        $tongThanhToan = 0;
+        foreach ($checkoutItems as $item) {
+            $tongThanhToan += $item['price'] * $item['quantity'];
+        }
+        if($tienGiam > $tongThanhToan) {
+            $tienGiam = $tongThanhToan;
+        }
+
+        // Lưu mã và số tiền giảm vào Session để chuẩn bị xuất ra View
+        session()->put('voucher', [
+            'mavoucher' => $voucher->mavoucher,
+            'tien_giam' => $tienGiam
+        ]);
+
+        return back()->with('success', 'Đã áp dụng mã giảm giá thành công!');
+    }
+
+    public function removeVoucher()
+    {
+        session()->forget('voucher');
+        return back()->with('success', 'Đã gỡ mã giảm giá!');
     }
 }

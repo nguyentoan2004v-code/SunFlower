@@ -24,4 +24,10 @@ class DanhMuc extends Model
         // hasMany(Tên_Model_Con, 'Tên_khóa_ngoại', 'Tên_khóa_chính')
         return $this->hasMany(SanPham::class, 'madm', 'madm');
     }
+
+    public function vouchers()
+    {
+        return $this->belongsToMany(Voucher::class, 'voucher_danhmuc', 'mavoucher', 'madm')
+                    ->withTimestamps();
+    }   
 }

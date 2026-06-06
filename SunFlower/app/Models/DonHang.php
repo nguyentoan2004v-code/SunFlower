@@ -15,7 +15,7 @@ class DonHang extends Model
     protected $keyType = 'string';
 
     protected $fillable = ['madon', 'ngaydat', 'tongtien', 'trangthai', 'makh', 
-    'sdt_nhan', 'diachi_giao', 'ghichu'];
+    'sdt_nhan', 'diachi_giao', 'ghichu', 'mavoucher', 'tiengiam'];
 
     // Đơn hàng THUỘC VỀ 1 Khách hàng (N-1)
     public function khachhang()
@@ -35,5 +35,10 @@ class DonHang extends Model
         return $this->belongsToMany(SanPham::class, 'chitiet_donhang', 'madon', 'masp')
                     ->withPivot('soluong', 'giaban') // Lấy thêm cột phụ từ bảng trung gian
                     ->withTimestamps();
+    }
+
+    public function voucher()
+    {
+        return $this->belongsTo(Voucher::class, 'mavoucher', 'mavoucher');
     }
 }

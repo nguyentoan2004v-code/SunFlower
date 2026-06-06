@@ -108,18 +108,53 @@
                         @endforeach
                     </div>
 
+                    <div class="border-t border-gray-200 pt-6 pb-2 mt-4">
+                        <div class="flex justify-between items-center">
+                            <div class="flex items-center gap-2 text-gray-700 font-bold text-lg">
+                                <svg class="w-6 h-6 text-[#FF6B35]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                                SunFlower Voucher
+                            </div>
+                            
+                            @if(session()->has('voucher'))
+                                <div class="flex items-center gap-3">
+                                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold border border-green-200">
+                                        Đã giảm {{ number_format(session('voucher')['tien_giam'], 0, ',', '.') }} ₫
+                                    </span>
+                                    <button type="button" onclick="document.getElementById('form-go-voucher').submit();" class="text-red-500 hover:text-red-700 text-sm font-medium hover:underline">Gỡ bỏ</button>
+                                </div>
+                            @else
+                                <button type="button" onclick="openVoucherModal()" class="text-blue-600 hover:text-blue-800 font-semibold transition flex items-center gap-1">
+                                    Chọn hoặc nhập mã <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                </button>
+                            @endif
+                        </div>
+                    </div>
+
+                    @php
+                        $tamtinh = $finalTotal ?? 0;
+                        $tienGiam = session()->has('voucher') ? session('voucher')['tien_giam'] : 0;
+                        $tongThanhToan = max(0, $tamtinh - $tienGiam);
+                    @endphp
                     <div class="space-y-4 border-t border-gray-200 pt-6">
                         <div class="flex justify-between text-gray-600">
                             <span>Tạm tính</span>
-                            <span class="font-medium text-gray-900">{{ number_format($finalTotal, 0, ',', '.') }} ₫</span>
+                            <span class="font-medium text-gray-900">{{ number_format($tamtinh, 0, ',', '.') }} ₫</span>
                         </div>
                         <div class="flex justify-between text-gray-600">
                             <span>Phí vận chuyển</span>
                             <span class="text-green-600 font-medium">Miễn phí</span>
                         </div>
+                        
+                        @if($tienGiam > 0)
+                        <div class="flex justify-between text-green-600">
+                            <span>Mã giảm giá</span>
+                            <span class="font-medium">- {{ number_format($tienGiam, 0, ',', '.') }} ₫</span>
+                        </div>
+                        @endif
+
                         <div class="flex justify-between items-center pt-4">
                             <span class="text-lg font-bold text-gray-900">Tổng thanh toán</span>
-                            <span class="text-2xl font-extrabold text-[#FF6B35]">{{ number_format($finalTotal, 0, ',', '.') }} ₫</span>
+                            <span class="text-2xl font-extrabold text-[#FF6B35]">{{ number_format($tongThanhToan, 0, ',', '.') }} ₫</span>
                         </div>
                     </div>
 
@@ -132,6 +167,107 @@
                 </div>
             </div>
         </div>
+    </form>
+    <div id="voucherModal" class="fixed inset-0 z-50 hidden bg-black bg-opacity-60 flex items-center justify-center transition-opacity backdrop-blur-sm">
+        <div class="bg-white rounded-2xl w-full max-w-md mx-4 overflow-hidden shadow-2xl flex flex-col max-h-[85vh] animate-[slideIn_0.3s_ease-out]">
+            
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-extrabold text-gray-900">Chọn SunFlower Voucher</h3>
+                <button type="button" onclick="closeVoucherModal()" class="text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 bg-[#f8f9fa]">
+                
+                <form action="{{ route('voucher.apply') }}" method="POST" class="flex gap-2 mb-8">
+                    @csrf
+                    <input type="text" name="mavoucher" placeholder="Nhập mã voucher (nếu có)" class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none uppercase font-medium bg-white shadow-sm" required>
+                    <button type="submit" class="bg-gray-200 hover:bg-[#FF6B35] hover:text-white text-gray-700 font-bold px-6 py-3 rounded-lg transition">ÁP DỤNG</button>
+                </form>
+
+                <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Mã miễn phí có sẵn cho bạn</h4>
+                
+               <div class="space-y-4">
+                    @forelse($publicVouchers as $vc)
+                        <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex items-center justify-between hover:border-[#FF6B35] hover:shadow-md transition">
+                            <div class="flex items-start gap-4">
+                                <div class="bg-orange-50 p-3 rounded-full text-[#FF6B35] mt-1">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"></path></svg>
+                                </div>
+                                <div>
+                                    <div class="font-bold text-gray-900 text-sm mb-2">{{ $vc->tenvoucher }}</div>
+                                    <div class="font-extrabold text-[#FF6B35] text-xl leading-none mb-1.5">
+                                        @if($vc->loai_giam === 'phan_tram')
+                                            Giảm {{ (int)$vc->gia_tri_giam }}%
+                                        @else
+                                            Giảm {{ number_format($vc->gia_tri_giam, 0, ',', '.') }}đ
+                                        @endif
+                                    </div>
+                                    
+                                    
+                                    <div class="text-sm text-gray-600 space-y-1">
+                                        <div>• Đơn tối thiểu: <span class="font-semibold text-gray-900">{{ number_format($vc->don_min, 0, ',', '.') }}đ</span></div>
+                                        
+                                        @if($vc->loai_giam === 'phan_tram' && $vc->giam_max)
+                                            <div>• Giảm tối đa: <span class="font-semibold text-gray-900">{{ number_format($vc->giam_max, 0, ',', '.') }}đ</span></div>
+                                        @endif
+                                        
+                                        @if($vc->loai_ap_dung === 'danh_muc')
+                                            <div class="text-[#FF6B35] font-medium text-xs bg-orange-50 inline-block px-2 py-0.5 rounded border border-orange-100">
+                                                * Chỉ áp dụng một số danh mục
+                                            </div>
+                                        @endif
+                                    </div>
+                                    
+                                    <div class="text-xs text-gray-500 mt-3 font-medium bg-gray-100 inline-block px-2 py-1 rounded">
+                                        HSD: {{ date('d/m/Y H:i', strtotime($vc->ngay_kt)) }}
+                                    </div>
+                                </div>
+                            </div>
+                            <form action="{{ route('voucher.apply') }}" method="POST" class="ml-2 shrink-0">
+                                @csrf
+                                <input type="hidden" name="mavoucher" value="{{ $vc->mavoucher }}">
+                                <button type="submit" class="bg-[#FF6B35] text-white text-sm font-bold px-4 py-2.5 rounded-lg hover:bg-orange-600 transition shadow-sm active:scale-95 whitespace-nowrap">
+                                    Dùng ngay
+                                </button>
+                            </form>
+                        </div>
+                    @empty
+                        <div class="text-center text-gray-400 py-8 bg-white rounded-xl border border-dashed border-gray-300">
+                            <i class="fa-solid fa-ticket fa-2x mb-2 text-gray-300"></i><br>
+                            Hiện tại không có mã giảm giá nào.
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openVoucherModal() {
+            document.getElementById('voucherModal').classList.remove('hidden');
+        }
+        function closeVoucherModal() {
+            document.getElementById('voucherModal').classList.add('hidden');
+        }
+
+        @if(session('error'))
+            alert("⚠️ {{ session('error') }}");
+        @endif
+        @if(session('success'))
+            // alert("✅ {{ session('success') }}"); // (Tuỳ chọn: Bạn có thể bật dòng này nếu muốn thông báo khi áp mã thành công)
+        @endif
+    </script>
+    <style>
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+
+    </form> <form id="form-go-voucher" action="{{ route('voucher.remove') }}" method="POST" class="hidden">
+        @csrf
     </form>
 </div>
 
