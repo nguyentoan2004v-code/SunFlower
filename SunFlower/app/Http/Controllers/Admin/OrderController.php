@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\DonHang;
 use App\Models\HoaDon;
+use App\Models\HangThanhVien;
+use App\Models\LichSuDiem;
 use App\Models\ChiTietHoaDon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
@@ -53,7 +55,8 @@ class OrderController extends Controller implements HasMiddleware
     // 3. Cập nhật trạng thái & Tự động tạo Hóa đơn
     public function update(Request $request, $madon)
     {
-        $order = DonHang::with('sanphams')->findOrFail($madon);
+        // Thêm 'khachhang' vào with() để tối ưu truy vấn
+        $order = DonHang::with(['sanphams', 'khachhang'])->findOrFail($madon);
         $oldStatus = $order->trangthai;
         $newStatus = $request->trangthai;
 
@@ -61,34 +64,68 @@ class OrderController extends Controller implements HasMiddleware
         try {
             $order->update(['trangthai' => $newStatus]);
 
-            // 2. Nếu trạng thái chuyển thành "Đã hoàn thành" và chưa có hóa đơn
+            // Nếu trạng thái chuyển thành "Đã hoàn thành" và trước đó chưa hoàn thành
             if ($newStatus == 'Đã hoàn thành' && $oldStatus != 'Đã hoàn thành') {
                 
+                // --- 1. LOGIC TẠO HÓA ĐƠN (Giữ nguyên của bạn) ---
                 $mahd = 'HD' . date('ymd') . rand(10, 99);
 
                 $hoadon = HoaDon::create([
                     'mahd'        => $mahd,
                     'madon'       => $order->madon,
                     'tongtien'    => $order->tongtien,
-                    'thue'        => 0, // Giả sử thuế là 0%, bạn có thể đổi thành 8 hoặc 10
+                    'thue'        => 0, 
                     'ngayxuat'    => now(),
-                    'ptthanhtoan' => 'Tiền mặt' // Mặc định là tiền mặt, hoặc lấy từ Đơn hàng nếu có
+                    'ptthanhtoan' => 'Tiền mặt' 
                 ]);
 
-                // Copy từ Chi Tiết Đơn Hàng sang Chi Tiết Hóa Đơn
                 foreach ($order->sanphams as $sp) {
                     ChiTietHoaDon::create([
                         'mahd'      => $hoadon->mahd,
                         'masp'      => $sp->masp,
                         'soluong'   => $sp->pivot->soluong,
-                        'dongia'    => $sp->pivot->giaban, // Hoặc dongia tùy tên cột của bạn
+                        'dongia'    => $sp->pivot->giaban, 
                         'thanhtien' => $sp->pivot->soluong * $sp->pivot->giaban
                     ]);
+                }
+
+                // --- 2. LOGIC TÍCH ĐIỂM & THĂNG HẠNG (Mới) ---
+                if ($order->makh && $order->khachhang) {
+                    $khachhang = $order->khachhang;
+                    $tien_don_hang = $order->tongtien; 
+                    
+                    // Tính điểm (100.000đ = 10 điểm <=> 10.000đ = 1 điểm)
+                    $diem_cong = (int) floor($tien_don_hang / 10000); 
+
+                    // Cộng dồn vào tài khoản khách
+                    $khachhang->tong_chi_tieu += $tien_don_hang;
+                    $khachhang->diem_thuong += $diem_cong;
+
+                    // Xét thăng hạng: Tìm Hạng có mốc tiền <= tổng chi tiêu (Lấy mốc cao nhất)
+                    $hangMoi = HangThanhVien::where('chi_tieu_toi_thieu', '<=', $khachhang->tong_chi_tieu)
+                                            ->orderBy('chi_tieu_toi_thieu', 'desc')
+                                            ->first();
+
+                    if ($hangMoi) {
+                        $khachhang->hang_thanh_vien_id = $hangMoi->id;
+                    }
+
+                    $khachhang->save();
+
+                    // Ghi vào bảng lịch sử điểm nếu có điểm cộng
+                    if ($diem_cong > 0) {
+                        LichSuDiem::create([
+                            'makh'           => $khachhang->makh,
+                            'loai_giao_dich' => 'cong_diem',
+                            'so_diem'        => $diem_cong,
+                            'mo_ta'          => 'Tích điểm từ đơn hàng ' . $order->madon
+                        ]);
+                    }
                 }
             }
 
             DB::commit(); 
-            return redirect()->route('admin.orders.show', $madon)->with('success', 'Đã cập nhật trạng thái đơn hàng!');
+            return redirect()->route('admin.orders.show', $madon)->with('success', 'Đã cập nhật trạng thái đơn hàng và tích điểm cho khách!');
 
         } catch (\Exception $e) {
             DB::rollBack(); 
@@ -96,45 +133,45 @@ class OrderController extends Controller implements HasMiddleware
         }
     }
     public function exportInvoice(Request $request, $madon)
-{
-    $order = DonHang::with('sanphams')->findOrFail($madon);
+    {
+        $order = DonHang::with('sanphams')->findOrFail($madon);
 
-    if (HoaDon::where('madon', $madon)->exists()) {
-        return back()->with('error', 'Đơn hàng này đã được xuất hóa đơn!');
-    }
-
-    try {
-        DB::beginTransaction();
-
-        $muc_thue = $order->tongtien * 0.08;
-
-        $hoadon = HoaDon::create([
-            'mahd'        => 'HD' . strtoupper(Str::random(6)),
-            'tongtien'    => $order->tongtien + $muc_thue,
-            'thue'        => $muc_thue,
-            'ngayxuat'    => now()->toDateString(),
-            'ptthanhtoan' => 'Tiền mặt',
-            'madon'       => $order->madon,
-        ]);
-
-        foreach ($order->sanphams as $sp) {
-            ChiTietHoaDon::create([
-                'mahd'    => $hoadon->mahd,
-                'masp'    => $sp->masp,
-                'tensp'   => $sp->tensp,           
-                'soluong' => $sp->pivot->soluong,
-                'dongia'  => $sp->pivot->giaban,   
-            ]);
+        if (HoaDon::where('madon', $madon)->exists()) {
+            return back()->with('error', 'Đơn hàng này đã được xuất hóa đơn!');
         }
 
-        DB::commit();
-        return back()->with('success', 'Xuất hóa đơn thành công!');
+        try {
+            DB::beginTransaction();
 
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Lỗi khi xuất hóa đơn: ' . $e->getMessage());
+            $muc_thue = $order->tongtien * 0.08;
+
+            $hoadon = HoaDon::create([
+                'mahd'        => 'HD' . strtoupper(Str::random(6)),
+                'tongtien'    => $order->tongtien + $muc_thue,
+                'thue'        => $muc_thue,
+                'ngayxuat'    => now()->toDateString(),
+                'ptthanhtoan' => 'Tiền mặt',
+                'madon'       => $order->madon,
+            ]);
+
+            foreach ($order->sanphams as $sp) {
+                ChiTietHoaDon::create([
+                    'mahd'    => $hoadon->mahd,
+                    'masp'    => $sp->masp,
+                    'tensp'   => $sp->tensp,           
+                    'soluong' => $sp->pivot->soluong,
+                    'dongia'  => $sp->pivot->giaban,   
+                ]);
+            }
+
+            DB::commit();
+            return back()->with('success', 'Xuất hóa đơn thành công!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Lỗi khi xuất hóa đơn: ' . $e->getMessage());
+        }
     }
-}
 public function printInvoice($mahd)
     {
         // Lấy hóa đơn kèm thông tin đơn hàng, khách hàng và chi tiết hóa đơn

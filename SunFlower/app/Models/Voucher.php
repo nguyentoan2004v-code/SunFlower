@@ -27,7 +27,8 @@ class Voucher extends Model
         'hien_thi', 
         'ngay_bd', 
         'ngay_kt', 
-        'trangthai'
+        'trangthai',
+        'diem_doi'
     ];
 
     // Quan hệ nhiều-nhiều: 1 voucher có thể áp dụng cho nhiều danh mục
@@ -41,5 +42,11 @@ class Voucher extends Model
     public function donhangs()
     {
         return $this->hasMany(DonHang::class, 'mavoucher', 'mavoucher');
+    }
+    public function khachHangs()
+    {
+        return $this->belongsToMany(KhachHang::class, 'khachhang_voucher', 'mavoucher', 'makh')
+                    ->withPivot('trang_thai', 'ngay_doi')
+                    ->withTimestamps();
     }
 }

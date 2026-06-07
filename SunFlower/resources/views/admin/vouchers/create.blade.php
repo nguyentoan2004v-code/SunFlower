@@ -68,12 +68,17 @@
                         <input type="number" name="soluong" class="form-control @error('soluong') is-invalid @enderror" value="{{ old('soluong') }}" min="1" required>
                         @error('soluong') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold text-dark">Điểm Quy Đổi (0 nếu miễn phí) <span class="text-danger">*</span></label>
+                        <input type="number" name="diem_doi" class="form-control @error('diem_doi') is-invalid @enderror" value="{{ old('diem_doi', 0) }}" min="0" required>
+                        @error('diem_doi') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-bold text-dark">Chế Độ Hiển Thị <span class="text-danger">*</span></label>
                         <select name="hien_thi" class="form-select">
-                            <option value="cong_khai" {{ old('hien_thi') == 'cong_khai' ? 'selected' : '' }}>Công khai ở trang đặt hàng</option>
-                            <option value="nhap_code" {{ old('hien_thi') == 'nhap_code' ? 'selected' : '' }}>Ẩn (Khách phải tự gõ chữ mã)</option>
+                            <option value="cong_khai" {{ old('hien_thi') == 'cong_khai' ? 'selected' : '' }}>Công khai </option>
+                            <option value="nhap_code" {{ old('hien_thi') == 'nhap_code' ? 'selected' : '' }}>Ẩn </option>
                         </select>
                     </div>
 

@@ -135,26 +135,61 @@
                         $tienGiam = session()->has('voucher') ? session('voucher')['tien_giam'] : 0;
                         $tongThanhToan = max(0, $tamtinh - $tienGiam);
                     @endphp
-                    <div class="space-y-4 border-t border-gray-200 pt-6">
-                        <div class="flex justify-between text-gray-600">
+
+                    @php
+                        // 1. Tính tổng tiền hàng gốc từ session
+                        $tongTienHang = 0;
+                        foreach ($checkoutItems as $item) {
+                            $tongTienHang += $item['price'] * $item['quantity'];
+                        }
+
+                        // 2. Lấy số tiền giảm từ Voucher trong session (nếu có)
+                        $tienGiamVoucher = session()->has('voucher') ? session('voucher')['tien_giam'] : 0;
+
+                        // 3. Tính số tiền giảm theo Hạng thành viên của tài khoản đang đăng nhập
+                        $tienGiamTheoHang = 0;
+                        $tenHang = '';
+                        if (Auth::guard('khachhang')->check()) {
+                            $user = Auth::guard('khachhang')->user()->load('hangThanhVien');
+                            if ($user->hangThanhVien && $user->hangThanhVien->phan_tram_giam > 0) {
+                                $tenHang = $user->hangThanhVien->ten_hang;
+                                $tienGiamTheoHang = $tongTienHang * ($user->hangThanhVien->phan_tram_giam / 100);
+                            }
+                        }
+
+                        // 4. Tính Tổng thanh toán cuối cùng
+                        $tongThanhToanCuoiCung = max(0, $tongTienHang - $tienGiamVoucher - $tienGiamTheoHang);
+                    @endphp
+                    <div class="space-y-3 border-t border-gray-100 pt-4">
+                        <div class="flex justify-between text-sm text-gray-600">
                             <span>Tạm tính</span>
-                            <span class="font-medium text-gray-900">{{ number_format($tamtinh, 0, ',', '.') }} ₫</span>
+                            <span class="font-medium text-gray-950">{{ number_format($tongTienHang, 0, ',', '.') }} đ</span>
                         </div>
-                        <div class="flex justify-between text-gray-600">
+
+                        @if($tienGiamVoucher > 0)
+                            <div class="flex justify-between text-sm text-red-600">
+                                <span>Voucher giảm giá</span>
+                                <span class="font-medium">- {{ number_format($tienGiamVoucher, 0, ',', '.') }} đ</span>
+                            </div>
+                        @endif
+
+                        @if($tienGiamTheoHang > 0)
+                            <div class="flex justify-between text-sm text-orange-600">
+                                <span>Ưu đãi ({{ $tenHang }})</span>
+                                <span class="font-medium">- {{ number_format($tienGiamTheoHang, 0, ',', '.') }} đ</span>
+                            </div>
+                        @endif
+
+                        <div class="flex justify-between text-sm text-gray-600">
                             <span>Phí vận chuyển</span>
                             <span class="text-green-600 font-medium">Miễn phí</span>
                         </div>
-                        
-                        @if($tienGiam > 0)
-                        <div class="flex justify-between text-green-600">
-                            <span>Mã giảm giá</span>
-                            <span class="font-medium">- {{ number_format($tienGiam, 0, ',', '.') }} ₫</span>
-                        </div>
-                        @endif
 
-                        <div class="flex justify-between items-center pt-4">
-                            <span class="text-lg font-bold text-gray-900">Tổng thanh toán</span>
-                            <span class="text-2xl font-extrabold text-[#FF6B35]">{{ number_format($tongThanhToan, 0, ',', '.') }} ₫</span>
+                        <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-2">
+                            <span class="text-base font-bold text-gray-900">Tổng thanh toán</span>
+                            <span class="text-2xl font-extrabold text-[#FF6B35]">
+                                {{ number_format($tongThanhToanCuoiCung, 0, ',', '.') }} đ
+                            </span>
                         </div>
                     </div>
 

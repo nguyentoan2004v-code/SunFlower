@@ -54,6 +54,7 @@ Route::middleware('auth:khachhang')->group(function () {
         Route::get('/', [ProfileController::class, 'index'])->name('profile.index');
         Route::put('/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
         Route::post('/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
+        Route::post('/profile/exchange-voucher', [ProfileController::class, 'exchangeVoucher'])->name('profile.exchange_voucher');
         
     });
 

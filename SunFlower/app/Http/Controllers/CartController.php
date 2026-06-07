@@ -120,21 +120,44 @@ class CartController extends Controller
         session()->put('checkout_data', $checkoutItems);
         
         $usedVouchers = [];
+        $myVoucherCodes = [];
+        
         if (Auth::guard('khachhang')->check()) {
             $makh = Auth::guard('khachhang')->user()->makh;
+            
+            // Lấy danh sách các mã voucher hệ thống thông thường đã dùng
             $usedVouchers = \App\Models\DonHang::where('makh', $makh)
                 ->whereNotNull('mavoucher')
                 ->where('trangthai', '!=', 'Đã hủy')
                 ->pluck('mavoucher')
                 ->toArray();
+
+            // [MỚI] Lấy danh sách mã voucher đổi điểm ĐANG SỞ HỮU TRONG VÍ (chưa dùng)
+            $myVoucherCodes = \DB::table('khachhang_voucher')
+                ->where('makh', $makh)
+                ->where('trang_thai', 0)
+                ->pluck('mavoucher')
+                ->toArray();
         }
 
+        // [TỐI ƯU] Gộp cả Voucher công khai miễn phí VÀ Voucher cá nhân đã đổi bằng điểm
         $publicVouchers = \App\Models\Voucher::where('trangthai', 1)
-            ->where('hien_thi', 'cong_khai')
             ->where('ngay_bd', '<=', now())
             ->where('ngay_kt', '>=', now())
-            ->whereRaw('da_sudung < soluong')
-            ->whereNotIn('mavoucher', $usedVouchers)
+            ->where(function($query) use ($usedVouchers, $myVoucherCodes) {
+                // Trường hợp 1: Mã miễn phí công khai của cửa hàng
+                $query->where(function($q) use ($usedVouchers) {
+                    $q->where('hien_thi', 'cong_khai')
+                      ->where('diem_doi', 0)
+                      ->whereRaw('da_sudung < soluong')
+                      ->whereNotIn('mavoucher', $usedVouchers);
+                });
+                
+                // Trường hợp 2: Mã đổi điểm đang nằm trong ví cá nhân của người này
+                if (!empty($myVoucherCodes)) {
+                    $query->orWhereIn('mavoucher', $myVoucherCodes);
+                }
+            })
             ->get();
 
         return view('checkout', compact('checkoutItems', 'publicVouchers'));
@@ -172,129 +195,160 @@ class CartController extends Controller
         session()->put('checkout_data', $checkoutItems);
 
         $usedVouchers = [];
+        $myVoucherCodes = [];
+        
         if (Auth::guard('khachhang')->check()) {
             $makh = Auth::guard('khachhang')->user()->makh;
+            
             $usedVouchers = \App\Models\DonHang::where('makh', $makh)
                 ->whereNotNull('mavoucher')
                 ->where('trangthai', '!=', 'Đã hủy')
                 ->pluck('mavoucher')
                 ->toArray();
+
+            // [MỚI] Lấy danh sách mã voucher đổi điểm ĐANG SỞ HỮU TRONG VÍ (chưa dùng)
+            $myVoucherCodes = \DB::table('khachhang_voucher')
+                ->where('makh', $makh)
+                ->where('trang_thai', 0)
+                ->pluck('mavoucher')
+                ->toArray();
         }
 
+        // [TỐI ƯU] Gộp cả Voucher công khai miễn phí VÀ Voucher cá nhân đã đổi bằng điểm
         $publicVouchers = \App\Models\Voucher::where('trangthai', 1)
-            ->where('hien_thi', 'cong_khai')
             ->where('ngay_bd', '<=', now())
             ->where('ngay_kt', '>=', now())
-            ->whereRaw('da_sudung < soluong')
-            ->whereNotIn('mavoucher', $usedVouchers)
+            ->where(function($query) use ($usedVouchers, $myVoucherCodes) {
+                // Trường hợp 1: Mã miễn phí công khai của cửa hàng
+                $query->where(function($q) use ($usedVouchers) {
+                    $q->where('hien_thi', 'cong_khai')
+                      ->where('diem_doi', 0)
+                      ->whereRaw('da_sudung < soluong')
+                      ->whereNotIn('mavoucher', $usedVouchers);
+                });
+                
+                // Trường hợp 2: Mã đổi điểm đang nằm trong ví cá nhân của người này
+                if (!empty($myVoucherCodes)) {
+                    $query->orWhereIn('mavoucher', $myVoucherCodes);
+                }
+            })
             ->get();
+
         // Chuyển thẳng tới giao diện thanh toán
         return view('checkout', compact('checkoutItems', 'publicVouchers'));
     }
 
     public function placeOrder(Request $request)
     {
-
         $request->validate([
-        'ten_nguoinhan'   => 'required|string|min:2|max:100',
-        'sdt_nguoinhan'   => 'required|digits:10',
-        'diachi_giaohang' => 'required|string|min:5|max:255',
-        'ghichu'          => 'nullable|string|max:500',
+            'ten_nguoinhan'   => 'required|string|min:2|max:100',
+            'sdt_nguoinhan'   => 'required|digits:10',
+            'diachi_giaohang' => 'required|string|min:5|max:255',
+            'ghichu'          => 'nullable|string|max:500',
         ], [
-        'ten_nguoinhan.required'   => 'Vui lòng nhập tên người nhận.',
-        'ten_nguoinhan.min'        => 'Tên người nhận phải có ít nhất 2 ký tự.',
-        'sdt_nguoinhan.required'   => 'Vui lòng nhập số điện thoại.',
-        'sdt_nguoinhan.digits' => 'Số điện thoại không hợp lệ (10 số).',
-        'diachi_giaohang.required' => 'Vui lòng nhập địa chỉ giao hàng.',
-        'diachi_giaohang.min'      => 'Địa chỉ phải có ít nhất 5 ký tự.',
+            'ten_nguoinhan.required'   => 'Vui lòng nhập tên người nhận.',
+            'ten_nguoinhan.min'        => 'Tên người nhận phải có ít nhất 2 ký tự.',
+            'sdt_nguoinhan.required'   => 'Vui lòng nhập số điện thoại.',
+            'sdt_nguoinhan.digits'     => 'Số điện thoại không hợp lệ (10 số).',
+            'diachi_giaohang.required' => 'Vui lòng nhập địa chỉ giao hàng.',
+            'diachi_giaohang.min'      => 'Địa chỉ phải có ít nhất 5 ký tự.',
         ]);
+
         $checkoutItems = session()->get('checkout_data');
 
         if (!$checkoutItems || count($checkoutItems) == 0) {
             return redirect()->route('cart.index')->with('error', 'Đơn hàng của bạn đã hết hạn hoặc không có sản phẩm.');
         }
 
-        $tongTien = 0;
+        // 1. Tính tổng tiền hàng gốc
+        $tongTienHang = 0;
         foreach ($checkoutItems as $item) {
-            $tongTien += $item['price'] * $item['quantity'];
+            $tongTienHang += $item['price'] * $item['quantity'];
         }
-        $tienGiam = 0;
+
+        // 2. Lấy số tiền giảm từ Voucher (nếu có)
+        $tienGiamVoucher = 0;
         $maVoucherCode = null;
         if (session()->has('voucher')) {
-            $tienGiam = session('voucher')['tien_giam'];
+            $tienGiamVoucher = session('voucher')['tien_giam'];
             $maVoucherCode = session('voucher')['mavoucher'];
         }
+
+        // 3. LOGIC MỚI: TÍNH TIỀN GIẢM THEO HẠNG THÀNH VIÊN
+        $tienGiamTheoHang = 0;
+        if (Auth::guard('khachhang')->check()) {
+            // Tải thông tin user kèm hạng thành viên của họ
+            $user = Auth::guard('khachhang')->user()->load('hangThanhVien');
+            
+            if ($user->hangThanhVien && $user->hangThanhVien->phan_tram_giam > 0) {
+                // Số tiền giảm = Tổng tiền hàng * (% giảm của hạng / 100)
+                $tienGiamTheoHang = $tongTienHang * ($user->hangThanhVien->phan_tram_giam / 100);
+            }
+        }
+
+        // Tổng số tiền được giảm thực tế = Voucher + Giảm theo Hạng
+        $tongTienDuocGiam = $tienGiamVoucher + $tienGiamTheoHang;
 
         DB::beginTransaction();
         try {
             $donHang = new DonHang();
             
-            // 1. Sinh mã đơn hàng (Độ dài 10 ký tự)
+            // Sinh mã đơn hàng (Độ dài 10 ký tự)
             $maDonMoi = 'DH-' . strtoupper(Str::random(7));
             $donHang->madon = $maDonMoi;
             
-            // ==========================================
-            // 2. XỬ LÝ LOGIC KHÁCH HÀNG (CÓ/KHÔNG ĐĂNG NHẬP)
-            // ==========================================
+            // XỬ LÝ LOGIC KHÁCH HÀNG (CÓ/KHÔNG ĐĂNG NHẬP)
             if (Auth::guard('khachhang')->check()) {
-                // TRƯỜNG HỢP 1: Khách đã đăng nhập
                 $donHang->makh = Auth::guard('khachhang')->user()->makh; 
             } else {
-                // TRƯỜNG HỢP 2: Khách vãng lai (Chưa đăng nhập)
-                // Tìm xem SĐT này đã từng mua hàng bao giờ chưa
                 $khachTonTai = \App\Models\KhachHang::where('sdt', $request->sdt_nguoinhan)->first();
-                
                 if ($khachTonTai) {
-                    // Nếu SĐT đã tồn tại, lấy mã khách hàng cũ gắn vào đơn này
                     $donHang->makh = $khachTonTai->makh;
                 } else {
-                    // Nếu SĐT hoàn toàn mới, tự động tạo hồ sơ khách hàng mới
                     $khachMoi = new \App\Models\KhachHang();
-                    
-                    // Tạo mã KH ngẫu nhiên 10 ký tự (Ví dụ: KVL-A1B2C3D)
                     $maKhMoi = 'KVL' . strtoupper(Str::random(7)); 
-                    
                     $khachMoi->makh = $maKhMoi;
-                    $khachMoi->hoten = $request->ten_nguoinhan; // Form gửi lên là ten_nguoinhan, lưu vào cột hoten
+                    $khachMoi->hoten = $request->ten_nguoinhan;
                     $khachMoi->sdt = $request->sdt_nguoinhan;
                     $khachMoi->diachi = $request->diachi_giaohang;
-                    
-                    $khachMoi->email = $request-> sdt_nguoinhan . '@gmail.com'; 
+                    $khachMoi->email = $request->sdt_nguoinhan . '@gmail.com'; 
                     $khachMoi->password = bcrypt('123456');
+                    $khachMoi->save();
                     
-                    
-                    $khachMoi->save(); // Lưu khách hàng mới vào DB
-                    
-                    // Gắn mã khách hàng vừa tạo cho đơn hàng
                     $donHang->makh = $maKhMoi;
                 }
             }
-            // ==========================================
             
-            // 3. Khớp cột bảng donhang
             $donHang->sdt_nhan = $request->sdt_nguoinhan;         
             $donHang->diachi_giao = $request->diachi_giaohang;    
             $donHang->ghichu = $request->ghichu;
             
+            // Gán dữ liệu tiền bạc đã tính toán ở trên vào đơn hàng
             $donHang->mavoucher = $maVoucherCode;
-            $donHang->tiengiam = $tienGiam;
-            $donHang->tongtien = max(0, $tongTien - $tienGiam);
+            $donHang->tiengiam = $tongTienDuocGiam; 
+            $donHang->tongtien = max(0, $tongTienHang - $tongTienDuocGiam); // Tổng tiền cuối cùng sau khi trừ hết ưu đãi
             $donHang->trangthai = 'Chờ xác nhận';
             $donHang->ngaydat = now();
             
-            $donHang->save(); // Lưu đơn hàng thành công!
+            $donHang->save();
+
             if ($maVoucherCode) {
                 $vc = Voucher::find($maVoucherCode);
                 if ($vc) {
                     $vc->increment('da_sudung');
+                    if ($vc->diem_doi > 0 && Auth::guard('khachhang')->check()) {
+                        \DB::table('khachhang_voucher')
+                            ->where('makh', Auth::guard('khachhang')->user()->makh)
+                            ->where('mavoucher', $maVoucherCode)
+                            ->where('trang_thai', 0)
+                            ->limit(1)
+                            ->update(['trang_thai' => 1]);
+                    }
                 }
             }
             
-            // ==========================================
-            // 4. Lưu chi tiết đơn hàng VÀ TRỪ TỒN KHO THEO LÔ (ĐÃ SỬA)
-            // ==========================================
+            // Lưu chi tiết đơn hàng VÀ TRỪ TỒN KHO THEO LÔ
             foreach ($checkoutItems as $id => $item) {
-                // A. Lưu chi tiết đơn hàng
                 $chiTiet = new ChiTietDonHang();
                 $chiTiet->madon = $maDonMoi; 
                 $chiTiet->masp = $id;               
@@ -302,40 +356,30 @@ class CartController extends Controller
                 $chiTiet->giaban = $item['price']; 
                 $chiTiet->save();
 
-                // B. LOGIC TRỪ TỒN KHO TRONG BẢNG LO_HANG (FIFO)
-                $qtyNeeded = $item['quantity']; // Số lượng khách mua cần trừ
-
-                // Lấy các lô hàng của sản phẩm này đang còn tồn kho (> 0)
-                // Ưu tiên lô sắp hết hạn ra bán trước (ngayhethan ASC)
+                $qtyNeeded = $item['quantity'];
                 $loHangs = LoHang::where('masp', $id)
                             ->where('soluong_ton', '>', 0)
                             ->orderBy('ngayhethan', 'asc')
                             ->get();
 
-                // Tùy chọn: Chặn nếu tổng tồn kho không đủ (Có thể bỏ nếu muốn bán âm)
                 if ($loHangs->sum('soluong_ton') < $qtyNeeded) {
                     throw new \Exception('Sản phẩm ' . $item['name'] . ' không đủ số lượng trong kho!');
                 }
 
                 foreach ($loHangs as $loHang) {
-                    if ($qtyNeeded <= 0) {
-                        break; // Đã trừ đủ số lượng khách mua, thoát vòng lặp
-                    }
+                    if ($qtyNeeded <= 0) break;
 
                     if ($loHang->soluong_ton >= $qtyNeeded) {
-                        // Nếu số tồn của lô này ĐỦ để trừ
                         $loHang->soluong_ton -= $qtyNeeded;
                         $loHang->save();
-                        $qtyNeeded = 0; // Đã trừ xong
+                        $qtyNeeded = 0;
                     } else {
-                        // Nếu số tồn của lô này KHÔNG ĐỦ
                         $qtyNeeded -= $loHang->soluong_ton;
                         $loHang->soluong_ton = 0;
                         $loHang->save();
                     }
                 }
             }
-            // ==========================================
 
             // Dọn dẹp session
             $cart = session()->get('cart', []);
@@ -351,7 +395,6 @@ class CartController extends Controller
             session()->put('viewed_orders', $viewedOrders);
             
             DB::commit();
-
             return redirect()->route('checkout.success')->with('madon_moi', $maDonMoi);
 
         } catch (\Exception $e) {
@@ -402,6 +445,19 @@ class CartController extends Controller
             return back()->with('error', 'Bạn đã sử dụng mã giảm giá này rồi (Mỗi khách chỉ được dùng 1 lần)!');
         }
 
+        // [BỔ SUNG] Chặn áp dụng lậu Voucher đổi điểm nếu chưa thực hiện đổi trong ví
+        if ($voucher->diem_doi > 0) {
+            $makh = Auth::guard('khachhang')->user()->makh;
+            $coSohuu = \DB::table('khachhang_voucher')
+                         ->where('makh', $makh)
+                         ->where('mavoucher', $mavoucher)
+                         ->where('trang_thai', 0) // Còn hạn, chưa dùng
+                         ->exists();
+
+            if (!$coSohuu) {
+                return back()->with('error', 'Mã giảm giá này yêu cầu phải đổi bằng điểm thưởng mới có thể sử dụng!');
+            }
+        }
         // Lấy dữ liệu sản phẩm CHUẨN BỊ THANH TOÁN
         $checkoutItems = session()->get('checkout_data', []);
         if (empty($checkoutItems)) {
