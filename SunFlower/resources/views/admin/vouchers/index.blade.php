@@ -73,8 +73,8 @@
                     <thead class="table-light text-muted">
                         <tr>
                             <th class="ps-4">Mã Voucher</th>
-                            <th>Thông tin chương trình</th>
-                            <th>Mức giảm</th>
+                            <th>Thông tin </th>
+                            <th class="text-center">Mức giảm</th>
                             <th>Phạm vi</th>
                             <th style="width: 12%">Đã dùng</th>
                             <th>Hiển thị</th>
@@ -95,12 +95,16 @@
                             </td>
                             <td>
                                 @if($vc->loai_giam === 'phan_tram')
-                                    <div class="fw-bold text-danger fs-6">{{ (int)$vc->gia_tri_giam }}%</div>
+                                    <span class="badge bg-info text-dark px-2 py-1 fs-6">
+                                        <i class="fa-solid fa-percent me-1"></i> Giảm {{ (int)$vc->gia_tri_giam }}%
+                                    </span>
                                     @if($vc->giam_max)
-                                        <small class="text-muted"><i class="fa-solid fa-arrow-down-up-across-line me-1"></i>Max: {{ number_format($vc->giam_max, 0, ',', '.') }}đ</small>
+                                        <div class="small text-muted mt-1"><i class="fa-solid fa-arrow-down-up-across-line me-1"></i>Max: {{ number_format($vc->giam_max, 0, ',', '.') }}đ</div>
                                     @endif
                                 @else
-                                    <div class="fw-bold text-danger fs-6">{{ number_format($vc->gia_tri_giam, 0, ',', '.') }}đ</div>
+                                    <span class="badge bg-warning text-dark px-2 py-1 fs-6">
+                                        <i class="fa-solid fa-money-bill-wave me-1"></i> Giảm {{ number_format($vc->gia_tri_giam, 0, ',', '.') }}đ
+                                    </span>
                                 @endif
                             </td>
                             <td>
@@ -113,17 +117,34 @@
                             <td>
                                 <div class="d-flex justify-content-between align-items-center mb-1">
                                     <small class="fw-semibold text-dark">{{ $vc->da_sudung }}</small>
-                                    <small class="text-muted">/ {{ $vc->soluong }}</small>
+                                    @if($vc->soluong >= 999999)
+                                        <span class="badge bg-dark text-white px-2" style="font-size: 0.7rem;">
+                                            <i class="fa-solid fa-infinity me-1"></i> Không giới hạn
+                                        </span>
+                                    @else
+                                        <small class="text-muted">/ {{ $vc->soluong }}</small>
+                                    @endif
                                 </div>
+                                    
+                                @if($vc->soluong < 999999)
                                 <div class="progress rounded-pill shadow-sm" style="height: 6px;">
                                     <div class="progress-bar bg-primary" role="progressbar" style="width: {{ $vc->soluong > 0 ? ($vc->da_sudung / $vc->soluong) * 100 : 0 }}%"></div>
                                 </div>
+                                @endif
                             </td>
                             <td>
                                 @if($vc->hien_thi === 'cong_khai')
-                                    <span class="text-success small fw-semibold"><i class="fa-solid fa-eye me-1"></i>Công khai</span>
-                                @else
-                                    <span class="text-secondary small fw-semibold"><i class="fa-solid fa-eye-slash me-1"></i>Mã ẩn</span>
+                                    <span class="badge badge-soft-success px-2 py-1">
+                                        <i class="fa-solid fa-earth-americas me-1"></i> Công khai
+                                    </span>
+                                @elseif($vc->hien_thi === 'nhap_code')
+                                    <span class="badge badge-soft-secondary px-2 py-1">
+                                        <i class="fa-solid fa-eye-slash me-1"></i> Ẩn (Nhập mã)
+                                    </span>
+                                @elseif($vc->hien_thi === 'doi_diem')
+                                    <span class="badge badge-soft-primary px-2 py-1">
+                                        <i class="fa-solid fa-star text-warning me-1"></i> Đổi điểm ({{ number_format($vc->diem_doi) }} đ)
+                                    </span>
                                 @endif
                             </td>
                             <td>
@@ -132,9 +153,9 @@
                             </td>
                             <td class="text-center">
                                 @if($vc->trangthai == 1 && strtotime($vc->ngay_kt) >= time())
-                                    <span class="badge badge-soft-success rounded-pill px-3 py-2"><i class="fa-solid fa-circle-check me-1"></i>Hoạt động</span>
+                                    <span class="badge badge-soft-success rounded-pill px-3 py-2"><i class="fa-solid fa-circle-check me-1"></i>Đang hoạt động</span>
                                 @elseif($vc->trangthai == 0)
-                                    <span class="badge badge-soft-secondary rounded-pill px-3 py-2"><i class="fa-solid fa-lock me-1"></i>Đã khóa</span>
+                                    <span class="badge badge-soft-secondary rounded-pill px-3 py-2"><i class="fa-solid fa-lock me-1"></i>Tạm dừng</span>
                                 @else
                                     <span class="badge badge-soft-danger rounded-pill px-3 py-2"><i class="fa-solid fa-clock me-1"></i>Hết hạn</span>
                                 @endif

@@ -167,7 +167,12 @@
                             @error('diachi') <p class="text-xs text-red-500 mt-1 ml-1">{{ $message }}</p> @enderror
                         </div>
 
-                        <div class="pt-4 flex justify-end">
+                       <div class="pt-4 flex justify-end gap-4">
+                            <!-- Nút mở modal Đổi Mật Khẩu -->
+                            <button type="button" id="btn-open-password-modal" class="bg-white border border-gray-300 text-gray-700 font-medium text-sm px-8 py-3 rounded-full shadow-sm hover:bg-gray-50 transition-colors">
+                                Đổi mật khẩu
+                            </button>
+                            <!-- Nút Lưu thay đổi thông tin cũ -->
                             <button type="submit" class="bg-[#111827] text-white font-medium text-sm px-8 py-3 rounded-full shadow-md hover:bg-black transition-colors">
                                 Lưu thay đổi
                             </button>
@@ -207,9 +212,9 @@
                                     <div class="flex-1 border-2 border-dashed border-[#FFB266] rounded-full py-2.5 px-4 text-center">
                                         <span class="text-[#FF7F00] font-bold tracking-widest text-sm">{{ $voucher->mavoucher }}</span>
                                     </div>
-                                    <button class="w-12 h-12 bg-[#FF7F00] rounded-xl flex items-center justify-center text-white hover:bg-orange-600 transition-colors shadow-sm">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                                    </button>
+                                    <button type="button" onclick="copyVoucher('{{ $voucher->mavoucher }}')" class="w-12 h-12 bg-[#FF7F00] rounded-xl flex items-center justify-center text-white hover:bg-orange-600 transition-colors shadow-sm" title="Sao chép mã">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+</button>
                                 </div>
 
                                 <div class="mt-4 flex items-center gap-1.5 text-[11px] text-gray-400">
@@ -282,6 +287,89 @@
         </div>
     </div>
 </div>
+<!-- MODAL ĐỔI MẬT KHẨU -->
+<div id="password-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-4">
+    <!-- Nền mờ -->
+    <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm transition-opacity" id="bg-password-modal"></div>
+
+    <!-- Khối Modal -->
+    <div class="bg-white rounded-[2rem] w-full max-w-md shadow-2xl relative animate-in fade-in zoom-in duration-300 overflow-hidden border border-gray-100">
+        
+        <!-- Nút đóng -->
+        <button type="button" id="btn-close-password-modal" class="absolute top-5 right-5 text-gray-400 hover:text-gray-800 bg-gray-50 hover:bg-gray-100 p-2 rounded-full transition-colors z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+
+        <div class="p-8">
+            <!-- Header của Modal -->
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-orange-50 text-[#FF7F00] rounded-full flex items-center justify-center mx-auto mb-4 shadow-sm border border-orange-100">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-800 mb-1">Đổi mật khẩu</h3>
+                <p class="text-gray-500 text-sm">Bảo mật tài khoản SunFlower của bạn</p>
+            </div>
+            
+            <form action="{{ route('profile.password.update') }}" method="POST" class="space-y-5">
+                @csrf
+                @method('PUT')
+                
+                <!-- Nhập mật khẩu hiện tại -->
+                <div>
+                    <label for="current_password" class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2 ml-1">Mật khẩu hiện tại</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#FF7F00] transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                        </div>
+                        <input type="password" id="current_password" name="current_password" required placeholder="Nhập mật khẩu cũ..." class="w-full bg-[#FAFAFA] border border-gray-200 focus:border-[#FF7F00] focus:ring-4 focus:ring-orange-500/10 focus:bg-white text-gray-700 text-sm rounded-2xl pl-11 pr-12 py-3.5 outline-none transition-all">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 btn-toggle-password">
+                            <svg class="w-5 h-5 icon-eye" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <svg class="w-5 h-5 icon-eye-slash hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                        </button>
+                    </div>
+                    @error('current_password') <p class="text-xs text-red-500 mt-1.5 ml-1">{{ $message }}</p> @enderror
+                </div>
+
+                <!-- Nhập mật khẩu mới -->
+                <div>
+                    <label for="password" class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2 ml-1">Mật khẩu mới</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#FF7F00] transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        </div>
+                        <input type="password" id="password" name="password" required placeholder="Tối thiểu 6 ký tự..." class="w-full bg-[#FAFAFA] border border-gray-200 focus:border-[#FF7F00] focus:ring-4 focus:ring-orange-500/10 focus:bg-white text-gray-700 text-sm rounded-2xl pl-11 pr-12 py-3.5 outline-none transition-all">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 btn-toggle-password">
+                            <svg class="w-5 h-5 icon-eye" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <svg class="w-5 h-5 icon-eye-slash hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                        </button>
+                    </div>
+                    @error('password') <p class="text-xs text-red-500 mt-1.5 ml-1">{{ $message }}</p> @enderror
+                </div>
+
+                <!-- Xác nhận mật khẩu mới -->
+                <div>
+                    <label for="password_confirmation" class="block text-xs font-bold text-gray-600 uppercase tracking-wider mb-2 ml-1">Xác nhận mật khẩu mới</label>
+                    <div class="relative group">
+                        <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-400 group-focus-within:text-[#FF7F00] transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <input type="password" id="password_confirmation" name="password_confirmation" required placeholder="Nhập lại mật khẩu mới..." class="w-full bg-[#FAFAFA] border border-gray-200 focus:border-[#FF7F00] focus:ring-4 focus:ring-orange-500/10 focus:bg-white text-gray-700 text-sm rounded-2xl pl-11 pr-12 py-3.5 outline-none transition-all">
+                        <button type="button" class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 btn-toggle-password">
+                            <svg class="w-5 h-5 icon-eye" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            <svg class="w-5 h-5 icon-eye-slash hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path></svg>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="pt-6">
+                    <button type="submit" class="w-full bg-gradient-to-r from-[#FF8A00] to-[#FF6B00] text-white font-bold text-sm px-5 py-4 rounded-2xl shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all">
+                        Cập nhật mật khẩu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 <style>
     /* CSS cho scrollbar mượt mà */
@@ -289,6 +377,10 @@
     .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
 </style>
 <script>
+    function copyVoucher(code) {
+    navigator.clipboard.writeText(code);
+}
+
     document.addEventListener('DOMContentLoaded', function() {
         const btnOpen = document.getElementById('btn-open-modal');
         const modal = document.getElementById('voucher-modal');
@@ -313,6 +405,56 @@
         } else {
             console.error('Không tìm thấy nút hoặc modal, hãy kiểm tra lại ID!');
         }
+        
     });
+        const btnOpenPassword = document.getElementById('btn-open-password-modal');
+        const modalPassword = document.getElementById('password-modal');
+        const btnClosePassword = document.getElementById('btn-close-password-modal');
+        const bgPasswordModal = document.getElementById('bg-password-modal');
+
+        if (btnOpenPassword && modalPassword) {
+    // Mở modal
+    btnOpenPassword.addEventListener('click', function() {
+        modalPassword.classList.remove('hidden');
+    });
+
+    // Đóng modal bằng nút X
+    btnClosePassword.addEventListener('click', function() {
+        modalPassword.classList.add('hidden');
+    });
+
+    // Đóng modal khi click ra ngoài nền tối
+    bgPasswordModal.addEventListener('click', function() {
+        modalPassword.classList.add('hidden');
+    });
+
+    // TỰ ĐỘNG MỞ LẠI MODAL NẾU CÓ LỖI NHẬP LIỆU
+    @if($errors->has('current_password') || $errors->has('password') || session('error_password'))
+        modalPassword.classList.remove('hidden');
+    @endif
+}
+
+        const togglePasswordBtns = document.querySelectorAll('.btn-toggle-password');
+
+        togglePasswordBtns.forEach(button => {
+            button.addEventListener('click', function() {
+                // Tìm ô input nằm cùng cấp (anh em) với nút bấm
+                const input = this.previousElementSibling;
+                const iconEye = this.querySelector('.icon-eye');
+                const iconEyeSlash = this.querySelector('.icon-eye-slash');
+
+                if (input.type === 'password') {
+                    // Hiện mật khẩu
+                    input.type = 'text';
+                    iconEye.classList.add('hidden');
+                    iconEyeSlash.classList.remove('hidden');
+                } else {
+                    // Ẩn mật khẩu
+                    input.type = 'password';
+                    iconEye.classList.remove('hidden');
+                    iconEyeSlash.classList.add('hidden');
+                }
+            });
+        });
 </script>
 @endsection

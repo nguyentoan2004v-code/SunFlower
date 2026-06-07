@@ -27,8 +27,13 @@
                 <div class="row g-3">
                     <div class="col-md-4">
                         <label class="form-label fw-bold text-dark">Mã Voucher <span class="text-danger">*</span></label>
-                        <input type="text" name="mavoucher" class="form-control @error('mavoucher') is-invalid @enderror" value="{{ old('mavoucher') }}" placeholder="Ví dụ: VALENTIN2026" required style="text-transform: uppercase;">
-                        @error('mavoucher') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <div class="input-group">
+                            <input type="text" name="mavoucher" id="mavoucher" class="form-control @error('mavoucher') is-invalid @enderror" value="{{ old('mavoucher') }}" placeholder="Ví dụ: VALENTIN2026" required style="text-transform: uppercase;">
+                            <button class="btn btn-outline-secondary" type="button" id="btn_random_code" title="Tạo mã ngẫu nhiên">
+                                <i class="fa-solid fa-dice"></i>
+                            </button>
+                        </div>
+                        @error('mavoucher') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-8">
@@ -64,22 +69,29 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-bold text-dark">Số Lượng Phát Hành <span class="text-danger">*</span></label>
-                        <input type="number" name="soluong" class="form-control @error('soluong') is-invalid @enderror" value="{{ old('soluong') }}" min="1" required>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold text-dark m-0">Số Lượng Phát Hành <span class="text-danger">*</span></label>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input" type="checkbox" id="check_unlimited_qty" value="1">
+                                <label class="form-check-label text-dark" style="font-size: 0.85rem;" for="check_unlimited_qty">Không giới hạn</label>
+                            </div>
+                        </div>
+                        <input type="number" name="soluong" id="soluong" class="form-control @error('soluong') is-invalid @enderror" value="{{ old('soluong') }}" min="1" required>
                         @error('soluong') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
                     <div class="col-md-4">
                         <label class="form-label fw-bold text-dark">Điểm Quy Đổi (0 nếu miễn phí) <span class="text-danger">*</span></label>
-                        <input type="number" name="diem_doi" class="form-control @error('diem_doi') is-invalid @enderror" value="{{ old('diem_doi', 0) }}" min="0" required>
+                        <input type="number" name="diem_doi" id="diem_doi" class="form-control @error('diem_doi') is-invalid @enderror" value="{{ old('diem_doi', 0) }}" min="0" required>
                         @error('diem_doi') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-bold text-dark">Chế Độ Hiển Thị <span class="text-danger">*</span></label>
-                        <select name="hien_thi" class="form-select">
+                        <select name="hien_thi" id="hien_thi" class="form-select">
                             <option value="cong_khai" {{ old('hien_thi') == 'cong_khai' ? 'selected' : '' }}>Công khai </option>
                             <option value="nhap_code" {{ old('hien_thi') == 'nhap_code' ? 'selected' : '' }}>Ẩn </option>
-                        </select>
+                            </select>
+                        @error('hien_thi') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-4">
@@ -168,6 +180,87 @@
         // Khởi chạy khi load trang để giữ dữ liệu cũ nếu báo lỗi validate
         handleLoaiGiam();
         handleLoaiApDung();
+
+        const btnRandom = document.getElementById('btn_random_code');
+        const inputMaVoucher = document.getElementById('mavoucher');
+        
+        if (btnRandom) {
+            btnRandom.addEventListener('click', function() {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+                let randomCode = 'SF'; // Bắt đầu bằng chữ SF (SunFlower)
+                for (let i = 0; i < 8; i++) {
+                    randomCode += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                inputMaVoucher.value = randomCode;
+            });
+        }
+
+        // 2. XỬ LÝ CHECKBOX KHÔNG GIỚI HẠN SỐ LƯỢNG
+        const checkUnlimitedQty = document.getElementById('check_unlimited_qty');
+        const inputSoLuong = document.getElementById('soluong');
+
+        if (checkUnlimitedQty) {
+            checkUnlimitedQty.addEventListener('change', function() {
+                if (this.checked) {
+                    // Sửa số 0 thành một con số cực lớn (ví dụ: 9999999)
+                    inputSoLuong.value = 9999999; 
+                    inputSoLuong.setAttribute('readonly', true);
+                    inputSoLuong.classList.add('bg-secondary', 'text-white');
+                } else {
+                    inputSoLuong.value = '';
+                    inputSoLuong.removeAttribute('readonly');
+                    inputSoLuong.classList.remove('bg-secondary', 'text-white');
+                }
+            });
+        }
+
+        // 3. TỰ ĐỘNG THÊM/BỎ TÙY CHỌN "ĐỔI ĐIỂM" KHI ĐIỂM QUY ĐỔI > 0
+        const inputDiemDoi = document.getElementById('diem_doi');
+        const selectHienThi = document.getElementById('hien_thi');
+        const doiDiemOptionValue = 'doi_diem';
+        
+        function handleDiemDoiChange() {
+            const diem = parseInt(inputDiemDoi.value) || 0;
+            
+            // Kiểm tra xem tuỳ chọn "doi_diem" đã tồn tại chưa
+            let doiDiemOption = selectHienThi.querySelector(`option[value="${doiDiemOptionValue}"]`);
+
+            if (diem > 0) {
+                // Nếu chưa có thì thêm vào
+                if (!doiDiemOption) {
+                    const newOption = document.createElement('option');
+                    newOption.value = doiDiemOptionValue;
+                    newOption.text = 'Đổi điểm';
+                    selectHienThi.appendChild(newOption);
+                }
+                // Tự động chọn luôn "Đổi điểm" nếu muốn
+                selectHienThi.value = doiDiemOptionValue; 
+                
+                // Khóa không cho chọn loại khác (Tùy chọn)
+                Array.from(selectHienThi.options).forEach(opt => {
+                    if(opt.value !== doiDiemOptionValue) opt.disabled = true;
+                });
+            } else {
+                // Nếu điểm = 0, xóa tùy chọn "doi_diem" (nếu có)
+                if (doiDiemOption) {
+                    selectHienThi.removeChild(doiDiemOption);
+                }
+                // Mở khóa các tùy chọn khác
+                Array.from(selectHienThi.options).forEach(opt => opt.disabled = false);
+                
+                // Trả về mặc định nếu đang chọn "doi_diem"
+                if(selectHienThi.value === doiDiemOptionValue) {
+                    selectHienThi.value = 'cong_khai';
+                }
+            }
+        }
+
+        if (inputDiemDoi) {
+            inputDiemDoi.addEventListener('input', handleDiemDoiChange);
+            // Chạy ngay khi load trang để bắt trường hợp có giá trị old()
+            handleDiemDoiChange();
+        }
+    
     });
 </script>
 @endsection

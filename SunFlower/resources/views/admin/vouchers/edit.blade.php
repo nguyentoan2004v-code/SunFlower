@@ -64,23 +64,34 @@
                     </div>
 
                     <div class="col-md-4">
-                        <label class="form-label fw-bold text-dark">Số Lượng Phát Hành <span class="text-danger">*</span></label>
-                        <input type="number" name="soluong" class="form-control @error('soluong') is-invalid @enderror" value="{{ old('soluong', $voucher->soluong) }}" min="{{ $voucher->da_sudung }}" required>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="form-label fw-bold text-dark m-0">Số Lượng Phát Hành <span class="text-danger">*</span></label>
+                            <div class="form-check form-switch m-0">
+                                <input class="form-check-input" type="checkbox" id="check_unlimited_qty" value="1" {{ old('soluong', $voucher->soluong) >= 999999 ? 'checked' : '' }}>
+                                <label class="form-check-label text-dark" style="font-size: 0.85rem;" for="check_unlimited_qty">Không giới hạn</label>
+                            </div>
+                        </div>
+                        <input type="number" name="soluong" id="soluong" class="form-control @error('soluong') is-invalid @enderror" value="{{ old('soluong', $voucher->soluong) }}" min="{{ $voucher->da_sudung }}" required>
                         <small class="text-muted">Đã sử dụng thực tế: {{ $voucher->da_sudung }} lượt</small>
-                        @error('soluong') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        @error('soluong') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
+
                     <div class="col-md-4">
                         <label class="form-label fw-bold text-dark">Điểm Quy Đổi (0 nếu miễn phí) <span class="text-danger">*</span></label>
-                        <input type="number" name="diem_doi" class="form-control @error('diem_doi') is-invalid @enderror" value="{{ old('diem_doi', $voucher->diem_doi) }}" min="0" required>
-                        @error('diem_doi') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                        <input type="number" name="diem_doi" id="diem_doi" class="form-control @error('diem_doi') is-invalid @enderror" value="{{ old('diem_doi', $voucher->diem_doi) }}" min="0" required>
+                        @error('diem_doi') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-bold text-dark">Chế Độ Hiển Thị <span class="text-danger">*</span></label>
-                        <select name="hien_thi" class="form-select">
+                        <select name="hien_thi" id="hien_thi" class="form-select">
                             <option value="cong_khai" {{ old('hien_thi', $voucher->hien_thi) == 'cong_khai' ? 'selected' : '' }}>Công khai </option>
                             <option value="nhap_code" {{ old('hien_thi', $voucher->hien_thi) == 'nhap_code' ? 'selected' : '' }}>Ẩn </option>
+                            @if(old('hien_thi', $voucher->hien_thi) == 'doi_diem')
+                                <option value="doi_diem" selected>Đổi điểm</option>
+                            @endif
                         </select>
+                        @error('hien_thi') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-4">
@@ -168,6 +179,81 @@
         
         handleLoaiGiam();
         handleLoaiApDung();
+
+        // 1. XỬ LÝ CHECKBOX KHÔNG GIỚI HẠN SỐ LƯỢNG
+        const checkUnlimitedQty = document.getElementById('check_unlimited_qty');
+        const inputSoLuong = document.getElementById('soluong');
+        
+        if (checkUnlimitedQty) {
+            function toggleUnlimited() {
+                if (checkUnlimitedQty.checked) {
+                    inputSoLuong.value = 9999999;
+                    inputSoLuong.setAttribute('readonly', true);
+                    inputSoLuong.classList.add('bg-secondary', 'text-white');
+                } else {
+                    // Nếu tắt checkbox, xóa số 9999999 đi để người dùng nhập lại
+                    if(inputSoLuong.value >= 999999) inputSoLuong.value = '';
+                    inputSoLuong.removeAttribute('readonly');
+                    inputSoLuong.classList.remove('bg-secondary', 'text-white');
+                }
+            }
+
+            checkUnlimitedQty.addEventListener('change', toggleUnlimited);
+            
+            // Khởi chạy khi load trang để khóa ô input nếu db đang lưu là không giới hạn
+            if (checkUnlimitedQty.checked) {
+                inputSoLuong.setAttribute('readonly', true);
+                inputSoLuong.classList.add('bg-secondary', 'text-white');
+            }
+        }
+
+        // 2. TỰ ĐỘNG THÊM/BỎ TÙY CHỌN "ĐỔI ĐIỂM" KHI ĐIỂM QUY ĐỔI > 0
+        const inputDiemDoi = document.getElementById('diem_doi');
+        const selectHienThi = document.getElementById('hien_thi');
+        const doiDiemOptionValue = 'doi_diem';
+        
+        // Lưu lại giá trị mặc định từ database để so sánh lúc load trang
+        const currentHienThi = '{{ old("hien_thi", $voucher->hien_thi) }}';
+
+        function handleDiemDoiChange(isInit = false) {
+            const diem = parseInt(inputDiemDoi.value) || 0;
+            let doiDiemOption = selectHienThi.querySelector(`option[value="${doiDiemOptionValue}"]`);
+
+            if (diem > 0) {
+                if (!doiDiemOption) {
+                    const newOption = document.createElement('option');
+                    newOption.value = doiDiemOptionValue;
+                    newOption.text = 'Đổi điểm';
+                    selectHienThi.appendChild(newOption);
+                }
+                
+                // Tự động chuyển select thành "Đổi điểm" nếu người dùng gõ điểm, 
+                // hoặc lúc load trang dữ liệu db đang là 'doi_diem'
+                if (!isInit || currentHienThi === doiDiemOptionValue) {
+                    selectHienThi.value = doiDiemOptionValue; 
+                }
+                
+                // Khóa các lựa chọn khác
+                Array.from(selectHienThi.options).forEach(opt => {
+                    if(opt.value !== doiDiemOptionValue) opt.disabled = true;
+                });
+            } else {
+                if (doiDiemOption) {
+                    selectHienThi.removeChild(doiDiemOption);
+                }
+                Array.from(selectHienThi.options).forEach(opt => opt.disabled = false);
+                
+                // Nếu người dùng xóa điểm về 0, trả về Công khai (nếu không phải là lúc mới load)
+                if(!isInit && selectHienThi.value === doiDiemOptionValue) {
+                    selectHienThi.value = 'cong_khai';
+                }
+            }
+        }
+
+        if (inputDiemDoi) {
+            inputDiemDoi.addEventListener('input', () => handleDiemDoiChange(false));
+            handleDiemDoiChange(true); // Gọi lúc load trang với cờ isInit = true
+        }
     });
 </script>
 @endsection
