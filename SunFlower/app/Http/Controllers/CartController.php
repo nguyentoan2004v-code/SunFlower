@@ -83,10 +83,15 @@ class CartController extends Controller
     
     public function update(Request $request)
     {
+        $request->validate([
+            'id' => 'required',
+            'quantity' => 'required|integer|min:1|max:1000'
+        ]);
+
         $cart = session()->get('cart', []);
         if(isset($cart[$request->id])) {
             // Cập nhật số lượng mới
-            $cart[$request->id]['quantity'] = $request->quantity;
+            $cart[$request->id]['quantity'] = (int) $request->quantity;
             session()->put('cart', $cart);
             
             return response()->json([
@@ -312,7 +317,7 @@ class CartController extends Controller
                     $khachMoi->sdt = $request->sdt_nguoinhan;
                     $khachMoi->diachi = $request->diachi_giaohang;
                     $khachMoi->email = $request->sdt_nguoinhan . '@gmail.com'; 
-                    $khachMoi->password = bcrypt('123456');
+                    $khachMoi->password = bcrypt(Str::random(32));
                     $khachMoi->save();
                     
                     $donHang->makh = $maKhMoi;
@@ -330,12 +335,20 @@ class CartController extends Controller
             $donHang->trangthai = 'Chờ xác nhận';
             $donHang->ngaydat = now();
             
+            // TẠO MỚI: Sinh token bảo mật cho khách vãng lai xem đơn
+            $secureToken = Str::random(40);
+            $donHang->token = $secureToken;
+            
             $donHang->save();
 
             if ($maVoucherCode) {
                 $vc = Voucher::find($maVoucherCode);
                 if ($vc) {
-                    $vc->increment('da_sudung');
+                    // Chỉ tăng số lượt sử dụng voucher nếu đây là mã công khai/nhập mã thông thường
+                    // Đối với mã đổi điểm, số lượt sử dụng đã được tính lúc đổi điểm ở ProfileController
+                    if ($vc->diem_doi == 0) {
+                        $vc->increment('da_sudung');
+                    }
                     if ($vc->diem_doi > 0 && Auth::guard('khachhang')->check()) {
                         \DB::table('khachhang_voucher')
                             ->where('makh', Auth::guard('khachhang')->user()->makh)
@@ -395,6 +408,7 @@ class CartController extends Controller
             session()->put('viewed_orders', $viewedOrders);
             
             DB::commit();
+            session()->put('donhang_token', $secureToken);
             return redirect()->route('checkout.success')->with('madon_moi', $maDonMoi);
 
         } catch (\Exception $e) {
@@ -407,13 +421,14 @@ class CartController extends Controller
     {
         // Lấy mã đơn từ session (do placeOrder truyền sang)
         $maDon = session('madon_moi');
+        $token = session('donhang_token');
 
         // Nếu không có mã đơn (ai đó gõ trực tiếp url /dat-hang-thanh-cong), đẩy về trang chủ
         if (!$maDon) {
             return redirect()->route('home');
         }
 
-        return view('checkout_success', compact('maDon'));
+        return view('checkout_success', compact('maDon', 'token'));
     }
     public function applyVoucher(Request $request)
     {

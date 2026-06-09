@@ -96,7 +96,7 @@ class ProductController extends Controller implements HasMiddleware
         // XỬ LÝ UPLOAD HÌNH ẢNH LÊN CLOUDINARY
         if ($request->hasFile('hinhanh')) {
             // Khởi tạo Cloudinary
-            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+            $cloudinary = new Cloudinary(config('cloudinary.url'));
             
             // Lấy file từ form và đẩy thẳng lên folder 'sunflower_products'
             $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
@@ -149,7 +149,7 @@ class ProductController extends Controller implements HasMiddleware
             }
             
             // 2. Upload ảnh mới thẳng lên Cloudinary
-            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+            $cloudinary = new Cloudinary(config('cloudinary.url'));
             $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
                 'folder' => 'sunflower_products'
             ]);

@@ -70,7 +70,7 @@ class CategoryController extends Controller implements HasMiddleware
 
         // XỬ LÝ UPLOAD ẢNH LÊN CLOUDINARY
         if ($request->hasFile('hinhanh')) {
-            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+            $cloudinary = new Cloudinary(config('cloudinary.url'));
             
             $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
                 'folder' => 'sunflower_categories' // Lưu vào thư mục danh mục riêng cho gọn
@@ -112,7 +112,7 @@ class CategoryController extends Controller implements HasMiddleware
             }
             
             // Upload ảnh mới lên Cloudinary
-            $cloudinary = new Cloudinary(env('CLOUDINARY_URL'));
+            $cloudinary = new Cloudinary(config('cloudinary.url'));
             $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
                 'folder' => 'sunflower_categories'
             ]);

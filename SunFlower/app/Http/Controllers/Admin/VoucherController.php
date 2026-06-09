@@ -51,16 +51,26 @@ class VoucherController extends Controller implements HasMiddleware
             'mavoucher' => 'required|string|max:20|unique:voucher,mavoucher',
             'tenvoucher' => 'required|string|max:100',
             'loai_giam' => 'required|string|in:phan_tram,so_tien',
-            'gia_tri_giam' => 'required|numeric|min:0',
+            'gia_tri_giam' => [
+                'required', 
+                'numeric', 
+                'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->loai_giam === 'phan_tram' && $value > 100) {
+                        $fail('Giá trị giảm theo phần trăm không được vượt quá 100%.');
+                    }
+                }
+            ],
             'giam_max' => 'nullable|numeric|min:0',
             'don_min' => 'required|numeric|min:0',
             'soluong' => 'required|integer|min:1',
+            'diem_doi' => 'required|integer|min:0',
             'loai_ap_dung' => 'required|string|in:tat_ca,danh_muc',
             'hien_thi' => 'required|string|in:cong_khai,nhap_code,doi_diem',
             'ngay_bd' => 'required|date',
-            'ngay_kt' => 'required|date|after_or_equal:ngay_bd',
+            'ngay_kt' => 'required|date|after:ngay_bd',
             'trangthai' => 'required|boolean',
-            'danhmuc_ids' => 'nullable|array' // Mảng chứa ID danh mục nếu chọn loại_áp_dụng = danh_muc
+            'danhmuc_ids' => 'required_if:loai_ap_dung,danh_muc|array' // Bắt buộc nếu chọn loại danh mục
         ]);
 
         // Tạo voucher (bỏ trường danhmuc_ids ra vì nó nằm ở bảng trung gian)
@@ -94,16 +104,26 @@ class VoucherController extends Controller implements HasMiddleware
         $request->validate([
             'tenvoucher' => 'required|string|max:100',
             'loai_giam' => 'required|string|in:phan_tram,so_tien',
-            'gia_tri_giam' => 'required|numeric|min:0',
+            'gia_tri_giam' => [
+                'required', 
+                'numeric', 
+                'min:0',
+                function ($attribute, $value, $fail) use ($request) {
+                    if ($request->loai_giam === 'phan_tram' && $value > 100) {
+                        $fail('Giá trị giảm theo phần trăm không được vượt quá 100%.');
+                    }
+                }
+            ],
             'giam_max' => 'nullable|numeric|min:0',
             'don_min' => 'required|numeric|min:0',
             'soluong' => 'required|integer|min:1',
+            'diem_doi' => 'required|integer|min:0',
             'loai_ap_dung' => 'required|string|in:tat_ca,danh_muc',
             'hien_thi' => 'required|string|in:cong_khai,nhap_code,doi_diem',
             'ngay_bd' => 'required|date',
-            'ngay_kt' => 'required|date|after_or_equal:ngay_bd',
+            'ngay_kt' => 'required|date|after:ngay_bd',
             'trangthai' => 'required|boolean',
-            'danhmuc_ids' => 'nullable|array'
+            'danhmuc_ids' => 'required_if:loai_ap_dung,danh_muc|array'
         ]);
 
         $voucher->update($request->except(['mavoucher', 'danhmuc_ids']));

@@ -13,8 +13,7 @@ class KhachHang extends Authenticatable
     protected $primaryKey = 'makh';
     public $incrementing = false;
     protected $keyType = 'string';
-
-    protected $fillable = ['makh', 'hoten', 'email', 'sdt', 'diachi', 'password','hang_thanh_vien_id', 'tong_chi_tieu', 'diem_thuong'];
+    protected $fillable = ['makh', 'hoten', 'email', 'sdt', 'diachi', 'password'];
 
     protected $hidden = ['password'];
     

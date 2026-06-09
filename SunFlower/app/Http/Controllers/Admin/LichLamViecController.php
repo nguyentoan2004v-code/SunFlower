@@ -73,25 +73,42 @@ class LichLamViecController extends Controller implements HasMiddleware
         
         DB::beginTransaction();
         try {
+            $manvList = array_keys($phancongs);
+            $dateList = [];
+            foreach ($phancongs as $days) {
+                foreach (array_keys($days) as $date) {
+                    $dateList[] = $date;
+                }
+            }
+            $dateList = array_unique($dateList);
+            
+            if (!empty($manvList) && !empty($dateList)) {
+                // Xóa lịch cũ của những người này trong các ngày đã chọn (Bulk Delete)
+                DB::table('phancong')
+                    ->whereIn('manv', $manvList)
+                    ->whereIn('ngaylam', $dateList)
+                    ->delete();
+            }
+
+            $inserts = [];
             foreach ($phancongs as $manv => $days) {
                 foreach ($days as $date => $maca) {
-                    // Xóa lịch cũ của người này trong ngày này (để tránh trùng lặp)
-                    DB::table('phancong')
-                        ->where('manv', $manv)
-                        ->where('ngaylam', $date)
-                        ->delete();
-                    
-                    // Nếu Quản lý có chọn Ca (Không chọn "Nghỉ") thì tiến hành insert mới
+                    // Nếu Quản lý có chọn Ca (Không chọn "Nghỉ") thì tiến hành chuẩn bị dữ liệu insert mới
                     if (!empty($maca)) {
-                        DB::table('phancong')->insert([
+                        $inserts[] = [
                             'manv' => $manv,
                             'maca' => $maca,
                             'ngaylam' => $date,
                             'created_at' => now(),
                             'updated_at' => now()
-                        ]);
+                        ];
                     }
                 }
+            }
+
+            // Chèn tất cả bằng 1 lệnh duy nhất (Bulk Insert)
+            if (!empty($inserts)) {
+                DB::table('phancong')->insert($inserts);
             }
             DB::commit();
             return redirect()->route('admin.lichlamviec.index', ['week' => $weekParam])
@@ -156,16 +173,20 @@ class LichLamViecController extends Controller implements HasMiddleware
             }
 
             // --- LUỒNG 1: ADMIN (Làm HC T2-T7, nghỉ CN) ---
+            $adminInserts = [];
             foreach ($admins as $admin) {
                 for ($i = 0; $i < 6; $i++) { // 6 ngày đầu tuần
-                    DB::table('phancong')->insert([
+                    $adminInserts[] = [
                         'manv' => $admin->manv,
                         'maca' => 'CA_HC',
                         'ngaylam' => $startOfWeek->copy()->addDays($i)->format('Y-m-d'),
                         'created_at' => now(),
                         'updated_at' => now()
-                    ]);
+                    ];
                 }
+            }
+            if (!empty($adminInserts)) {
+                DB::table('phancong')->insert($adminInserts);
             }
 
             // --- LUỒNG 2: NHÂN VIÊN THƯỜNG (3 Sáng - 3 Tối) ---
@@ -234,8 +255,8 @@ class LichLamViecController extends Controller implements HasMiddleware
             }
 
             // 3. Insert lịch hoàn hảo vào DB
-            foreach ($bestSchedule as $plan) {
-                DB::table('phancong')->insert($plan);
+            if (!empty($bestSchedule)) {
+                DB::table('phancong')->insert($bestSchedule);
             }
             
             DB::commit();

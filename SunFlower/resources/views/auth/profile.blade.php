@@ -250,9 +250,11 @@
         
         <div class="space-y-4 max-h-[50vh] overflow-y-auto pr-2 custom-scrollbar">
             @php 
+                $daDoi = \DB::table('khachhang_voucher')->where('makh', $user->makh)->pluck('mavoucher')->toArray();
                 $vouchers = \App\Models\Voucher::where('diem_doi', '>', 0)
                             ->where('soluong', '>', \DB::raw('da_sudung'))
                             ->where('trangthai', 1)
+                            ->whereNotIn('mavoucher', $daDoi)
                             ->get(); 
             @endphp
 

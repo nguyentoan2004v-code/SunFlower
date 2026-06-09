@@ -47,9 +47,18 @@
                         <div class="h-4 w-px bg-gray-300"></div>
                         <span class="text-sm text-gray-500">Mã SP: <strong class="text-gray-800">{{ $product->masp }}</strong></span>
                         <div class="h-4 w-px bg-gray-300 hidden sm:block"></div>
-                        <span class="text-sm text-green-600 font-medium hidden sm:block">
-                            <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> Còn hàng
-                        </span>
+                        @php
+                            $tonKho = $product->lohangs_sum_soluong_ton ?? 0;
+                        @endphp
+                        @if($tonKho > 0)
+                            <span class="text-sm text-green-600 font-medium hidden sm:block">
+                                <span class="inline-block w-2 h-2 bg-green-500 rounded-full mr-1 animate-pulse"></span> Còn hàng (Trong kho còn {{ $tonKho }} đóa)
+                            </span>
+                        @else
+                            <span class="text-sm text-red-600 font-medium hidden sm:block">
+                                <span class="inline-block w-2 h-2 bg-red-500 rounded-full mr-1"></span> Hết hàng
+                            </span>
+                        @endif
                     </div>
                     
                     <div class="bg-orange-50/50 rounded-2xl p-4 sm:p-6 mb-8 border border-orange-100 flex flex-wrap items-end gap-4">
@@ -115,26 +124,32 @@
                     
                     <div class="flex flex-col xl:flex-row gap-4 mb-8">
                         <div class="flex items-center justify-between border-2 border-gray-100 rounded-2xl w-full xl:w-36 h-14 bg-white shadow-sm overflow-hidden focus-within:border-orange-200 transition-colors">
-                            <button type="button" class="w-12 h-full flex items-center justify-center hover:bg-gray-50 btn-minus-qty text-gray-500 font-bold text-xl transition">-</button>
-                            <input type="text" id="product-quantity" class="w-10 text-center border-none focus:ring-0 font-bold text-gray-800 text-lg p-0 bg-transparent" value="1" readonly>
-                            <button type="button" class="w-12 h-full flex items-center justify-center hover:bg-gray-50 btn-plus-qty text-gray-500 font-bold text-xl transition">+</button>
+                            <button type="button" class="w-12 h-full flex items-center justify-center hover:bg-gray-50 btn-minus-qty text-gray-500 font-bold text-xl transition" {{ $tonKho <= 0 ? 'disabled' : '' }}>-</button>
+                            <input type="text" id="product-quantity" class="w-10 text-center border-none focus:ring-0 font-bold text-gray-800 text-lg p-0 bg-transparent" value="{{ $tonKho > 0 ? 1 : 0 }}" readonly>
+                            <button type="button" class="w-12 h-full flex items-center justify-center hover:bg-gray-50 btn-plus-qty text-gray-500 font-bold text-xl transition" {{ $tonKho <= 0 ? 'disabled' : '' }}>+</button>
                         </div>
 
                         <div class="flex flex-1 gap-4">
-                            <form action="{{ route('cart.add', $product->masp) }}" method="POST" id="form-add-cart" class="w-1/3">
-                                @csrf
-                                <input type="hidden" name="quantity" id="hidden-quantity" value="1">
-                                <button type="submit" id="btn-add-cart" class="w-full h-14 bg-orange-50 border-2 border-orange-200 text-[#FF6B35] flex items-center justify-center rounded-2xl font-bold text-base hover:bg-orange-100 transition shadow-sm group">
-                                    <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-                                    </svg>
-                                </button>
-                            </form>
+                            @if($tonKho > 0)
+                                <form action="{{ route('cart.add', $product->masp) }}" method="POST" id="form-add-cart" class="w-1/3">
+                                    @csrf
+                                    <input type="hidden" name="quantity" id="hidden-quantity" value="1">
+                                    <button type="submit" id="btn-add-cart" class="w-full h-14 bg-orange-50 border-2 border-orange-200 text-[#FF6B35] flex items-center justify-center rounded-2xl font-bold text-base hover:bg-orange-100 transition shadow-sm group">
+                                        <svg class="w-5 h-5 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                                        </svg>
+                                    </button>
+                                </form>
 
-                            <a href="{{ route('cart.buyNow', $product->masp) }}" id="btn-buy-now"
-                               class="flex-1 h-14 bg-gradient-to-r from-[#FF6B35] to-[#ff8559] text-white flex items-center justify-center rounded-2xl font-bold text-lg hover:shadow-lg hover:shadow-orange-200 transition duration-300 active:scale-95">
-                                Đặt Mua Ngay
-                            </a>
+                                <a href="{{ route('cart.buyNow', $product->masp) }}" id="btn-buy-now"
+                                   class="flex-1 h-14 bg-gradient-to-r from-[#FF6B35] to-[#ff8559] text-white flex items-center justify-center rounded-2xl font-bold text-lg hover:shadow-lg hover:shadow-orange-200 transition duration-300 active:scale-95">
+                                    Đặt Mua Ngay
+                                </a>
+                            @else
+                                <button type="button" class="w-full h-14 bg-gray-200 text-gray-500 flex items-center justify-center rounded-2xl font-bold text-lg cursor-not-allowed" disabled>
+                                    Tạm Hết Hàng
+                                </button>
+                            @endif
                         </div>
                     </div>              
                     
@@ -180,6 +195,7 @@
                             $imgUrl = str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/'));
                             $imgHtml = '<img src="' . $imgUrl . '" alt="' . $product->tensp . '" class="w-full max-w-md mx-auto rounded-2xl shadow-md my-8 block border border-gray-100">';
                             $finalContent = str_replace('[anh_hoa]', $imgHtml, $product->mota_chitiet);
+                            $finalContent = strip_tags($finalContent, '<p><br><strong><em><ul><ol><li><h2><h3><img><a>');
                         @endphp
                         {!! $finalContent !!}
                     @else
@@ -383,6 +399,7 @@
 
                 const baseBuyNowUrl = "{{ route('cart.buyNow', $product->masp) }}";
                 const hiddenQty = document.getElementById('hidden-quantity');
+                const maxQty = {{ $tonKho }}; // Giới hạn tồn kho
 
                 function updateLinks() {
                     const qty = inputQty.value;
@@ -400,8 +417,12 @@
 
                 btnPlus.addEventListener('click', () => {
                     let qty = parseInt(inputQty.value);
-                    inputQty.value = qty + 1;
-                    updateLinks();
+                    if (qty < maxQty) {
+                        inputQty.value = qty + 1;
+                        updateLinks();
+                    } else {
+                        alert('Xin lỗi, số lượng sản phẩm trong kho chỉ còn ' + maxQty + ' đóa hoa!');
+                    }
                 });
 
                 updateLinks();

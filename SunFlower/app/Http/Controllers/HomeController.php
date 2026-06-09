@@ -54,7 +54,10 @@ class HomeController extends Controller {
 
     // 3. Trang Chi tiết 1 Sản phẩm
     public function productDetail($masp) {
-        $product = \App\Models\SanPham::with('danhmuc')->find($masp);
+        // Nạp thêm tổng tồn kho của sản phẩm (withSum)
+        $product = \App\Models\SanPham::with('danhmuc')
+            ->withSum('lohangs', 'soluong_ton')
+            ->find($masp);
         
         if (!$product) {
             abort(404, 'Sản phẩm không tồn tại!'); 
@@ -69,13 +72,20 @@ class HomeController extends Controller {
         $totalReviews = \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->count();
         $avgRating = $totalReviews > 0 ? round(\App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->avg('so_sao'), 1) : 0;
 
-        // 2. Đếm số lượng cho bộ lọc (Giống Shopee) - (CHỈ TÍNH NHỮNG ĐÁNH GIÁ ĐANG HIỆN)
+        // 2. Đếm số lượng cho bộ lọc (Giống Shopee) - Gộp thành 1 câu truy vấn groupBy để tối ưu hiệu năng
+        $starCounts = \App\Models\DanhGia::where('masp', $masp)
+            ->where('trang_thai', 1)
+            ->selectRaw('so_sao, count(*) as count')
+            ->groupBy('so_sao')
+            ->pluck('count', 'so_sao')
+            ->toArray();
+
         $countStars = [
-            5 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 5)->count(),
-            4 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 4)->count(),
-            3 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 3)->count(),
-            2 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 2)->count(),
-            1 => \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->where('so_sao', 1)->count(),
+            5 => $starCounts[5] ?? 0,
+            4 => $starCounts[4] ?? 0,
+            3 => $starCounts[3] ?? 0,
+            2 => $starCounts[2] ?? 0,
+            1 => $starCounts[1] ?? 0,
         ];
         // Đếm các đánh giá có chữ (không rỗng)
         $countComments = \App\Models\DanhGia::where('masp', $masp)->where('trang_thai', 1)->whereNotNull('binh_luan')->where('binh_luan', '!=', '')->count();

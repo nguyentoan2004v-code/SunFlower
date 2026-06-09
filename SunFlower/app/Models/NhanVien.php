@@ -50,7 +50,7 @@ class NhanVien extends Authenticatable
     // Hàm kiểm tra xem nhân viên có vai trò cụ thể nào đó không
     public function hasRole($tenVaiTro)
     {
-        // Trả về true nếu nhân viên có tên vai trò trùng khớp
-        return $this->vaitros()->where('tenvt', $tenVaiTro)->exists();
+        // Sử dụng collection đã load để tối ưu truy vấn (tránh N+1)
+        return $this->vaitros->contains('tenvt', $tenVaiTro);
     }
 }

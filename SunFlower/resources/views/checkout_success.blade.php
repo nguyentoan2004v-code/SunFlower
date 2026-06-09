@@ -22,6 +22,12 @@
             <p class="text-3xl font-extrabold text-[#FF6B35] tracking-wider">{{ $maDon }}</p>
         </div>
 
+        @if(isset($token) && $token)
+        <div class="bg-blue-50 rounded-2xl p-4 mb-8 border border-blue-100 text-sm text-blue-700 text-left">
+            <p><strong>Lưu ý quan trọng:</strong> Vì bạn đặt hàng mà không đăng nhập, vui lòng lưu lại đường link <strong>"Xem đơn hàng"</strong> bên dưới hoặc lưu lại Mã đơn hàng. Đây là cách duy nhất để bạn có thể xem lại chi tiết và trạng thái đơn hàng của mình sau khi đóng trình duyệt.</p>
+        </div>
+        @endif
+
         <div class="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="{{ route('home') }}" class="inline-flex justify-center items-center px-6 py-3.5 border border-transparent text-base font-bold rounded-xl text-white bg-[#FF6B35] hover:bg-orange-600 transition shadow-lg shadow-orange-200 active:scale-95">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -29,7 +35,7 @@
                 </svg>
                 Về trang chủ
             </a>
-            <a href="{{ route('orders.show', $maDon) }}" class="inline-flex justify-center items-center px-6 py-3.5 border-2 border-gray-200 text-base font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 transition active:scale-95">
+            <a href="{{ (isset($token) && $token) ? route('orders.show', ['madon' => $maDon, 'token' => $token]) : route('orders.show', $maDon) }}" class="inline-flex justify-center items-center px-6 py-3.5 border-2 border-gray-200 text-base font-bold rounded-xl text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 transition active:scale-95">
                 <svg class="w-5 h-5 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
                 </svg>

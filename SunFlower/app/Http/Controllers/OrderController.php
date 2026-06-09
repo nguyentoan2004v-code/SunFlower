@@ -22,11 +22,16 @@ class OrderController extends Controller
         return view('auth.order_history', compact('donHangs'));
     }
    // Hiển thị chi tiết đơn hàng
-    public function show($madon)
+    public function show(Request $request, $madon)
     {
         $donHang = DonHang::with('sanphams')
             ->where('madon', $madon)
             ->firstOrFail();
+
+        // MỚI: Ưu tiên kiểm tra Token bảo mật trên URL (Cho khách vãng lai dùng link lưu trữ)
+        if ($donHang->token && $request->query('token') === $donHang->token) {
+            return view('auth.order_detail', compact('donHang'));
+        }
 
         // 1. ƯU TIÊN KIỂM TRA THẺ BÀI SESSION (Khách vãng lai vừa đặt đơn)
         $viewedOrders = session()->get('viewed_orders', []);
@@ -35,27 +40,26 @@ class OrderController extends Controller
             return view('auth.order_detail', compact('donHang'));
         }
 
-        // 2. NẾU KHÔNG CÓ THẺ BÀI -> Bắt buộc kiểm tra đăng nhập (Bảo vệ đơn hàng cũ)
-        if ($donHang->makh !== null) {
-            if (!Auth::guard('khachhang')->check() || Auth::guard('khachhang')->user()->makh !== $donHang->makh) {
-                return redirect()->route('home')->with('error', 'Bạn không có quyền xem đơn hàng này!');
-            }
+        // 2. NẾU KHÔNG CÓ THẺ BÀI VÀ TOKEN -> Bắt buộc kiểm tra đăng nhập (Bảo vệ đơn hàng)
+        if (!Auth::guard('khachhang')->check() || Auth::guard('khachhang')->user()->makh !== $donHang->makh) {
+            return redirect()->route('home')->with('error', 'Bạn không có quyền xem đơn hàng này!');
         }
 
         return view('auth.order_detail', compact('donHang'));
     }
 
     // Xử lý khách hàng tự hủy đơn
-    public function cancel($madon)
+    public function cancel(Request $request, $madon)
     {
         $donHang = DonHang::where('madon', $madon)->firstOrFail();
 
         // 1. BẢO MẬT: Kiểm tra quyền hủy
-        if ($donHang->makh !== null) {
-            // Đơn của thành viên -> Phải đăng nhập đúng
-            if (!Auth::guard('khachhang')->check() || Auth::guard('khachhang')->user()->makh !== $donHang->makh) {
-                return redirect()->route('home')->with('error', 'Bạn không có quyền thao tác trên đơn hàng này!');
-            }
+        $hasToken = $donHang->token && $request->query('token') === $donHang->token;
+        $hasSession = in_array($madon, session()->get('viewed_orders', []));
+        $isOwner = Auth::guard('khachhang')->check() && Auth::guard('khachhang')->user()->makh === $donHang->makh;
+
+        if (!$hasToken && !$hasSession && !$isOwner) {
+            return redirect()->route('home')->with('error', 'Bạn không có quyền thao tác trên đơn hàng này!');
         }
 
         // 2. Tiến hành hủy

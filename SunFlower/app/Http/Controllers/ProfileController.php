@@ -114,6 +114,11 @@ class ProfileController extends Controller
         $voucher = Voucher::where('mavoucher', $request->mavoucher)->firstOrFail();
 
         // 1. Kiểm tra điều kiện
+        $alreadyHas = \App\Models\KhachHangVoucher::where('makh', $user->makh)->where('mavoucher', $voucher->mavoucher)->exists();
+        if ($alreadyHas) {
+            return back()->with('error', 'Bạn đã đổi mã giảm giá này rồi và không thể đổi thêm.');
+        }
+
         if ($user->diem_thuong < $voucher->diem_doi) {
             return back()->with('error', 'Bạn không đủ điểm để đổi voucher này.');
         }

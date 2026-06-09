@@ -159,10 +159,13 @@
         const divDanhMuc = document.getElementById('div_danhmuc');
 
         function handleLoaiGiam() {
+            const inputGiaTri = document.querySelector('input[name="gia_tri_giam"]');
             if (loaiGiam.value === 'so_tien') {
                 divGiamMax.classList.add('d-none');
+                if(inputGiaTri) inputGiaTri.removeAttribute('max');
             } else {
                 divGiamMax.classList.remove('d-none');
+                if(inputGiaTri) inputGiaTri.setAttribute('max', 100);
             }
         }
 
@@ -254,6 +257,26 @@
             inputDiemDoi.addEventListener('input', () => handleDiemDoiChange(false));
             handleDiemDoiChange(true); // Gọi lúc load trang với cờ isInit = true
         }
+
+        // 4. KIỂM TRA NGÀY KẾT THÚC PHẢI LỚN HƠN NGÀY BẮT ĐẦU
+        const ngayBd = document.querySelector('input[name="ngay_bd"]');
+        const ngayKt = document.querySelector('input[name="ngay_kt"]');
+        
+        if(ngayBd && ngayKt) {
+            ngayBd.addEventListener('change', function() {
+                ngayKt.setAttribute('min', this.value);
+                if (ngayKt.value && ngayKt.value <= this.value) {
+                    ngayKt.value = '';
+                }
+            });
+            ngayKt.addEventListener('change', function() {
+                if (ngayBd.value && this.value <= ngayBd.value) {
+                    alert('Ngày kết thúc phải lớn hơn ngày bắt đầu!');
+                    this.value = '';
+                }
+            });
+        }
+    
     });
 </script>
 @endsection

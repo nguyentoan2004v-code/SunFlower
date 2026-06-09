@@ -40,12 +40,19 @@ class DashboardController extends Controller
         // ============================================================
         $revenueLabels = [];
         $revenueData   = [];
+        
+        $sevenDaysAgo = Carbon::today()->subDays(6);
+        $dailyRevenues = DonHang::where('trangthai', 'Đã hoàn thành')
+                                ->where('ngaydat', '>=', $sevenDaysAgo->startOfDay())
+                                ->selectRaw('DATE(ngaydat) as date, SUM(tongtien) as total')
+                                ->groupBy('date')
+                                ->pluck('total', 'date');
+
         for ($i = 6; $i >= 0; $i--) {
-            $date            = Carbon::today()->subDays($i);
+            $date = Carbon::today()->subDays($i);
             $revenueLabels[] = $date->format('d/m');
-            $revenueData[]   = (int) DonHang::whereDate('ngaydat', $date)
-                                            ->where('trangthai', 'Đã hoàn thành')
-                                            ->sum('tongtien');
+            $dateString = $date->format('Y-m-d');
+            $revenueData[] = (int) ($dailyRevenues[$dateString] ?? 0);
         }
  
         // ============================================================

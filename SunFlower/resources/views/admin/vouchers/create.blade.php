@@ -96,13 +96,13 @@
 
                     <div class="col-md-4">
                         <label class="form-label fw-bold text-dark">Ngày Bắt Đầu Có Hiệu Lực <span class="text-danger">*</span></label>
-                        <input type="datetime-local" name="ngay_bd" class="form-control @error('ngay_bd') is-invalid @enderror" value="{{ old('ngay_bd') }}" required>
+                        <input type="datetime-local" name="ngay_bd" id="ngay_bd" class="form-control @error('ngay_bd') is-invalid @enderror" value="{{ old('ngay_bd', now()->format('Y-m-d\TH:i')) }}" min="{{ now()->format('Y-m-d\TH:i') }}" required>
                         @error('ngay_bd') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
                     <div class="col-md-4">
                         <label class="form-label fw-bold text-dark">Ngày Hết Hạn <span class="text-danger">*</span></label>
-                        <input type="datetime-local" name="ngay_kt" class="form-control @error('ngay_kt') is-invalid @enderror" value="{{ old('ngay_kt') }}" required>
+                        <input type="datetime-local" name="ngay_kt" id="ngay_kt" class="form-control @error('ngay_kt') is-invalid @enderror" value="{{ old('ngay_kt', now()->addDays(7)->format('Y-m-d\TH:i')) }}" required>
                         @error('ngay_kt') <div class="invalid-feedback">{{ $message }}</div> @enderror
                     </div>
 
@@ -159,10 +159,13 @@
         const divDanhMuc = document.getElementById('div_danhmuc');
 
         function handleLoaiGiam() {
+            const inputGiaTri = document.querySelector('input[name="gia_tri_giam"]');
             if (loaiGiam.value === 'so_tien') {
                 divGiamMax.classList.add('d-none');
+                if(inputGiaTri) inputGiaTri.removeAttribute('max');
             } else {
                 divGiamMax.classList.remove('d-none');
+                if(inputGiaTri) inputGiaTri.setAttribute('max', 100);
             }
         }
 
@@ -259,6 +262,25 @@
             inputDiemDoi.addEventListener('input', handleDiemDoiChange);
             // Chạy ngay khi load trang để bắt trường hợp có giá trị old()
             handleDiemDoiChange();
+        }
+
+        // 4. KIỂM TRA NGÀY KẾT THÚC PHẢI LỚN HƠN NGÀY BẮT ĐẦU
+        const ngayBd = document.querySelector('input[name="ngay_bd"]');
+        const ngayKt = document.querySelector('input[name="ngay_kt"]');
+        
+        if(ngayBd && ngayKt) {
+            ngayBd.addEventListener('change', function() {
+                ngayKt.setAttribute('min', this.value);
+                if (ngayKt.value && ngayKt.value <= this.value) {
+                    ngayKt.value = '';
+                }
+            });
+            ngayKt.addEventListener('change', function() {
+                if (ngayBd.value && this.value <= ngayBd.value) {
+                    alert('Ngày kết thúc phải lớn hơn ngày bắt đầu!');
+                    this.value = '';
+                }
+            });
         }
     
     });

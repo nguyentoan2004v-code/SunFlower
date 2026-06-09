@@ -67,26 +67,31 @@ class OrderController extends Controller implements HasMiddleware
             // Nếu trạng thái chuyển thành "Đã hoàn thành" và trước đó chưa hoàn thành
             if ($newStatus == 'Đã hoàn thành' && $oldStatus != 'Đã hoàn thành') {
                 
-                // --- 1. LOGIC TẠO HÓA ĐƠN (Giữ nguyên của bạn) ---
-                $mahd = 'HD' . date('ymd') . rand(10, 99);
+                // Kiểm tra xem đã có hóa đơn nào cho đơn hàng này chưa để tránh vi phạm UNIQUE constraint
+                $invoiceExists = HoaDon::where('madon', $order->madon)->exists();
+                
+                if (!$invoiceExists) {
+                    // --- 1. LOGIC TẠO HÓA ĐƠN ---
+                    $mahd = 'HD' . date('ymd') . rand(10, 99);
 
-                $hoadon = HoaDon::create([
-                    'mahd'        => $mahd,
-                    'madon'       => $order->madon,
-                    'tongtien'    => $order->tongtien,
-                    'thue'        => 0, 
-                    'ngayxuat'    => now(),
-                    'ptthanhtoan' => 'Tiền mặt' 
-                ]);
-
-                foreach ($order->sanphams as $sp) {
-                    ChiTietHoaDon::create([
-                        'mahd'      => $hoadon->mahd,
-                        'masp'      => $sp->masp,
-                        'soluong'   => $sp->pivot->soluong,
-                        'dongia'    => $sp->pivot->giaban, 
-                        'thanhtien' => $sp->pivot->soluong * $sp->pivot->giaban
+                    $hoadon = HoaDon::create([
+                        'mahd'        => $mahd,
+                        'madon'       => $order->madon,
+                        'tongtien'    => $order->tongtien,
+                        'thue'        => 0, 
+                        'ngayxuat'    => now(),
+                        'ptthanhtoan' => 'Tiền mặt' 
                     ]);
+
+                    foreach ($order->sanphams as $sp) {
+                        ChiTietHoaDon::create([
+                            'mahd'      => $hoadon->mahd,
+                            'masp'      => $sp->masp,
+                            'tensp'     => $sp->tensp, // Snapshot tên sản phẩm
+                            'soluong'   => $sp->pivot->soluong,
+                            'dongia'    => $sp->pivot->giaban
+                        ]);
+                    }
                 }
 
                 // --- 2. LOGIC TÍCH ĐIỂM & THĂNG HẠNG (Mới) ---
