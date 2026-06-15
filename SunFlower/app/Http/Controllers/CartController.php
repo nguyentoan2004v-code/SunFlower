@@ -103,26 +103,34 @@ class CartController extends Controller
     
     public function checkout(Request $request)
     {
-        $quantities = $request->input('quantities', []);
-        $cart = session()->get('cart', []);
+        if ($request->isMethod('post')) {
+            $quantities = $request->input('quantities', []);
+            $cart = session()->get('cart', []);
 
-        foreach ($quantities as $id => $qty) {
-            if (isset($cart[$id])) {
-                $cart[$id]['quantity'] = (int)$qty;
+            foreach ($quantities as $id => $qty) {
+                if (isset($cart[$id])) {
+                    $cart[$id]['quantity'] = (int)$qty;
+                }
+            }
+            session()->put('cart', $cart);
+            $selectedIds = $request->input('selected_items', []);
+            if (empty($selectedIds)) {
+                return back()->with('error', 'Vui lòng chọn ít nhất một đóa hoa để thanh toán!');
+            }
+
+            $cart = session()->get('cart');
+            // Chỉ lọc ra những sản phẩm nằm trong danh sách được chọn
+            $checkoutItems = array_intersect_key($cart, array_flip($selectedIds));
+            
+            // Lưu tạm danh sách mua này vào session riêng để sang trang thanh toán
+            session()->put('checkout_data', $checkoutItems);
+        } else {
+            // GET request (chuyển hướng quay lại từ lỗi validation đặt hàng hoặc áp dụng voucher)
+            $checkoutItems = session()->get('checkout_data', []);
+            if (empty($checkoutItems)) {
+                return redirect()->route('cart.index')->with('error', 'Vui lòng chọn ít nhất một đóa hoa để thanh toán!');
             }
         }
-        session()->put('cart', $cart);
-        $selectedIds = $request->input('selected_items', []);
-        if (empty($selectedIds)) {
-            return back()->with('error', 'Vui lòng chọn ít nhất một đóa hoa để thanh toán!');
-        }
-
-        $cart = session()->get('cart');
-        // Chỉ lọc ra những sản phẩm nằm trong danh sách được chọn
-        $checkoutItems = array_intersect_key($cart, array_flip($selectedIds));
-        
-        // Lưu tạm danh sách mua này vào session riêng để sang trang thanh toán
-        session()->put('checkout_data', $checkoutItems);
         
         $usedVouchers = [];
         $myVoucherCodes = [];
@@ -372,6 +380,7 @@ class CartController extends Controller
                 $qtyNeeded = $item['quantity'];
                 $loHangs = LoHang::where('masp', $id)
                             ->where('soluong_ton', '>', 0)
+                            ->where('ngayhethan', '>=', now())
                             ->orderBy('ngayhethan', 'asc')
                             ->get();
 

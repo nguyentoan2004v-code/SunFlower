@@ -44,9 +44,24 @@
             $statuses = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao', 'Đã giao'];
             $dbStatus = $donHang->trangthai;
             $currentIndex = 0; 
-            if ($dbStatus == 'Đang giao') $currentIndex = 2; 
-            elseif ($dbStatus == 'Đã hoàn thành') $currentIndex = 3; 
+            if ($dbStatus == 'Đã xác nhận') {
+                $currentIndex = 1;
+            } elseif ($dbStatus == 'Đang giao') {
+                $currentIndex = 2;
+            } elseif ($dbStatus == 'Đã hoàn thành' || $dbStatus == 'Đã giao') {
+                $currentIndex = 3;
+            }
             $isCancelled = ($dbStatus == 'Đã hủy');
+
+            $getIcon = function($label) {
+                return match($label) {
+                    'Chờ xác nhận' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                    'Đã xác nhận' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>',
+                    'Đang giao' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8h4l3 3v5a1 1 0 01-1 1h-1m-6 0h-2"></path></svg>',
+                    'Đã giao' => '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>',
+                    default => '',
+                };
+            };
         @endphp
 
         @if($isCancelled)
@@ -55,37 +70,45 @@
                 <span class="text-lg">ĐƠN HÀNG ĐÃ BỊ HỦY</span>
             </div>
         @else
-            <div class="relative flex justify-between items-center w-full mt-4 mb-2">
-                <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-gray-100 w-full rounded-full"></div>
-                <div class="absolute left-0 top-1/2 -translate-y-1/2 h-1.5 bg-gradient-to-r from-orange-400 to-[#FF6B35] transition-all duration-700 rounded-full" 
-                     style="width: {{ $currentIndex * 33.33 }}%"></div>
-
-                @foreach($statuses as $index => $label)
-                    @php
-                        $colorClass = 'bg-gray-100 text-gray-400 border-gray-200';
-                        if ($index <= $currentIndex) {
-                            $colorClass = match($label) {
-                                'Chờ xác nhận' => 'bg-yellow-400 text-white border-yellow-100',
-                                'Đã xác nhận'  => 'bg-blue-500 text-white border-blue-100',
-                                'Đang giao'    => 'bg-purple-500 text-white border-purple-100',
-                                'Đã giao'      => 'bg-[#FF6B35] text-white border-orange-100',
-                                default        => 'bg-gray-100'
-                            };
-                        }
-                    @endphp
-                    <div class="relative z-10 flex flex-col items-center group">
-                       <div class="w-12 h-12 {{ $colorClass }} rounded-full flex items-center justify-center shadow-sm transition-all duration-500 border-4">
-                            @if($index <= $currentIndex)
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-                            @else
-                                <span class="font-bold">{{ $index + 1 }}</span>
-                            @endif
-                        </div>
-                        <span class="absolute top-14 text-xs font-bold whitespace-nowrap {{ $index <= $currentIndex ? 'text-gray-900' : 'text-gray-400' }}">
-                            {{ $label }}
-                        </span>
+            <div class="relative py-4">
+                <div class="relative w-full">
+                    <!-- Line background -->
+                    <div class="absolute left-12 right-12 sm:left-[72px] sm:right-[72px] top-6 -translate-y-1/2 h-1 bg-gray-100 rounded-full" aria-hidden="true">
+                        <div class="h-full bg-green-500 transition-all duration-700 rounded-full" style="width: {{ $currentIndex * 33.33 }}%"></div>
                     </div>
-                @endforeach
+
+                    <div class="relative flex justify-between items-start w-full px-6 sm:px-12">
+                        @foreach($statuses as $index => $label)
+                            @php
+                                $isCompleted = $index < $currentIndex;
+                                $isCurrent = $index == $currentIndex;
+                                $isUpcoming = $index > $currentIndex;
+                            @endphp
+                            <div class="flex flex-col items-center z-10">
+                                @if($isCompleted)
+                                    <!-- Step Completed -->
+                                    <div class="w-12 h-12 bg-green-500 text-white rounded-full flex items-center justify-center shadow-md transition-all duration-500 border-4 border-white ring-2 ring-green-500/20">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    </div>
+                                @elseif($isCurrent)
+                                    <!-- Step Current -->
+                                    <div class="w-12 h-12 bg-white text-green-500 rounded-full flex items-center justify-center shadow-md transition-all duration-500 border-4 border-green-500 ring-4 ring-green-100">
+                                        {!! $getIcon($label) !!}
+                                    </div>
+                                @else
+                                    <!-- Step Upcoming -->
+                                    <div class="w-12 h-12 bg-white text-gray-300 rounded-full flex items-center justify-center shadow-sm border-2 border-gray-200 transition-all duration-500">
+                                        {!! $getIcon($label) !!}
+                                    </div>
+                                @endif
+                                
+                                <span class="mt-3 text-[11px] sm:text-xs font-bold tracking-tight whitespace-nowrap {{ $isCurrent ? 'text-green-500 font-extrabold scale-105' : ($isCompleted ? 'text-gray-700' : 'text-gray-400') }} transition-all duration-300">
+                                    {{ $label }}
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
             </div>
         @endif
     </div>

@@ -197,7 +197,7 @@
                     <!-- Danh sách Scroll -->
                     <div class="overflow-y-auto pr-2 space-y-4 max-h-[450px] scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
                         
-                        @forelse($user->vouchers as $voucher)
+                        @forelse($user->vouchers->where('pivot.trang_thai', 0) as $voucher)
                             <!-- Thẻ Voucher -->
                             <div class="bg-[#FFF9F5] border border-orange-100 rounded-2xl p-5 relative">
                                 <h4 class="font-bold text-gray-800 mb-1">{{ $voucher->tenvoucher }}</h4>

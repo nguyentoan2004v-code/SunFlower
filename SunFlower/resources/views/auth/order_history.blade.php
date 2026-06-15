@@ -31,7 +31,7 @@
                 {{ $don->trangthai == 'Chờ xác nhận' ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : '' }}
                 {{ $don->trangthai == 'Đã xác nhận' ? 'bg-blue-50 text-blue-700 border-blue-200' : '' }}
                 {{ $don->trangthai == 'Đang giao' ? 'bg-purple-50 text-purple-700 border-purple-200' : '' }}
-                {{ $don->trangthai == 'Đã giao' ? 'bg-green-50 text-green-700 border-green-200' : '' }}
+                {{ ($don->trangthai == 'Đã giao' || $don->trangthai == 'Đã hoàn thành') ? 'bg-green-50 text-green-700 border-green-200' : '' }}
                 {{ $don->trangthai == 'Đã hủy' ? 'bg-red-50 text-red-700 border-red-200' : '' }}">
                 {{ $don->trangthai }}
             </span>

@@ -73,12 +73,13 @@ class OrderController extends Controller implements HasMiddleware
                 if (!$invoiceExists) {
                     // --- 1. LOGIC TẠO HÓA ĐƠN ---
                     $mahd = 'HD' . date('ymd') . rand(10, 99);
+                    $muc_thue = round($order->tongtien * 8 / 108);
 
                     $hoadon = HoaDon::create([
                         'mahd'        => $mahd,
                         'madon'       => $order->madon,
                         'tongtien'    => $order->tongtien,
-                        'thue'        => 0, 
+                        'thue'        => $muc_thue, 
                         'ngayxuat'    => now(),
                         'ptthanhtoan' => 'Tiền mặt' 
                     ]);
@@ -148,13 +149,14 @@ class OrderController extends Controller implements HasMiddleware
         try {
             DB::beginTransaction();
 
-            $muc_thue = $order->tongtien * 0.08;
+            $muc_thue = round($order->tongtien * 8 / 108);
+            $mahd = 'HD' . date('ymd') . rand(10, 99);
 
             $hoadon = HoaDon::create([
-                'mahd'        => 'HD' . strtoupper(Str::random(6)),
-                'tongtien'    => $order->tongtien + $muc_thue,
+                'mahd'        => $mahd,
+                'tongtien'    => $order->tongtien,
                 'thue'        => $muc_thue,
-                'ngayxuat'    => now()->toDateString(),
+                'ngayxuat'    => now(),
                 'ptthanhtoan' => 'Tiền mặt',
                 'madon'       => $order->madon,
             ]);

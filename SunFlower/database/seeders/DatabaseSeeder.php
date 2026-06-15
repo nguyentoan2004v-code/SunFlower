@@ -20,6 +20,14 @@ class DatabaseSeeder extends Seeder
     {
         $now = Carbon::now();
 
+        // 0. CA LÀM VIỆC (LichLamViec)
+        $calamviecs = [
+            ['maca' => 'CA_SANG', 'giolam' => '07:00:00', 'giotan' => '14:00:00'],
+            ['maca' => 'CA_TOI', 'giolam' => '13:00:00', 'giotan' => '20:00:00'],
+            ['maca' => 'CA_HC', 'giolam' => '08:00:00', 'giotan' => '17:00:00'],
+        ];
+        foreach ($calamviecs as $ca) \App\Models\LichLamViec::create($ca);
+
         // 1. VAI TRÒ & NHÂN SỰ
         $vaitros = [
             ['mavt' => 'VT00000001', 'tenvt' => 'Quản lý Cửa hàng', 'mota' => 'Full quyền hệ thống'],
@@ -107,6 +115,7 @@ class DatabaseSeeder extends Seeder
             LoHang::create([
                 'malo' => 'LH' . str_pad($index + 1, 8, '0', STR_PAD_LEFT),
                 'masp' => $sp['masp'],
+                'manv' => 'NV00000001',
                 'soluong_nhap' => 100,
                 'soluong_ton' => 100,
                 'ngaynhap' => $now,

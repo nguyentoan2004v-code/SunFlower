@@ -74,7 +74,7 @@ Route::get('/gio-hang', [CartController::class, 'index'])->name('cart.index');
 Route::post('/gio-hang/them/{masp}', [CartController::class, 'add'])->name('cart.add');
 Route::post('/gio-hang/xoa/{masp}', [CartController::class, 'remove'])->name('cart.remove');
 Route::post('/gio-hang/update', [CartController::class, 'update'])->name('cart.update');
-Route::post('/thanh-toan', [CartController::class, 'checkout'])->name('checkout');
+Route::match(['get', 'post'], '/thanh-toan', [CartController::class, 'checkout'])->name('checkout');
 Route::post('/dat-hang', [CartController::class, 'placeOrder'])->name('order.place');
 Route::get('/mua-ngay/{masp}', [CartController::class, 'buyNow'])->name('cart.buyNow');
 Route::get('/dat-hang-thanh-cong', [CartController::class, 'orderSuccess'])->name('checkout.success');

@@ -12,13 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('phancong', function (Blueprint $table) {
-           $table->char('manv', 10);
+            $table->char('manv', 10);
             $table->char('maca', 10);
-            $table->string('tencongviec', 50);
-            $table->string('dacta', 255);
+            $table->date('ngaylam');
 
-            // Thiết lập Khóa chính kép (1 người ở 1 ca chỉ có 1 dòng dữ liệu)
-            $table->primary(['manv', 'maca']);
+            // Thiết lập Khóa chính kép gồm 3 cột (Cho phép nhân viên làm cùng 1 ca vào nhiều ngày khác nhau)
+            $table->primary(['manv', 'maca', 'ngaylam']);
 
             // Thiết lập Khóa ngoại
             $table->foreign('manv')->references('manv')->on('nhanvien')->onDelete('cascade');
