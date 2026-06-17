@@ -103,7 +103,33 @@ class HomeController extends Controller {
 
         $reviews = $query->orderBy('created_at', 'desc')->paginate(5)->withQueryString();
 
-        return view('product.show', compact('product', 'relatedProducts', 'reviews', 'totalReviews', 'avgRating', 'countStars', 'countComments'));
+        // Xây dựng và làm sạch nội dung mô tả chi tiết trước khi đưa ra View
+        // Logic được đưa lên Controller để View chỉ có trách nhiệm hiển thị, không xử lý
+        $finalContent = null;
+        if (!empty($product->mota_chitiet)) {
+            // Build URL ảnh đúng định dạng (Cloudinary hoặc local storage)
+            $imgUrl = str_starts_with($product->hinhanh, 'http')
+                ? $product->hinhanh
+                : asset('storage/' . ltrim($product->hinhanh, '/'));
+
+            // Dùng e() để escape tensp trong attribute alt — tránh XSS thứ cấp
+            $imgHtml = '<img src="' . $imgUrl . '" alt="' . e($product->tensp) . '"'
+                . ' class="w-full max-w-md mx-auto rounded-2xl shadow-md my-8 block border border-gray-100">';
+
+            $rawContent   = str_replace('[anh_hoa]', $imgHtml, $product->mota_chitiet);
+
+            // HTMLPurifier làm sạch toàn bộ HTML:
+            // - Loại bỏ attribute nguy hiểm (onerror, onclick, onload...)
+            // - Chặn javascript: và data: trong href/src
+            // - Giữ nguyên cấu trúc HTML hợp lệ theo whitelist trong HtmlPurifierService
+            $finalContent = app(\App\Services\HtmlPurifierService::class)->purify($rawContent);
+        }
+
+        return view('product.show', compact(
+            'product', 'relatedProducts', 'reviews',
+            'totalReviews', 'avgRating', 'countStars', 'countComments',
+            'finalContent'
+        ));
     }
 
     // Xử lý luồng Tìm kiếm

@@ -111,13 +111,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/invoices/{mahd}/print', [AdminOrderController::class, 'printInvoice'])->name('orders.print-invoice');
         // --- QUẢN LÝ LÔ HÀNG VÀ PHIẾU HỦY HÀNG ---
         Route::resource('lohang', LoHangController::class);
+        // Chỉ khai báo 1 lần qua resource — views và controller đều dùng admin.phieuhuyhang.*
         Route::resource('phieuhuyhang', PhieuHuyHangController::class);
-        // --- Phiếu hủy hàng ---
-        Route::prefix('phieuhuy')->name('phieuhuy.')->group(function () {
-        Route::get('/', [PhieuHuyHangController::class, 'index'])->name('index');
-        Route::get('/create', [PhieuHuyHangController::class, 'create'])->name('create');
-        Route::post('/store', [PhieuHuyHangController::class, 'store'])->name('store');
-        });
 
         // --- QUẢN LÝ NHÂN VIÊN VÀ PHÂN QUYỀN ---
         Route::get('/nhanvien', [NhanVienController::class, 'index'])->name('nhanvien.index');

@@ -190,13 +190,9 @@
             
             <div class="relative">
                 <div id="long-desc-container" class="text-gray-700 text-base leading-relaxed font-sans overflow-hidden product-content max-h-[400px] transition-all duration-700 relative">
-                    @if(!empty($product->mota_chitiet))
-                        @php
-                            $imgUrl = str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/'));
-                            $imgHtml = '<img src="' . $imgUrl . '" alt="' . $product->tensp . '" class="w-full max-w-md mx-auto rounded-2xl shadow-md my-8 block border border-gray-100">';
-                            $finalContent = str_replace('[anh_hoa]', $imgHtml, $product->mota_chitiet);
-                            $finalContent = strip_tags($finalContent, '<p><br><strong><em><ul><ol><li><h2><h3><img><a>');
-                        @endphp
+                    @if(!empty($finalContent))
+                        {{-- $finalContent đã được HTMLPurifier làm sạch trong Controller --}}
+                        {{-- Chặn XSS: onerror, onclick, javascript:href, data:src... đều bị strip --}}
                         {!! $finalContent !!}
                     @else
                         <p class="text-gray-400 italic">Sản phẩm hiện chưa được cập nhật bài viết chi tiết.</p>
