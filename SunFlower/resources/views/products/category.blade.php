@@ -54,6 +54,9 @@
                 </a>
             @endforeach
         </div>
+        <div class="mt-8 flex justify-center">
+            {{ $products->withQueryString()->links() }}
+        </div>
     @else
         <div class="text-center py-24 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
             <svg class="w-16 h-16 mx-auto text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

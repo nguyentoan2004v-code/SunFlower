@@ -27,7 +27,7 @@ class ProductController extends Controller
     $category = \App\Models\DanhMuc::where('madm', $madm)->firstOrFail();
     
     // Lấy tất cả sản phẩm thuộc danh mục này
-    $products = SanPham::where('madm', $madm)->get();
+    $products = SanPham::where('madm', $madm)->paginate(12);
     
     // Trả về một view riêng để hiển thị danh sách đã lọc
     return view('products.category', compact('category', 'products'));

@@ -11,22 +11,35 @@
 <body class="min-h-screen bg-background font-sans antialiased text-foreground selection:bg-primary/20">
     <div class="relative flex min-h-screen flex-col flex-1 overflow-x-hidden">
         
-        {{-- Chỉ hiển thị Header nếu không phải trang login hoặc register --}}
-        @if(!request()->routeIs('login', 'register'))
+        {{-- Chỉ hiển thị Header nếu không phải trang auth (login, register, quên/đặt lại mật khẩu) --}}
+        @if(!request()->routeIs('login', 'register', 'password.*'))
             @include('partials.header')
         @endif
 
-        <main class="flex-1 w-full mx-auto {{ request()->routeIs('login', 'register') ? '' : 'p-4 sm:p-6 lg:p-8' }}">
+        <main class="flex-1 w-full mx-auto {{ request()->routeIs('login', 'register', 'password.*') ? '' : 'p-4 sm:p-6 lg:p-8' }}">
             @yield('content')
         </main>
 
-        {{-- Chỉ hiển thị Footer nếu không phải trang login hoặc register --}}
-        @if(!request()->routeIs('login', 'register'))
+        {{-- Chỉ hiển thị Footer nếu không phải trang auth (login, register, quên/đặt lại mật khẩu) --}}
+        @if(!request()->routeIs('login', 'register', 'password.*'))
             @include('partials.footer')
         @endif
        
-</main>
-
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Loading state cho các form có thuộc tính data-loading
+            document.querySelectorAll('form[data-loading]').forEach(form => {
+                form.addEventListener('submit', function() {
+                    const btn = this.querySelector('button[type="submit"]');
+                    if (btn) {
+                        btn.disabled = true;
+                        btn.innerHTML = '⏳ Đang xử lý...';
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>

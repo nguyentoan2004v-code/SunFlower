@@ -10,7 +10,7 @@
 
     <div class="mb-10 border-b pb-4">
         <h2 class="text-2xl">Kết quả cho: <span class="font-bold text-[#FF6B35]">"{{ $keyword }}"</span></h2>
-        <p class="text-gray-500 mt-1">Tìm thấy {{ count($products) }} đóa hoa phù hợp.</p>
+        <p class="text-gray-500 mt-1">Tìm thấy {{ $products->total() }} đóa hoa phù hợp.</p>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
@@ -76,6 +76,9 @@
                     </div>
                 </div>
             @endforeach
+            <div class="col-span-full mt-8 flex justify-center">
+                {{ $products->withQueryString()->links() }}
+            </div>
         @else
             <div class="col-span-full text-center py-20 bg-gray-50 rounded-3xl border border-dashed">
                 <p class="text-gray-500 text-lg">Không tìm thấy bông hoa nào tên "{{ $keyword }}" cả bro ơi! 🥀</p>

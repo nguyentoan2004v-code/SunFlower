@@ -12,7 +12,7 @@
             <p class="text-gray-500 text-sm">Vui lòng đăng nhập để tiếp tục mua sắm.</p>
         </div>
 
-        <form action="{{ route('login') }}" method="POST" class="space-y-6" autocomplete="off">
+        <form action="{{ route('login') }}" method="POST" class="space-y-6" autocomplete="off" data-loading>
             @csrf
             
             <input type="text" name="prevent_autofill" id="prevent_autofill" value="" style="display:none;" />
@@ -50,6 +50,13 @@
                 @error('password')
                     <span class="text-red-500 text-sm mt-1 block font-medium">{{ $message }}</span>
                 @enderror
+            </div>
+
+            <div class="flex justify-end">
+                <a href="{{ route('password.request') }}"
+                   class="text-sm text-[#E67E22] hover:underline font-medium">
+                    Quên mật khẩu?
+                </a>
             </div>
 
             <button type="submit" class="w-full bg-[#E67E22] hover:bg-orange-600 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-orange-200 transition active:scale-95 mt-2">

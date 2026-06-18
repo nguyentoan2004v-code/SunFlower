@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\PasswordResetController;
 use App\Http\Controllers\Admin\AuthController as AdminAuthController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
@@ -43,6 +44,12 @@ Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10
 Route::get('/dang-ky', [AuthController::class, 'showRegisterForm'])->name('register');
 Route::post('/dang-ky', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+// Quên mật khẩu (khách hàng)
+Route::get('/quen-mat-khau', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
+Route::post('/quen-mat-khau', [PasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:5,1');
+Route::get('/dat-lai-mat-khau/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset.khachhang');
+Route::post('/dat-lai-mat-khau', [PasswordResetController::class, 'resetPassword'])->name('password.update');
 
 // =====================
 // 3. PROFILE & ĐƠN HÀNG (YÊU CẦU ĐĂNG NHẬP)

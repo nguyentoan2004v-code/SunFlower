@@ -6,7 +6,7 @@
 <div class="max-w-7xl mx-auto px-4 py-12">
     <h1 class="text-3xl font-extrabold text-gray-900 mb-8">Xác nhận thanh toán</h1>
 
-    <form action="{{ route('order.place') }}" method="POST">
+    <form action="{{ route('order.place') }}" method="POST" data-loading>
         @csrf
         <div class="flex flex-col lg:flex-row gap-12">
             
@@ -293,6 +293,17 @@
         @if(session('success'))
             // alert("✅ {{ session('success') }}"); // (Tuỳ chọn: Bạn có thể bật dòng này nếu muốn thông báo khi áp mã thành công)
         @endif
+
+        // Loading state khi submit form đặt hàng
+        document.querySelectorAll('form[data-loading]').forEach(form => {
+            form.addEventListener('submit', function() {
+                const btn = this.querySelector('button[type="submit"]');
+                if (btn) {
+                    btn.disabled = true;
+                    btn.innerHTML = '⏳ Đang xử lý...';
+                }
+            });
+        });
     </script>
     <style>
         @keyframes slideIn {

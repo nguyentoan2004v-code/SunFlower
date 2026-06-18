@@ -51,7 +51,7 @@
                 <div class="flex items-center justify-between mb-8">
                     <h2 class="text-xl font-bold text-gray-900">
                         {{ $category->tendm ?? 'Tất cả sản phẩm' }} 
-                        <span class="text-sm font-normal text-gray-400 ml-2">({{ $products->count() }} sản phẩm)</span>
+                        <span class="text-sm font-normal text-gray-400 ml-2">({{ $products->total() }} sản phẩm)</span>
                     </h2>
                 </div>
 
@@ -114,6 +114,9 @@
                                 </div>
                             </div>
                         @endforeach
+                    </div>
+                    <div class="mt-8 flex justify-center">
+                        {{ $products->withQueryString()->links() }}
                     </div>
                 @else
                     <div class="bg-white rounded-3xl border border-dashed border-gray-200 py-24 text-center">

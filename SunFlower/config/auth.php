@@ -77,8 +77,17 @@ return [
     'passwords' => [
         'users' => [
             'provider' => 'users',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
-            'expire' => 60,
+            'table'    => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire'   => 60,
+            'throttle' => 60,
+        ],
+
+        // Broker riêng cho khách hàng — PHẢI chỉ rõ, không dùng broker mặc định 'users'
+        // Nếu thiếu → Password::broker('khachhangs') fail âm thầm, lookup nhầm bảng users
+        'khachhangs' => [
+            'provider' => 'khachhangs',
+            'table'    => 'password_reset_tokens',
+            'expire'   => 60,
             'throttle' => 60,
         ],
     ],

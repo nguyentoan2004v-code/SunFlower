@@ -46,7 +46,7 @@ class HomeController extends Controller {
         $categories = DanhMuc::all();
         
         // Đổi tên biến từ $categoryProducts thành $products để View có thể đọc được
-        $products = \App\Models\SanPham::where('madm', $madm)->get();
+        $products = \App\Models\SanPham::where('madm', $madm)->paginate(12);
         
         // Trả về view kèm $category và $products
         return view('category.show', compact('categories', 'category', 'products'));
@@ -141,7 +141,7 @@ class HomeController extends Controller {
         }
 
         // Tái sử dụng logic tìm kiếm trực tiếp bằng Eloquent (không gọi qua cổng 8000 nữa)
-        $products = SanPham::whereRaw('LOWER(tensp) LIKE ?', ['%' . strtolower($keyword) . '%'])->get();
+        $products = SanPham::whereRaw('LOWER(tensp) LIKE ?', ['%' . strtolower($keyword) . '%'])->paginate(12);
 
         return view('search.results', compact('products', 'keyword'));
     }

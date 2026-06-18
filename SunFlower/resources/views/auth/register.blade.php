@@ -12,7 +12,7 @@
             <p class="text-gray-500 text-sm">Tạo tài khoản để nhận nhiều ưu đãi và quản lý đơn hàng tốt hơn.</p>
         </div>
 
-        <form action="{{ route('register') }}" method="POST" class="space-y-6" autocomplete="off">
+        <form action="{{ route('register') }}" method="POST" class="space-y-6" autocomplete="off" data-loading>
             @csrf
             
             <input type="text" style="display:none">

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
 use Cloudinary\Cloudinary;
+use Illuminate\Support\Facades\Cache;
 
 class CategoryController extends Controller implements HasMiddleware
 {
@@ -80,6 +81,7 @@ class CategoryController extends Controller implements HasMiddleware
         }
 
         DanhMuc::create($data);
+        Cache::forget('danhmuc_all');
 
         return redirect()->route('admin.categories.index')->with('success', 'Thêm danh mục thành công!');
     }
@@ -121,6 +123,7 @@ class CategoryController extends Controller implements HasMiddleware
         }
 
         $category->update($data);
+        Cache::forget('danhmuc_all');
 
         return redirect()->route('admin.categories.index')->with('success', 'Cập nhật danh mục thành công!');
     }
@@ -141,6 +144,7 @@ class CategoryController extends Controller implements HasMiddleware
         }
 
         $category->delete();
+        Cache::forget('danhmuc_all');
 
         return redirect()->route('admin.categories.index')->with('success', 'Xóa danh mục thành công!');
     }

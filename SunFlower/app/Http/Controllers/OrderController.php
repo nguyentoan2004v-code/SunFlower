@@ -17,7 +17,7 @@ class OrderController extends Controller
         $donHangs = DonHang::with('sanphams')
             ->where('makh', $khachhang->makh)
             ->orderBy('ngaydat', 'desc')
-            ->get();
+            ->paginate(10);
 
         return view('auth.order_history', compact('donHangs'));
     }

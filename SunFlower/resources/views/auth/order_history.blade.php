@@ -68,6 +68,9 @@
     </a>
 @endforeach
             </div>
+            <div class="mt-8 flex justify-center">
+                {{ $donHangs->withQueryString()->links() }}
+            </div>
         @else
             <div class="text-center py-20">
                 <p>Bạn chưa có đơn hàng nào.</p>
