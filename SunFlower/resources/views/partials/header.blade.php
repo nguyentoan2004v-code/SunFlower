@@ -53,7 +53,7 @@
                 </div>
                 <div class="flex flex-col">
                     <span class="text-base font-extrabold text-gray-900 leading-none">0987.654.321</span>
-                    <span class="text-xs text-gray-500 font-medium mt-0.5">Mở cửa: 08:00 - 22:00</span>
+                    <span class="text-xs text-gray-500 font-medium mt-0.5">Mở cửa: 07:00 - 20:00</span>
                 </div>
             </div>
             

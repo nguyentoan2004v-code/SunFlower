@@ -23,6 +23,9 @@
         {{-- Chỉ hiển thị Footer nếu không phải trang auth (login, register, quên/đặt lại mật khẩu) --}}
         @if(!request()->routeIs('login', 'register', 'password.*'))
             @include('partials.footer')
+            
+            {{-- Nhúng Chatbot Widget --}}
+            @include('partials.chatbot')
         @endif
        
     </div>

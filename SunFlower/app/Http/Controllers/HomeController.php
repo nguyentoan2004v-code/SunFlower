@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use App\Models\DanhMuc;
 use App\Models\SanPham;
 use App\Models\DanhGia;
+use App\Services\SemanticSearchService;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class HomeController extends Controller {
     
@@ -132,7 +135,9 @@ class HomeController extends Controller {
         ));
     }
 
-    // Xử lý luồng Tìm kiếm
+    // =========================================================
+    // Xử lý luồng Tìm kiếm (Semantic Search + Fallback LIKE)
+    // =========================================================
     public function search(Request $request) {
         $keyword = trim($request->query('query'));
 
@@ -140,10 +145,43 @@ class HomeController extends Controller {
             return redirect()->route('home');
         }
 
-        // Tái sử dụng logic tìm kiếm trực tiếp bằng Eloquent (không gọi qua cổng 8000 nữa)
-        $products = SanPham::whereRaw('LOWER(tensp) LIKE ?', ['%' . strtolower($keyword) . '%'])->paginate(12);
+        // ---------------------------------------------------
+        // Khởi tạo SemanticSearchService
+        // ---------------------------------------------------
+        $semanticService = app(SemanticSearchService::class);
 
-        return view('search.results', compact('products', 'keyword'));
+        // ---------------------------------------------------
+        // Tải toàn bộ sản phẩm 1 lần (tránh N+1 queries)
+        // SemanticSearch cần duyệt qua tất cả để tính similarity
+        // ---------------------------------------------------
+        $allProducts = SanPham::all();
+
+        // ---------------------------------------------------
+        // Gọi Semantic Search (tự động fallback nếu API lỗi)
+        // ---------------------------------------------------
+        $result      = $semanticService->search($keyword, $allProducts);
+        $rawProducts = $result['products'];   // Mảng sản phẩm đã sort
+        $searchType  = $result['search_type']; // 'semantic' | 'fallback'
+
+        // ---------------------------------------------------
+        // Phân trang thủ công vì SemanticSearch trả về array,
+        // không phải Eloquent Builder
+        // ---------------------------------------------------
+        $perPage     = 12;
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $collection  = new Collection($rawProducts);
+        $sliced      = $collection->slice(($currentPage - 1) * $perPage, $perPage)->values();
+
+        $products = new LengthAwarePaginator(
+            $sliced,
+            $collection->count(),
+            $perPage,
+            $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        // Truyền search_type ra View để hiển thị badge "AI" hoặc "Thường"
+        return view('search.results', compact('products', 'keyword', 'searchType'));
     }
 
     // Hàm trả về file hình ảnh theo mã danh mục

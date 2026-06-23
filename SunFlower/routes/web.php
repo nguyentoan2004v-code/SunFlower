@@ -106,6 +106,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // --- QUẢN LÝ SẢN PHẨM ---
+        Route::post('products/generate-description', [AdminProductController::class, 'generateDescription'])->name('products.generate-desc');
         Route::resource('products', AdminProductController::class);
         // --- QUẢN LÝ DANH MỤC ---
         Route::resource('categories', AdminCategoryController::class);
@@ -168,3 +169,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         
     });
 });
+// ==========================================
+// API ROUTES CHO T�NH N�NG �?C BI?T
+// ==========================================
+Route::post('/chatbot/ask', [\App\Http\Controllers\ChatbotController::class, 'ask'])->name('chatbot.ask');
+

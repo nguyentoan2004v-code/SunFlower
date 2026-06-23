@@ -185,4 +185,113 @@ class ProductController extends Controller implements HasMiddleware
 
         return redirect()->route('admin.products.index')->with('success', 'Xóa sản phẩm thành công!');
     }
+
+    // 7. Xử lý AI Sinh mô tả sản phẩm (Sử dụng Gemini API)
+    public function generateDescription(Request $request)
+    {
+        $request->validate([
+            'tensp' => 'required|string|max:100'
+        ]);
+
+        $keyword = $request->tensp;
+        $apiKey = config('services.gemini.key');
+
+        if (empty($apiKey)) {
+            return response()->json(['error' => 'Thiếu GEMINI_API_KEY trong file .env'], 500);
+        }
+
+        $systemPrompt = <<<EOT
+Bạn là một Copywriter chuyên nghiệp của shop hoa SunFlower. Nhiệm vụ của bạn là viết một bài mô tả sản phẩm thật lãng mạn, tinh tế và đầy cảm xúc dựa trên tên sản phẩm được cung cấp.
+
+BẮT BUỘC TUÂN THỦ NGHIÊM NGẶT cấu trúc 5 phần sau (được format sẵn bằng HTML):
+
+1. Mở bài (1-2 đoạn): Miêu tả vẻ đẹp rực rỡ, cảm giác mang lại, ý nghĩa loài hoa.
+2. Hình ảnh: Dành 1 dòng chỉ in ra đúng chữ "[anh_hoa]"
+3. Dịp tặng: Tiêu đề <strong>Phù hợp cho những dịp như:</strong> theo sau là danh sách <ul>.
+4. Thông điệp: Tiêu đề <strong>Thông điệp mà bó hoa mang lại:</strong> theo sau là danh sách <ul>.
+5. Kết luận: 1 đoạn văn khẳng định ý nghĩa món quà.
+
+Dưới đây là một VÍ DỤ MẪU BẮT BUỘC PHẢI NOI THEO (bạn hãy thay đổi nội dung cho phù hợp với hoa được yêu cầu nhưng GIỮ NGUYÊN FORMAT HTML này):
+
+<p>Mở bài lãng mạn ở đây...</p>
+<p>Mô tả chi tiết hơn về thiết kế...</p>
+<p>[anh_hoa]</p>
+<p><strong>Phù hợp cho những dịp như:</strong></p>
+<ul>
+    <li>Dịp 1...</li>
+    <li>Dịp 2...</li>
+</ul>
+<p><strong>Thông điệp mà bó hoa mang lại:</strong></p>
+<ul>
+    <li>Sự ấm áp và nguồn năng lượng tích cực</li>
+    <li>Tình yêu nhẹ nhàng nhưng chân thành</li>
+    <li>Lời chúc hạnh phúc và may mắn</li>
+    <li>Niềm hy vọng về những khởi đầu mới tốt đẹp</li>
+</ul>
+<p>Với vẻ đẹp thanh lịch cùng ý nghĩa sâu sắc, bó hoa này sẽ là món quà hoàn hảo giúp bạn thay lời muốn nói, mang đến niềm vui và cảm xúc đặc biệt cho người nhận trong mọi khoảnh khắc đáng nhớ.</p>
+
+TUYỆT ĐỐI KHÔNG giải thích, KHÔNG thêm lời chào, chỉ trả về mã HTML.
+EOT;
+
+        try {
+            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
+            
+            $response = \Illuminate\Support\Facades\Http::timeout(60)
+                ->withHeaders([
+                    'Content-Type' => 'application/json'
+                ])
+                ->post($url, [
+                    'system_instruction' => [
+                        'parts' => [
+                            ['text' => $systemPrompt]
+                        ]
+                    ],
+                    'contents' => [
+                        [
+                            'parts' => [
+                                ['text' => "Tên sản phẩm cần viết: {$keyword}"]
+                            ]
+                        ]
+                    ],
+                    'generationConfig' => [
+                        'temperature' => 0.7,
+                        'maxOutputTokens' => 1500
+                    ]
+                ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                
+                // Trích xuất nội dung từ phản hồi của Gemini
+                if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
+                    $content = $data['candidates'][0]['content']['parts'][0]['text'];
+                    
+                    // Clean up any potential markdown code blocks like ```html
+                    $content = preg_replace('/^```html\n?|```$/m', '', $content);
+                    $content = trim($content);
+
+                    return response()->json([
+                        'success' => true,
+                        'description' => $content
+                    ]);
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'Gemini API trả về kết quả không hợp lệ.'
+                    ], 500);
+                }
+            }
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Lỗi từ Gemini API: ' . $response->body()
+            ], $response->status());
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Lỗi kết nối: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

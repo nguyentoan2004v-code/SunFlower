@@ -35,4 +35,20 @@ return [
         ],
     ],
 
+    // ===========================================================
+    // HuggingFace API — Semantic Search (dangvantuan/vietnamese-embedding)
+    // Đặt HUGGINGFACE_API_TOKEN trong file .env
+    // Lấy token tại: https://huggingface.co/settings/tokens
+    // ===========================================================
+    'huggingface' => [
+        'token' => env('HUGGINGFACE_API_TOKEN'),
+    ],
+
+    // ===========================================================
+    // Gemini API — Generative AI (Viết nội dung)
+    // ===========================================================
+    'gemini' => [
+        'key' => env('GEMINI_API_KEY'),
+    ],
+
 ];

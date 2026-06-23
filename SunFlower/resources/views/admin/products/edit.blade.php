@@ -148,7 +148,12 @@
                                     @enderror
                                 </div>
                                 <div class="mb-3">
-                                    <label for="mota_chitiet" class="form-label fw-bold">Mô tả chi tiết </label>
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <label for="mota_chitiet" class="form-label fw-bold mb-0">Mô tả chi tiết</label>
+                                        <button type="button" id="btn-ai-generate" class="btn btn-sm text-white" style="background: linear-gradient(45deg, #8A2387, #E94057, #F27121); border: none; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                                            <i class="fa-solid fa-wand-magic-sparkles"></i> ✨ Viết bằng AI
+                                        </button>
+                                    </div>
                                     <textarea name="mota_chitiet" id="mota_chitiet" rows="8" class="form-control @error('mota_chitiet') is-invalid @enderror" 
                                               placeholder="Nhập đầy đủ chi tiết, ý nghĩa sản phẩm, hướng dẫn chăm sóc...">{{ old('mota_chitiet', $product->mota_chitiet) }}</textarea>
                                     @error('mota_chitiet')
@@ -225,5 +230,51 @@
         };
         reader.readAsDataURL(event.target.files[0]);
     }
+
+    // Xử lý sự kiện click nút AI
+    document.getElementById('btn-ai-generate').addEventListener('click', function() {
+        const tensp = document.getElementById('tensp').value.trim();
+        if (!tensp) {
+            alert('Vui lòng nhập "Tên sản phẩm" trước khi nhờ AI viết mô tả!');
+            document.getElementById('tensp').focus();
+            return;
+        }
+
+        const btn = this;
+        const originalText = btn.innerHTML;
+        
+        // Hiển thị trạng thái loading
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang nhờ AI viết... ⏳';
+        btn.disabled = true;
+
+        // Gửi AJAX request
+        fetch('{{ route('admin.products.generate-desc') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ tensp: tensp })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Đẩy nội dung vào CKEditor
+                CKEDITOR.instances.mota_chitiet.setData(data.description);
+                alert('✨ AI đã viết xong mô tả! Bạn có thể xem và chỉnh sửa lại theo ý muốn.');
+            } else {
+                alert('Lỗi: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Đã xảy ra lỗi kết nối khi gọi AI!');
+        })
+        .finally(() => {
+            // Khôi phục nút
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    });
 </script>
 @endsection
