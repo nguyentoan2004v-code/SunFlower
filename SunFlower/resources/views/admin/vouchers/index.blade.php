@@ -18,7 +18,7 @@
     [data-bs-theme="dark"] .bg-light { background-color: #2c3034 !important; }
     
     /* UI Nâng cấp */
-    .table-wrapper { overflow: hidden; border-radius: 0.5rem; }
+    .table-wrapper { overflow-x: auto; border-radius: 0.5rem; }
     .table-light th { font-weight: 600; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; padding-top: 15px; padding-bottom: 15px; border-top: none;}
     .voucher-code { letter-spacing: 1px; font-family: monospace; font-size: 1.05rem; }
     .badge-soft-success { background-color: rgba(25, 135, 84, 0.1); color: #198754; border: 1px solid rgba(25, 135, 84, 0.2); }
@@ -70,26 +70,26 @@
         <div class="card-body p-0">
             <div class="table-responsive table-wrapper border-top">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light text-muted">
+                    <thead class="table-light text-muted text-nowrap">
                         <tr>
                             <th class="ps-4">Mã Voucher</th>
-                            <th>Thông tin </th>
+                            <th style="min-width: 180px;">Thông tin</th>
                             <th class="text-center">Mức giảm</th>
-                            <th>Phạm vi</th>
-                            <th style="width: 12%">Đã dùng</th>
-                            <th>Hiển thị</th>
-                            <th>Thời gian</th>
+                            <th class="text-center">Phạm vi</th>
+                            <th class="text-center" style="min-width: 120px;">Đã dùng</th>
+                            <th class="text-center">Hiển thị</th>
+                            <th class="text-center" style="min-width: 150px;">Thời gian</th>
                             <th class="text-center">Trạng thái</th>
-                            <th class="text-end pe-4">Thao tác</th>
+                            <th class="text-center">Thao tác</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="text-nowrap">
                         @forelse($vouchers as $vc)
                         <tr>
                             <td class="ps-4">
                                 <span class="badge badge-soft-primary voucher-code py-2 px-3">{{ $vc->mavoucher }}</span>
                             </td>
-                            <td>
+                            <td class="text-wrap" style="min-width: 180px;">
                                 <div class="fw-bold text-dark mb-1">{{ $vc->tenvoucher }}</div>
                                 <span class="badge bg-light text-muted border">Đơn tối thiểu: {{ number_format($vc->don_min, 0, ',', '.') }}đ</span>
                             </td>
@@ -161,11 +161,11 @@
                                 @endif
                             </td>
                             <td class="text-end pe-4">
-                                <div class="d-flex justify-content-end gap-2">
+                                <div class="d-flex justify-content-end gap-2 text-nowrap">
                                     <a href="{{ route('admin.vouchers.edit', $vc->mavoucher) }}" class="btn btn-outline-primary btn-action">
                                         <i class="fa-solid fa-pen"></i> Sửa
                                     </a>
-                                    <form action="{{ route('admin.vouchers.destroy', $vc->mavoucher) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa mã giảm giá này? Nếu mã đã được sử dụng, hệ thống khuyến khích nên Tắt trạng thái thay vì Xóa.');">
+                                    <form action="{{ route('admin.vouchers.destroy', $vc->mavoucher) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn xóa mã giảm giá này? Nếu mã đã được sử dụng, hệ thống khuyến khích nên Tắt trạng thái thay vì Xóa.');" class="d-inline">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="btn btn-outline-danger btn-action">

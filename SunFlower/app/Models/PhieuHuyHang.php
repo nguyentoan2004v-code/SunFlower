@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class PhieuHuyHang extends Model
 {
+    use \Illuminate\Database\Eloquent\SoftDeletes;
+
     protected $table = 'phieu_huy_hang';
     protected $primaryKey = 'maphieu';
     public $incrementing = false;

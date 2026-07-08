@@ -2,7 +2,7 @@
 <div id="chatbot-widget" class="fixed bottom-6 right-6 z-50 flex flex-col items-end" style="font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;">
     
     <!-- Khung Chat (Ẩn mặc định) -->
-    <div id="chatbot-window" class="hidden w-[360px] sm:w-[420px] bg-gradient-to-b from-[#FFF5F0] to-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(255,107,53,0.2)] overflow-hidden transition-all duration-500 transform origin-bottom-right scale-95 opacity-0 mb-4 flex-col h-[600px] border border-orange-100">
+    <div id="chatbot-window" class="hidden w-[calc(100vw-3rem)] sm:w-[380px] bg-gradient-to-b from-[#FFF5F0] to-white rounded-[2rem] shadow-[0_20px_60px_-15px_rgba(255,107,53,0.2)] overflow-hidden transition-all duration-500 transform origin-bottom-right scale-95 opacity-0 mb-4 flex-col h-[70vh] sm:h-[520px] max-h-[800px] border border-orange-100">
         
         <!-- Header -->
         <div class="bg-[#FF6B35] text-white p-5 flex items-center justify-between z-10 relative overflow-hidden rounded-t-[2rem]">
@@ -27,9 +27,6 @@
                 </div>
             </div>
             <div class="flex items-center space-x-2 relative z-10">
-                <button class="w-8 h-8 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-colors">
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                </button>
                 <button id="chatbot-close-btn" class="w-8 h-8 flex items-center justify-center rounded-full text-white/80 hover:text-white hover:bg-white/20 transition-colors">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                 </button>
@@ -78,12 +75,9 @@
                         id="chatbot-input" 
                         rows="1" 
                         placeholder="Nhắn gì đó với SunFlower..." 
-                        class="w-full bg-[#FFF5F0] text-[14px] pl-4 pr-10 py-3 rounded-3xl focus:outline-none focus:ring-1 focus:ring-[#FFB89E] border border-[#FFE1D6] resize-none max-h-24 overflow-y-auto text-gray-700 placeholder-[#FFB89E] custom-scrollbar shadow-inner"
+                        class="w-full bg-[#FFF5F0] text-[14px] px-4 py-3 rounded-3xl focus:outline-none focus:ring-1 focus:ring-[#FFB89E] border border-[#FFE1D6] resize-none max-h-24 overflow-y-auto text-gray-700 placeholder-[#FFB89E] hide-scrollbar shadow-inner"
                         style="min-height: 44px; line-height: 22px;"
                     ></textarea>
-                    <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-[#FFB89E] hover:text-[#FF6B35] focus:outline-none">
-                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    </button>
                 </div>
                 <button type="submit" id="chatbot-submit-btn" class="w-11 h-11 rounded-full text-[#FF6B35] hover:bg-[#FFF5F0] hover:shadow-sm transition-all focus:outline-none flex items-center justify-center flex-shrink-0">
                     <svg class="w-6 h-6 transform translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -112,6 +106,10 @@
     .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
     .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #FFE1D6; border-radius: 10px; }
     .custom-scrollbar::-webkit-scrollbar-thumb:hover { background-color: #FFB89E; }
+
+    /* Ẩn scrollbar cho thẻ textarea */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     
     /* Animation cho Typing Indicator */
     .typing-dot { animation: typing 1.5s infinite ease-in-out both; }
@@ -189,16 +187,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Template tin nhắn AI
-    function getAiMessageTemplate(content) {
+    function getAiMessageTemplate(content, id = '') {
         let formattedContent = content.replace(/\n/g, '<br>');
         formattedContent = formattedContent.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-[#D9531E] font-bold underline hover:text-[#E85D22] transition-colors">$1</a>');
+        
+        const idAttr = id ? `id="${id}"` : '';
         
         return `
             <div class="w-8 h-8 rounded-full bg-white flex-shrink-0 flex items-center justify-center mr-3 shadow-md mt-1 overflow-hidden p-0.5 border border-[#FF6B35]/20">
                 <img src="https://res.cloudinary.com/drgrh0yeo/image/upload/v1780496206/5drg92D3VeOdSV5C41Lipg_2k_q40cvj.webp" alt="SunFlower" class="w-full h-full object-contain">
             </div>
             <div class="bg-white p-4 rounded-2xl rounded-tl-sm shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] text-[14px] text-gray-800 leading-relaxed border border-orange-50/50 break-words w-full">
-                <div class="prose prose-sm prose-p:my-1 prose-a:text-[#D9531E] max-w-none">
+                <div ${idAttr} class="prose prose-sm prose-p:my-1 prose-a:text-[#D9531E] max-w-none">
                     ${formattedContent}
                 </div>
             </div>
@@ -333,22 +333,68 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             body: JSON.stringify({ message: message })
         })
-        .then(response => response.json())
-        .then(data => {
+        .then(async response => {
             removeTypingIndicator(typingId);
+            
+            if (!response.ok || response.headers.get('content-type')?.includes('application/json')) {
+                const data = await response.json().catch(() => ({}));
+                appendMessage(data.reply || data.error || "Xin lỗi, hệ thống đang bận. Vui lòng thử lại sau.", false);
+                return;
+            }
+
+            // Xử lý Streaming (SSE)
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            
+            // Tạo bong bóng chat trống để stream text vào
+            const msgId = 'stream-msg-' + Date.now();
+            const div = document.createElement('div');
+            div.className = 'flex items-start max-w-[85%] self-start w-full font-sans translate-y-4 opacity-0 transition-all duration-500 ease-out';
+            div.innerHTML = getAiMessageTemplate("", msgId);
+            chatMessages.appendChild(div);
+            
             setTimeout(() => {
-                if (data.reply) {
-                    appendMessage(data.reply, false);
-                } else {
-                    appendMessage("Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.", false);
+                div.classList.remove('translate-y-4', 'opacity-0');
+                div.classList.add('translate-y-0', 'opacity-100');
+                scrollToBottom();
+            }, 10);
+            
+            const contentContainer = document.getElementById(msgId);
+            let fullText = "";
+
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+                
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split("\n");
+                
+                for (let line of lines) {
+                    if (line.startsWith("data: ")) {
+                        try {
+                            const jsonStr = line.substring(6);
+                            if (!jsonStr) continue;
+                            const data = JSON.parse(jsonStr);
+                            if (data.candidates && data.candidates[0].content.parts[0].text) {
+                                fullText += data.candidates[0].content.parts[0].text;
+                                
+                                // Parse Markdown on-the-fly
+                                let formatted = fullText.replace(/\n/g, '<br>');
+                                formatted = formatted.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" class="text-[#D9531E] font-bold underline hover:text-[#E85D22] transition-colors">$1</a>');
+                                
+                                contentContainer.innerHTML = formatted;
+                                scrollToBottom();
+                            }
+                        } catch (e) {
+                            // Bỏ qua lỗi parse JSON cho các chunk dở dang
+                        }
+                    }
                 }
-            }, 300);
+            }
         })
         .catch(error => {
             removeTypingIndicator(typingId);
-            setTimeout(() => {
-                appendMessage("Lỗi kết nối mạng, vui lòng kiểm tra lại mạng hoặc thử lại sau.", false);
-            }, 300);
+            appendMessage("Lỗi kết nối mạng, vui lòng kiểm tra lại kết nối và thử lại.", false);
         })
         .finally(() => {
             isWaiting = false;

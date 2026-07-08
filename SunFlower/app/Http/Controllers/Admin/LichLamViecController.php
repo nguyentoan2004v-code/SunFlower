@@ -107,9 +107,13 @@ class LichLamViecController extends Controller implements HasMiddleware
             }
 
             // Chèn tất cả bằng 1 lệnh duy nhất (Bulk Insert)
-            if (!empty($inserts)) {
-                DB::table('phancong')->insert($inserts);
+            if (empty($inserts)) {
+                DB::rollBack();
+                return back()->with('error', 'Vui lòng sắp xếp ít nhất một ca làm việc trước khi lưu lịch!');
             }
+            
+            DB::table('phancong')->insert($inserts);
+            
             DB::commit();
             return redirect()->route('admin.lichlamviec.index', ['week' => $weekParam])
                              ->with('success', 'Đã lưu lịch làm việc tuần thành công!');

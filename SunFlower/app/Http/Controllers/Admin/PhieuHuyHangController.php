@@ -17,22 +17,13 @@ class PhieuHuyHangController extends Controller implements HasMiddleware
     public static function middleware(): array
     {
         return [
-            new Middleware(function ($request, $next) {
-                $user = auth()->guard('nhanvien')->user();
-                
-                if (!$user->hasRole('Quản lý Cửa hàng') && !$user->hasRole('Quản lý Kho hàng')) {
-                    abort(403, 'Bạn không có quyền thao tác với Kho hàng!');
-                }
-                
-                return $next($request);
-            }),
+            'check.kho.role',
         ];
     }
     public function store(Request $request)
     {
         // 1. Validate dữ liệu (Đã bỏ 'masp' vì sẽ tự động lấy từ Lô hàng)
         $request->validate([
-            'maphieu' => 'required|string|max:10|unique:phieu_huy_hang,maphieu',
             'malo' => 'required|exists:lo_hang,malo',
             'soluong_huy' => 'required|integer|min:1',
             'ngayhuy' => 'required|date',
@@ -42,7 +33,13 @@ class PhieuHuyHangController extends Controller implements HasMiddleware
         DB::beginTransaction();
 
         try {
-            // 2. LockForUpdate để tránh đua lệnh (Race condition)
+            // Tự sinh mã phiếu hủy (dùng lockForUpdate để tránh trùng mã)
+            $lastPhieu = PhieuHuyHang::lockForUpdate()->orderBy('maphieu', 'desc')->first();
+            $newMaPhieu = $lastPhieu 
+                ? 'PH' . str_pad(intval(substr($lastPhieu->maphieu, 2)) + 1, 8, '0', STR_PAD_LEFT) 
+                : 'PH00000001';
+
+            // 2. LockForUpdate để tránh đua lệnh (Race condition) trên Lô Hàng
             $loHang = LoHang::where('malo', $request->malo)->lockForUpdate()->firstOrFail();
 
             if ($loHang->soluong_ton < $request->soluong_huy) {
@@ -51,7 +48,7 @@ class PhieuHuyHangController extends Controller implements HasMiddleware
 
             // 3. Tạo phiếu hủy mới
             $phieuHuy = new PhieuHuyHang();
-            $phieuHuy->maphieu = $request->maphieu;
+            $phieuHuy->maphieu = $newMaPhieu;
             $phieuHuy->malo = $request->malo;
             
             // TỰ ĐỘNG lấy masp từ lô hàng, đảm bảo tính chính xác 100%
@@ -87,18 +84,11 @@ class PhieuHuyHangController extends Controller implements HasMiddleware
         return view('admin.phieuhuyhang.index', compact('phieuHuys'));
     }
 
-    // Giao diện tạo phiếu hủy mới
     public function create()
     {
         // Chỉ lấy những lô hàng CÒN TỒN KHO (> 0) để hiển thị cho nhân viên chọn
         $loHangs = LoHang::with('sanpham')->where('soluong_ton', '>', 0)->get();
-        
-        // Tạo mã phiếu tự động
-        $lastPhieu = PhieuHuyHang::orderBy('maphieu', 'desc')->first();
-        $newMaPhieu = $lastPhieu 
-            ? 'PH' . str_pad(intval(substr($lastPhieu->maphieu, 2)) + 1, 8, '0', STR_PAD_LEFT) 
-            : 'PH00000001';
 
-        return view('admin.phieuhuyhang.create', compact('loHangs', 'newMaPhieu'));
+        return view('admin.phieuhuyhang.create', compact('loHangs'));
     }
 }

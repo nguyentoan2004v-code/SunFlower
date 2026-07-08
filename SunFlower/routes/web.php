@@ -49,7 +49,7 @@ Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 Route::get('/quen-mat-khau', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
 Route::post('/quen-mat-khau', [PasswordResetController::class, 'sendResetLink'])->name('password.email')->middleware('throttle:5,1');
 Route::get('/dat-lai-mat-khau/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset.khachhang');
-Route::post('/dat-lai-mat-khau', [PasswordResetController::class, 'resetPassword'])->name('password.update');
+Route::post('/dat-lai-mat-khau', [PasswordResetController::class, 'resetPassword'])->name('password.update')->middleware('throttle:5,1');
 
 // =====================
 // 3. PROFILE & ĐƠN HÀNG (YÊU CẦU ĐĂNG NHẬP)
@@ -62,17 +62,17 @@ Route::middleware('auth:khachhang')->group(function () {
         Route::put('/update', [ProfileController::class, 'updateProfile'])->name('profile.update');
         
         Route::put('/profile/password', [ProfileController::class, 'updatePassword'])->name('profile.password.update');
-        Route::post('/profile/exchange-voucher', [ProfileController::class, 'exchangeVoucher'])->name('profile.exchange_voucher');
+        Route::post('/profile/exchange-voucher', [ProfileController::class, 'exchangeVoucher'])->name('profile.exchange_voucher')->middleware('throttle:5,1');
         
     });
 
     // Đơn hàng
     Route::get('/lich-su-don-hang', [OrderController::class, 'history'])->name('orders.history');
-    Route::post('/danh-gia', [DanhGiaController::class, 'store'])->name('danhgia.store');
+    Route::post('/danh-gia', [DanhGiaController::class, 'store'])->name('danhgia.store')->middleware('throttle:5,1');
     
 });
 Route::get('/don-hang/{madon}', [OrderController::class, 'show'])->name('orders.show');
-Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('orders.cancel');
+Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('orders.cancel')->middleware('throttle:5,1');
 
 // =====================
 // 4. GIỎ HÀNG & THANH TOÁN
@@ -82,10 +82,10 @@ Route::post('/gio-hang/them/{masp}', [CartController::class, 'add'])->name('cart
 Route::post('/gio-hang/xoa/{masp}', [CartController::class, 'remove'])->name('cart.remove');
 Route::post('/gio-hang/update', [CartController::class, 'update'])->name('cart.update');
 Route::match(['get', 'post'], '/thanh-toan', [CartController::class, 'checkout'])->name('checkout');
-Route::post('/dat-hang', [CartController::class, 'placeOrder'])->name('order.place');
+Route::post('/dat-hang', [CartController::class, 'placeOrder'])->name('order.place')->middleware('throttle:5,1');
 Route::get('/mua-ngay/{masp}', [CartController::class, 'buyNow'])->name('cart.buyNow');
 Route::get('/dat-hang-thanh-cong', [CartController::class, 'orderSuccess'])->name('checkout.success');
-Route::post('/ap-dung-voucher', [CartController::class, 'applyVoucher'])->name('voucher.apply');
+Route::post('/ap-dung-voucher', [CartController::class, 'applyVoucher'])->name('voucher.apply')->middleware('throttle:10,1');
 Route::post('/go-voucher', [CartController::class, 'removeVoucher'])->name('voucher.remove');
 
 // =====================
@@ -170,7 +170,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     });
 });
 // ==========================================
-// API ROUTES CHO T�NH N�NG �?C BI?T
+// API ROUTES CHO T�NH N�NG �?C BI?T
 // ==========================================
-Route::post('/chatbot/ask', [\App\Http\Controllers\ChatbotController::class, 'ask'])->name('chatbot.ask');
+Route::post('/chatbot/ask', [\App\Http\Controllers\ChatbotController::class, 'ask'])->name('chatbot.ask')->middleware('throttle:10,1');
 

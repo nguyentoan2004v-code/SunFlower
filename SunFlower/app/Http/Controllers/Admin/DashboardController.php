@@ -28,6 +28,25 @@ class DashboardController extends Controller
         $tongNhanVien = NhanVien::count();
  
         // ============================================================
+        // 1.5. BÁO CÁO TỶ LỆ HAO HỤT TRONG 30 NGÀY QUA
+        // ============================================================
+        $thirtyDaysAgo = Carbon::today()->subDays(30);
+
+        // Tổng số lượng hoa đã bán (trong 30 ngày)
+        $tongBan30Ngay = ChiTietDonHang::join('donhang', 'chitiet_donhang.madon', '=', 'donhang.madon')
+            ->where('donhang.ngaydat', '>=', $thirtyDaysAgo)
+            ->where('donhang.trangthai', 'Đã hoàn thành')
+            ->sum('chitiet_donhang.soluong');
+
+        // Tổng số lượng hoa bị hủy (trong 30 ngày)
+        $tongHuy30Ngay = \App\Models\PhieuHuyHang::where('ngayhuy', '>=', $thirtyDaysAgo)
+            ->sum('soluong_huy');
+
+        $tongHoaXuat = $tongBan30Ngay + $tongHuy30Ngay;
+        $tyLeHaoHut = $tongHoaXuat > 0 ? round(($tongHuy30Ngay / $tongHoaXuat) * 100, 2) : 0;
+
+ 
+        // ============================================================
         // 2. 5 ĐƠN HÀNG MỚI NHẤT
         // ============================================================
         $recentOrders = DonHang::with('khachhang')
@@ -67,12 +86,12 @@ class DashboardController extends Controller
         $catData   = $categoryDataRaw->pluck('total_products')->toArray();
  
         // ============================================================
-        // 5. CẢNH BÁO TỒN KHO THẤP
+        // 5. CẢNH BÁO TỒN KHO THẤP (Sử dụng ngưỡng động tonkho_toithieu)
         // ============================================================
         $lowStockProducts = SanPham::join('lo_hang', 'sanpham.masp', '=', 'lo_hang.masp')
-            ->selectRaw('sanpham.masp, sanpham.tensp, sum(lo_hang.soluong_ton) as soluong')
-            ->groupBy('sanpham.masp', 'sanpham.tensp')
-            ->having('soluong', '<=', 10)
+            ->selectRaw('sanpham.masp, sanpham.tensp, sanpham.tonkho_toithieu, sum(lo_hang.soluong_ton) as soluong')
+            ->groupBy('sanpham.masp', 'sanpham.tensp', 'sanpham.tonkho_toithieu')
+            ->havingRaw('sum(lo_hang.soluong_ton) <= sanpham.tonkho_toithieu')
             ->take(3)
             ->get();
  
@@ -153,7 +172,10 @@ class DashboardController extends Controller
             'revenueData',
             'catLabels',
             'catData',
-            'lowStockProducts'
+            'lowStockProducts',
+            'tyLeHaoHut',
+            'tongBan30Ngay',
+            'tongHuy30Ngay'
         ));
     }
  

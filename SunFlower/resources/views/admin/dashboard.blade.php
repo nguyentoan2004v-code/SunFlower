@@ -122,11 +122,26 @@
                 @forelse($lowStockProducts as $sp)
                 <div class="p-3 rounded-3 border mb-2" style="background-color: var(--bs-tertiary-bg);">
                     <h6 class="mb-1 fw-bold text-danger">{{ $sp->tensp }}</h6>
-                    <p class="mb-0 text-body-secondary" style="font-size: 0.8rem;">Tồn thấp: {{ $sp->soluong }}</p>
+                    <p class="mb-0 text-body-secondary" style="font-size: 0.8rem;">Tồn thấp: <b class="text-danger">{{ $sp->soluong }}</b> / Ngưỡng cảnh báo: {{ $sp->tonkho_toithieu }}</p>
                 </div>
                 @empty
                 <div class="text-success border border-success p-3 rounded">Kho an toàn</div>
                 @endforelse
+            </div>
+            
+            <div class="card border-0 shadow-sm p-4 mb-4 bg-body-tertiary" style="border-radius: 12px;">
+                <h5 class="fw-bold mb-3 text-body" style="font-size: 1.1rem;">Tỷ lệ hao hụt hoa tươi (30 ngày)</h5>
+                <div class="d-flex align-items-center mb-3">
+                    <h3 class="fw-bold mb-0 {{ $tyLeHaoHut > 10 ? 'text-danger' : 'text-success' }} me-2">{{ $tyLeHaoHut }}%</h3>
+                    <span class="text-body-secondary" style="font-size: 0.85rem;">(Hủy / Tổng Xuất)</span>
+                </div>
+                <div class="progress" style="height: 10px;">
+                    <div class="progress-bar {{ $tyLeHaoHut > 10 ? 'bg-danger' : 'bg-success' }}" role="progressbar" style="width: {{ $tyLeHaoHut }}%" aria-valuenow="{{ $tyLeHaoHut }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="d-flex justify-content-between mt-2 text-body-secondary" style="font-size: 0.85rem;">
+                    <span>Đã bán: <b class="text-primary">{{ $tongBan30Ngay }}</b> cành/bó</span>
+                    <span>Đã hủy: <b class="text-danger">{{ $tongHuy30Ngay }}</b> cành/bó</span>
+                </div>
             </div>
         </div>
     </div>

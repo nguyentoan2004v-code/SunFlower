@@ -64,7 +64,7 @@ class CategoryController extends Controller implements HasMiddleware
         $request->validate([
             'madm' => 'required|string|max:10|unique:danhmuc,madm',
             'tendm' => 'required|string|max:100',
-            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|mimetypes:image/jpeg,image/png,image/gif|max:2048'
         ]);
 
         $data = $request->all();
@@ -100,7 +100,7 @@ class CategoryController extends Controller implements HasMiddleware
 
         $request->validate([
             'tendm' => 'required|string|max:100',
-            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|mimetypes:image/jpeg,image/png,image/gif|max:2048'
         ]);
 
         $data = $request->except(['madm']);

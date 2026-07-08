@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class LoHang extends Model
 {
+    use \Illuminate\Database\Eloquent\SoftDeletes;
+
     protected $table = 'lo_hang';
     protected $primaryKey = 'malo';
     public $incrementing = false;

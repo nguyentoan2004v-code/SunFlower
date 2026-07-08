@@ -22,3 +22,10 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Test files chứa API credentials - không được commit
+test_*.php
+
+# SQLite database
+*.sqlite
+*.sqlite-journal

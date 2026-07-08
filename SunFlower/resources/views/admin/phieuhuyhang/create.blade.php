@@ -33,7 +33,7 @@
                     {{-- Mã Phiếu Hủy --}}
                     <div class="col-md-4 mb-3">
                         <label for="maphieu" class="form-label fw-bold">Mã Phiếu Hủy</label>
-                        <input type="text" class="form-control bg-light" id="maphieu" name="maphieu" value="{{ $newMaPhieu }}" readonly>
+                        <input type="text" class="form-control bg-light text-muted fw-bold" id="maphieu" value="(Mã sinh tự động)" readonly>
                     </div>
 
                     {{-- Chọn Lô Hàng (Sử dụng Tom Select) --}}

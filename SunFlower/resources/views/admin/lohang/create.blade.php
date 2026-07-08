@@ -27,7 +27,7 @@
                     {{-- Mã Lô Hàng --}}
                     <div class="col-md-6 mb-3">
                         <label for="malo" class="form-label fw-bold">Mã Lô Hàng</label>
-                        <input type="text" class="form-control bg-light" id="malo" name="malo" value="{{ $newMaLo }}" readonly>
+                        <input type="text" class="form-control bg-light text-muted fw-bold" id="malo" value="(Mã sinh tự động)" readonly>
                     </div>
 
                     {{-- Chọn Sản Phẩm (Đã sửa ID để khớp với Script) --}}

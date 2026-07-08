@@ -34,43 +34,24 @@ class ChatbotController extends Controller
             }
         }
 
-        $apiKey = config('services.gemini.key');
-        if (empty($apiKey)) {
+        // Cơ chế API Key Rotation
+        $apiKeysStr = env('GEMINI_API_KEYS', config('services.gemini.key'));
+        $apiKeys = array_filter(array_map('trim', explode(',', $apiKeysStr)));
+        
+        if (empty($apiKeys)) {
             return response()->json(['error' => 'Hệ thống đang bảo trì. Vui lòng thử lại sau.'], 500);
         }
+        $apiKey = $apiKeys[array_rand($apiKeys)];
 
         // ==========================================
-        // 2. CƠ CHẾ RAG (TÌM KIẾM NGỮ NGHĨA & LỌC TỪ KHÓA)
+        // 2. CUNG CẤP TOÀN BỘ DANH MỤC SẢN PHẨM (OMNISCIENCE)
         // ==========================================
-        $query = \App\Models\SanPham::query();
-        
-        // Trích xuất mức giá dự kiến từ tin nhắn (vd: "500k", "1 triệu")
-        if (preg_match('/(\d+)\s*(k|ngàn|nghìn)/i', $userMessage, $matches)) {
-            $maxPrice = intval($matches[1]) * 1000;
-            // Cho phép biên độ dao động +100k
-            $query->where('giaban', '<=', $maxPrice + 100000);
-        } elseif (preg_match('/(\d+)\s*(tr|triệu)/i', $userMessage, $matches)) {
-            $maxPrice = intval($matches[1]) * 1000000;
-            $query->where('giaban', '<=', $maxPrice + 200000);
-        }
-
-        // Tìm từ khóa loại hoa phổ biến
-        $flowers = ['hồng', 'hướng dương', 'cẩm chướng', 'cẩm tú cầu', 'tulip', 'baby', 'lan', 'thạch thảo'];
-        $hasFlowerKeyword = false;
-        foreach ($flowers as $flower) {
-            if (mb_stripos($userMessage, $flower) !== false) {
-                $query->where('tensp', 'LIKE', '%' . $flower . '%');
-                $hasFlowerKeyword = true;
-                break;
-            }
-        }
-
-        $products = $query->select('masp', 'tensp', 'giaban')->limit(15)->get();
-        
-        // Fallback: Nếu không tìm thấy hoặc người dùng chỉ chào hỏi chung chung, lấy các sản phẩm nổi bật
-        if ($products->isEmpty()) {
-            $products = \App\Models\SanPham::select('masp', 'tensp', 'giaban')->inRandomOrder()->limit(10)->get();
-        }
+        // Do Gemini có Context Window rất lớn (1M tokens), thay vì lọc từ khóa thủ công (Regex hên xui),
+        // ta nhồi toàn bộ danh sách sản phẩm (tối đa 100) vào "não" của AI để AI tự do phân tích và trả lời.
+        $products = \App\Models\SanPham::select('masp', 'tensp', 'giaban')
+                                       ->orderBy('masp', 'desc')
+                                       ->limit(100)
+                                       ->get();
 
         $productListText = "";
         foreach($products as $p) {
@@ -114,12 +95,10 @@ EOT;
         ];
 
         try {
-            // Khôi phục lại gemini-2.5-flash
-            $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={$apiKey}";
-            
-            $response = Http::timeout(30)
-                ->withHeaders(['Content-Type' => 'application/json'])
-                ->post($url, [
+            return response()->stream(function () use ($apiKey, $systemInstruction, $apiContents, $userMessage) {
+                $url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?alt=sse&key={$apiKey}";
+                
+                $payload = [
                     'system_instruction' => [
                         'parts' => [
                             ['text' => $systemInstruction]
@@ -130,50 +109,61 @@ EOT;
                         'temperature' => 0.5,
                         'maxOutputTokens' => 3000
                     ]
-                ]);
+                ];
 
-            if ($response->successful()) {
-                $data = $response->json();
+                $ch = curl_init($url);
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload));
+                curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
                 
-                if (isset($data['candidates'][0]['content']['parts'][0]['text'])) {
-                    $reply = $data['candidates'][0]['content']['parts'][0]['text'];
-                    
-                    // Xóa block code nếu Gemini ngớ ngẩn trả về markdown code block
-                    $reply = preg_replace('/^```html\n?|```$/m', '', $reply);
-                    $reply = trim($reply);
+                // Biến lưu trữ lịch sử phản hồi để save vào session
+                $fullReply = '';
 
-                    // Cập nhật Lịch sử (Chỉ lưu userMessage gốc, không lưu câu lệnh Sandwich để khỏi rối context)
-                    $history[] = [
-                        'role' => 'user',
-                        'parts' => [['text' => $userMessage]]
-                    ];
-                    $history[] = [
-                        'role' => 'model',
-                        'parts' => [['text' => $reply]]
-                    ];
-
-                    // Cắt bớt lịch sử nếu quá 10 tin nhắn (5 lượt)
-                    if (count($history) > 10) {
-                        $history = array_slice($history, -10);
+                // Streaming callback
+                curl_setopt($ch, CURLOPT_WRITEFUNCTION, function ($ch, $data) use (&$fullReply) {
+                    // Phân tích SSE chunk để lấy text lưu lịch sử
+                    $lines = explode("\n", $data);
+                    foreach ($lines as $line) {
+                        if (strpos($line, 'data: ') === 0) {
+                            $jsonStr = substr($line, 6);
+                            $json = json_decode($jsonStr, true);
+                            if (isset($json['candidates'][0]['content']['parts'][0]['text'])) {
+                                $fullReply .= $json['candidates'][0]['content']['parts'][0]['text'];
+                            }
+                        }
                     }
-                    session()->put('chatbot_history', $history);
 
-                    return response()->json([
-                        'success' => true,
-                        'reply' => $reply
-                    ]);
-                } else {
-                    return response()->json([
-                        'success' => false,
-                        'reply' => 'Dạ, hệ thống đang bận một chút, quý khách vui lòng hỏi lại sau nhé.'
-                    ]);
+                    // Flush trực tiếp ra trình duyệt
+                    echo $data;
+                    if (ob_get_level() > 0) ob_flush();
+                    flush();
+                    return strlen($data);
+                });
+
+                curl_exec($ch);
+                curl_close($ch);
+
+                // Cập nhật Lịch sử (Chat Memory) thủ công
+                $history = session()->get('chatbot_history', []);
+                $history[] = [
+                    'role' => 'user',
+                    'parts' => [['text' => $userMessage]]
+                ];
+                $history[] = [
+                    'role' => 'model',
+                    'parts' => [['text' => trim($fullReply)]]
+                ];
+                if (count($history) > 10) {
+                    $history = array_slice($history, -10);
                 }
-            }
+                session()->put('chatbot_history', $history);
+                session()->save(); // Bắt buộc gọi save() vì đang trong stream response
 
-            // Fallback nếu API lỗi (VD: quota exceeded, timeout)
-            return response()->json([
-                'success' => false,
-                'reply' => 'Dạ em đang quá tải, quý khách vui lòng chờ vài giây rồi thử lại ạ.'
+            }, 200, [
+                'Cache-Control' => 'no-cache',
+                'X-Accel-Buffering' => 'no',
+                'Content-Type' => 'text/event-stream',
             ]);
 
         } catch (\Exception $e) {
