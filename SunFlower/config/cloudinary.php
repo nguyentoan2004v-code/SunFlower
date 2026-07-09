@@ -33,6 +33,9 @@ return [
     */
     'cloud_url' => env('CLOUDINARY_URL', 'cloudinary://'.env('CLOUDINARY_KEY').':'.env('CLOUDINARY_SECRET').'@'.env('CLOUDINARY_CLOUD_NAME')),
 
+    // Alias để config('cloudinary.url') hoạt động đúng
+    'url' => env('CLOUDINARY_URL', 'cloudinary://'.env('CLOUDINARY_KEY').':'.env('CLOUDINARY_SECRET').'@'.env('CLOUDINARY_CLOUD_NAME')),
+
     /**
      * Upload Preset From Cloudinary Dashboard
      */

@@ -16,14 +16,63 @@
         <div class="bg-white rounded-3xl shadow-sm border border-gray-100 overflow-hidden mb-12">
             <div class="grid grid-cols-1 md:grid-cols-12 gap-0">
                 
-                <div class="md:col-span-5 bg-gray-50 p-8 flex items-center justify-center relative group">
-                    <img src="{{ str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/')) }}" 
-                        alt="{{ $product->tensp ?? 'Hoa' }}"
-                        class="w-full h-auto object-cover aspect-square rounded-2xl shadow-sm group-hover:scale-105 transition duration-700">
-                    
-                    <div class="absolute top-6 left-6 bg-gradient-to-r from-red-500 to-rose-500 text-white text-xs font-bold px-4 py-1.5 rounded-full shadow-md uppercase tracking-wider">
-                        Hot Trend
+                {{-- GALLERY SLIDER --}}
+                <div class="md:col-span-5 bg-gray-50 p-6 relative" id="product-gallery">
+                    @php
+                        // Tạo mảng tất cả ảnh: ảnh chính + ảnh phụ
+                        $mainImg = str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/'));
+                        $allImages = collect([$mainImg]);
+                        if ($product->hinhAnhPhu && $product->hinhAnhPhu->count() > 0) {
+                            foreach ($product->hinhAnhPhu as $anhPhu) {
+                                $allImages->push($anhPhu->duong_dan);
+                            }
+                        }
+                        $totalImages = $allImages->count();
+                    @endphp
+
+                    {{-- ẢNH CHÍNH --}}
+                    <div class="relative overflow-hidden rounded-2xl bg-white shadow-sm mb-4 group cursor-zoom-in" id="main-image-container">
+                        <img id="gallery-main-img" 
+                             src="{{ $allImages[0] }}" 
+                             alt="{{ $product->tensp ?? 'Hoa' }}"
+                             class="w-full h-auto object-cover aspect-square rounded-2xl transition-all duration-300 ease-in-out"
+                             style="transform-origin: center center; opacity: 1;">
+
+
+
+                        {{-- Đếm ảnh --}}
+                        @if($totalImages > 1)
+                            <div class="absolute bottom-4 right-4 bg-black/60 backdrop-blur-sm text-white text-xs font-bold px-3 py-1.5 rounded-full z-10">
+                                <span id="gallery-counter">1</span>/{{ $totalImages }}
+                            </div>
+                        @endif
+
+                        {{-- Nút Prev/Next --}}
+                        @if($totalImages > 1)
+                            <button type="button" onclick="galleryPrev()" class="absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:bg-white transition z-10 opacity-0 group-hover:opacity-100">
+                                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                            </button>
+                            <button type="button" onclick="galleryNext()" class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 backdrop-blur-sm rounded-full shadow-lg flex items-center justify-center hover:bg-white transition z-10 opacity-0 group-hover:opacity-100">
+                                <svg class="w-5 h-5 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                        @endif
                     </div>
+
+                    {{-- THUMBNAIL BAR --}}
+                    @if($totalImages > 1)
+                        <div class="flex gap-3 overflow-x-auto pb-4 px-2 snap-x" id="gallery-thumbnails" style="scrollbar-width: thin;">
+                            @foreach($allImages as $index => $imgUrl)
+                                <button type="button" 
+                                        onclick="galleryGoTo({{ $index }})"
+                                        class="gallery-thumb flex-shrink-0 rounded-md overflow-hidden border-2 transition-all duration-300 hover:opacity-100 {{ $index === 0 ? 'border-[#FF6B35] ring-2 ring-orange-200 opacity-100' : 'border-transparent opacity-60 hover:border-gray-300' }}"
+                                        style="width: 150px; height: 150px;"
+                                        data-index="{{ $index }}">
+                                    <img src="{{ $imgUrl }}" alt="Ảnh {{ $index + 1 }}" 
+                                         class="w-full h-full object-cover">
+                                </button>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
 
                 <div class="md:col-span-7 p-8 md:p-12 flex flex-col justify-center border-l border-gray-50">
@@ -489,6 +538,75 @@
                         }
                     });
                 }
+            });
+
+            // ==========================================
+            // GALLERY SLIDER LOGIC
+            // ==========================================
+            const galleryImages = @json($allImages->values());
+            let currentGalleryIndex = 0;
+            const mainImg = document.getElementById('gallery-main-img');
+            const counter = document.getElementById('gallery-counter');
+            const thumbs = document.querySelectorAll('.gallery-thumb');
+
+            function galleryGoTo(index) {
+                if (index < 0 || index >= galleryImages.length) return;
+                currentGalleryIndex = index;
+
+                // Fade transition
+                mainImg.style.opacity = '0';
+                mainImg.style.transform = 'scale(0.97)';
+                
+                setTimeout(() => {
+                    mainImg.src = galleryImages[index];
+                    mainImg.style.opacity = '1';
+                    mainImg.style.transform = 'scale(1)';
+                }, 200);
+
+                // Cập nhật counter
+                if (counter) counter.textContent = index + 1;
+
+                // Cập nhật thumbnail active
+                thumbs.forEach((t, i) => {
+                    if (i === index) {
+                        t.classList.add('border-[#FF6B35]', 'ring-2', 'ring-orange-200', 'opacity-100');
+                        t.classList.remove('border-transparent', 'opacity-60');
+                    } else {
+                        t.classList.remove('border-[#FF6B35]', 'ring-2', 'ring-orange-200', 'opacity-100');
+                        t.classList.add('border-transparent', 'opacity-60');
+                    }
+                });
+            }
+
+            function galleryNext() {
+                galleryGoTo((currentGalleryIndex + 1) % galleryImages.length);
+            }
+
+            function galleryPrev() {
+                galleryGoTo((currentGalleryIndex - 1 + galleryImages.length) % galleryImages.length);
+            }
+
+            // Zoom on hover cho ảnh chính
+            const imgContainer = document.getElementById('main-image-container');
+            if (imgContainer && mainImg) {
+                imgContainer.addEventListener('mousemove', (e) => {
+                    const rect = imgContainer.getBoundingClientRect();
+                    const x = ((e.clientX - rect.left) / rect.width) * 100;
+                    const y = ((e.clientY - rect.top) / rect.height) * 100;
+                    mainImg.style.transformOrigin = `${x}% ${y}%`;
+                    mainImg.style.transform = 'scale(1.8)';
+                });
+                imgContainer.addEventListener('mouseleave', () => {
+                    mainImg.style.transformOrigin = 'center center';
+                    mainImg.style.transform = 'scale(1)';
+                });
+            }
+
+            // Keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (galleryImages.length <= 1) return;
+                if (e.key === 'ArrowLeft') galleryPrev();
+                if (e.key === 'ArrowRight') galleryNext();
             });
         </script>
     @else

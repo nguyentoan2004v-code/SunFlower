@@ -169,6 +169,17 @@
                                         <div class="invalid-feedback text-start">{{ $message }}</div>
                                     @enderror
                                 </div>
+
+                                {{-- ẢNH PHỤ (GALLERY) --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold d-block text-start">
+                                        Ảnh phụ <span class="text-muted fw-normal">(tối đa 5 ảnh)</span>
+                                    </label>
+                                    <input type="file" name="hinhanh_phu[]" id="hinhanh_phu" class="form-control" 
+                                           accept="image/*" multiple onchange="previewGallery(event)">
+                                    <small class="text-muted mt-1 d-block text-start">Chọn nhiều ảnh để hiển thị Gallery trên trang chi tiết.</small>
+                                    <div id="gallery-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                </div>
                             </div>
                         </div>
 
@@ -250,5 +261,29 @@
             btn.disabled = false;
         });
     });
+
+    // Preview ảnh phụ (gallery)
+    function previewGallery(event) {
+        const container = document.getElementById('gallery-preview');
+        container.innerHTML = '';
+        const files = event.target.files;
+        const maxFiles = Math.min(files.length, 5);
+        
+        if (files.length > 5) {
+            alert('Chỉ được chọn tối đa 5 ảnh phụ! Hệ thống sẽ chỉ lấy 5 ảnh đầu tiên.');
+        }
+        
+        for (let i = 0; i < maxFiles; i++) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.style.cssText = 'position:relative; width:80px; height:80px;';
+                div.innerHTML = `<img src="${e.target.result}" class="rounded border" style="width:80px; height:80px; object-fit:cover;">
+                                 <span class="position-absolute top-0 end-0 badge bg-dark" style="font-size:10px;">${i+1}</span>`;
+                container.appendChild(div);
+            };
+            reader.readAsDataURL(files[i]);
+        }
+    }
 </script>
 @endsection

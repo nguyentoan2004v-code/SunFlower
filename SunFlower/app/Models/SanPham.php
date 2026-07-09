@@ -42,6 +42,12 @@ class SanPham extends Model
     {
         return $this->hasMany(LoHang::class, 'masp', 'masp');
     }
+
+    // 1 Sản phẩm có NHIỀU ảnh phụ (Gallery)
+    public function hinhAnhPhu()
+    {
+        return $this->hasMany(HinhAnhSanPham::class, 'masp', 'masp')->orderBy('thu_tu');
+    }
     protected static function booted()
     {
         // Tự động trim khoảng trắng cho masp khi lấy dữ liệu ra

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\SanPham;
 use App\Models\DanhMuc;
+use App\Models\HinhAnhSanPham;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -13,6 +14,24 @@ use Cloudinary\Cloudinary;
 
 class ProductController extends Controller implements HasMiddleware
 {
+    /**
+     * Trích xuất public_id từ URL Cloudinary.
+     * VD: "https://res.cloudinary.com/.../sunflower_products/abc123.jpg" → "sunflower_products/abc123"
+     */
+    private function extractCloudinaryPublicId(?string $url): ?string
+    {
+        if (!$url || !str_contains($url, 'cloudinary.com')) return null;
+
+        $path = parse_url($url, PHP_URL_PATH);
+        $parts = explode('/upload/', $path);
+        if (count($parts) < 2) return null;
+
+        // Bỏ version prefix (v1234567890/...)
+        $afterUpload = preg_replace('/^v\d+\//', '', $parts[1]);
+
+        // Trả về public_id không có extension
+        return pathinfo($afterUpload, PATHINFO_DIRNAME) . '/' . pathinfo($afterUpload, PATHINFO_FILENAME);
+    }
 
     public static function middleware(): array
     {
@@ -80,34 +99,57 @@ class ProductController extends Controller implements HasMiddleware
     // 3. Xử lý lưu sản phẩm mới
   public function store(Request $request)
     {
+        set_time_limit(300); // Tăng thời gian thực thi lên 5 phút
         $request->validate([
             'masp' => 'required|string|max:10|unique:sanpham,masp',
             'tensp' => 'required|string|max:50',
             'giaban' => 'required|numeric|min:0',
             'giakm' => 'nullable|numeric|min:0|lt:giaban',
             'madm' => 'required|exists:danhmuc,madm',
-            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|mimetypes:image/jpeg,image/png,image/gif|max:2048',
+            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'hinhanh_phu.*' => 'nullable|image|mimes:jpeg,png,jpg,gif',
             'mota' => 'nullable|string',
             'mota_chitiet' => 'nullable|string'
+        ], [
+            'hinhanh.image' => 'Ảnh chính phải là định dạng hình ảnh hợp lệ.',
+            'hinhanh_phu.*.image' => 'Ảnh phụ phải là định dạng hình ảnh hợp lệ.',
         ]);
 
-        $data = $request->all();
+        $data = $request->except(['hinhanh_phu']);
 
-        // XỬ LÝ UPLOAD HÌNH ẢNH LÊN CLOUDINARY
+        // XỬ LÝ UPLOAD HÌNH ẢNH CHÍNH LÊN CLOUDINARY
         if ($request->hasFile('hinhanh')) {
-            // Khởi tạo Cloudinary
             $cloudinary = new Cloudinary(config('cloudinary.url'));
-            
-            // Lấy file từ form và đẩy thẳng lên folder 'sunflower_products'
             $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
                 'folder' => 'sunflower_products'
             ]);
-            
-            // Lấy đường link bảo mật (https) gán vào DB
             $data['hinhanh'] = $result['secure_url']; 
         }
 
-        SanPham::create($data);
+        $sanPham = SanPham::create($data);
+
+        // XỬ LÝ UPLOAD ẢNH PHỤ (GALLERY)
+        if ($request->hasFile('hinhanh_phu')) {
+            $cloudinary = $cloudinary ?? new Cloudinary(config('cloudinary.url'));
+            $files = $request->file('hinhanh_phu');
+            // Giới hạn tối đa 5 ảnh phụ
+            $files = array_slice($files, 0, 5);
+            
+            foreach ($files as $index => $file) {
+                try {
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'sunflower_products/gallery'
+                    ]);
+                    HinhAnhSanPham::create([
+                        'masp' => $sanPham->masp,
+                        'duong_dan' => $result['secure_url'],
+                        'thu_tu' => $index,
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::warning('Lỗi upload ảnh phụ: ' . $e->getMessage());
+                }
+            }
+        }
 
         return redirect()->route('admin.products.index')->with('success', 'Thêm sản phẩm thành công!');
     }
@@ -115,7 +157,7 @@ class ProductController extends Controller implements HasMiddleware
     // 4. Hiển thị form sửa sản phẩm
     public function edit($masp)
     {
-        $product = SanPham::findOrFail($masp);
+        $product = SanPham::with('hinhAnhPhu')->findOrFail($masp);
         $categories = DanhMuc::all();
         return view('admin.products.edit', compact('product', 'categories'));
     }
@@ -123,6 +165,7 @@ class ProductController extends Controller implements HasMiddleware
     // 5. Xử lý cập nhật sản phẩm
     public function update(Request $request, $masp)
     {
+        set_time_limit(300); // Tăng thời gian thực thi lên 5 phút để tránh lỗi timeout khi upload ảnh nặng lên Cloudinary
         $product = SanPham::findOrFail($masp);
 
         $request->validate([
@@ -130,21 +173,46 @@ class ProductController extends Controller implements HasMiddleware
             'giaban' => 'required|numeric|min:0',
             'giakm' => 'nullable|numeric|min:0|lt:giaban',
             'madm' => 'required|exists:danhmuc,madm',
-            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif|mimetypes:image/jpeg,image/png,image/gif|max:2048',
+            'hinhanh' => 'nullable|image|mimes:jpeg,png,jpg,gif',
+            'hinhanh_phu.*' => 'nullable|image|mimes:jpeg,png,jpg,gif',
             'mota' => 'nullable|string',
             'mota_chitiet' => 'nullable|string'
+        ], [
+            'hinhanh.image' => 'Ảnh chính phải là định dạng hình ảnh hợp lệ.',
+            'hinhanh_phu.*.image' => 'Ảnh phụ phải là định dạng hình ảnh hợp lệ.',
         ]);
 
-        $data = $request->except(['masp']); // Không cho phép sửa mã sản phẩm
+        $data = $request->except(['masp', 'hinhanh_phu', 'xoa_anh_phu']); // Không cho phép sửa mã sản phẩm
 
-        // XỬ LÝ ẢNH MỚI NẾU CÓ
+        \Log::info('--- PRODUCT UPDATE REQUEST ---', ['masp' => $masp]);
+        \Log::info('Has hinhanh file?', ['has' => $request->hasFile('hinhanh')]);
+        \Log::info('Has hinhanh_phu files?', ['has' => $request->hasFile('hinhanh_phu')]);
+
+        // Nếu KHÔNG có ảnh mới upload lên, phải loại bỏ 'hinhanh' khỏi mảng data để giữ nguyên hình cũ
+        if (!$request->hasFile('hinhanh')) {
+            unset($data['hinhanh']);
+        }
+
+        // XỬ LÝ ẢNH CHÍNH MỚI NẾU CÓ
         if ($request->hasFile('hinhanh')) {
             
-            // 1. Dọn dẹp rác: Nếu ảnh cũ là ảnh local (không có chữ http), thì xóa khỏi ổ cứng máy tính
-            if ($product->hinhanh && !str_starts_with($product->hinhanh, 'http')) {
-                $oldPath = ltrim($product->hinhanh, '/'); 
-                if(Storage::disk('public')->exists($oldPath)) {
-                    Storage::disk('public')->delete($oldPath);
+            // 1. Dọn dẹp ảnh cũ
+            if ($product->hinhanh) {
+                if (!str_starts_with($product->hinhanh, 'http')) {
+                    $oldPath = ltrim($product->hinhanh, '/'); 
+                    if(Storage::disk('public')->exists($oldPath)) {
+                        Storage::disk('public')->delete($oldPath);
+                    }
+                } else {
+                    try {
+                        $oldPublicId = $this->extractCloudinaryPublicId($product->hinhanh);
+                        if ($oldPublicId) {
+                            $cloudinaryDel = new Cloudinary(config('cloudinary.url'));
+                            $cloudinaryDel->uploadApi()->destroy($oldPublicId);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('Không thể xóa ảnh cũ Cloudinary: ' . $e->getMessage());
+                    }
                 }
             }
             
@@ -153,12 +221,56 @@ class ProductController extends Controller implements HasMiddleware
             $result = $cloudinary->uploadApi()->upload($request->file('hinhanh')->getRealPath(), [
                 'folder' => 'sunflower_products'
             ]);
-            
-            // 3. Ghi đè link mới vào DB
             $data['hinhanh'] = $result['secure_url'];
         }
 
         $product->update($data);
+
+        // XỬ LÝ XÓA ẢNH PHỤ (nếu admin tick chọn xóa)
+        if ($request->has('xoa_anh_phu')) {
+            $idsToDelete = $request->input('xoa_anh_phu', []);
+            $anhCanXoa = HinhAnhSanPham::whereIn('id', $idsToDelete)->where('masp', $masp)->get();
+            
+            $cloudinary = $cloudinary ?? new Cloudinary(config('cloudinary.url'));
+            foreach ($anhCanXoa as $anh) {
+                try {
+                    $publicId = $this->extractCloudinaryPublicId($anh->duong_dan);
+                    if ($publicId) {
+                        $cloudinary->uploadApi()->destroy($publicId);
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Lỗi xóa ảnh phụ Cloudinary: ' . $e->getMessage());
+                }
+                $anh->delete();
+            }
+        }
+
+        // XỬ LÝ THÊM ẢNH PHỤ MỚI
+        if ($request->hasFile('hinhanh_phu')) {
+            $soAnhHienCo = HinhAnhSanPham::where('masp', $masp)->count();
+            $soAnhConDuocThem = max(0, 5 - $soAnhHienCo);
+            
+            if ($soAnhConDuocThem > 0) {
+                $cloudinary = $cloudinary ?? new Cloudinary(config('cloudinary.url'));
+                $files = array_slice($request->file('hinhanh_phu'), 0, $soAnhConDuocThem);
+                $maxThuTu = HinhAnhSanPham::where('masp', $masp)->max('thu_tu') ?? -1;
+                
+                foreach ($files as $file) {
+                    try {
+                        $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                            'folder' => 'sunflower_products/gallery'
+                        ]);
+                        HinhAnhSanPham::create([
+                            'masp' => $masp,
+                            'duong_dan' => $result['secure_url'],
+                            'thu_tu' => ++$maxThuTu,
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Lỗi upload ảnh phụ mới: ' . $e->getMessage());
+                    }
+                }
+            }
+        }
 
         return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công!');
     }
@@ -173,13 +285,39 @@ class ProductController extends Controller implements HasMiddleware
             return redirect()->route('admin.products.index')->with('error', 'Không thể xóa sản phẩm đã có trong đơn hàng!');
         }
 
-        // Xóa ảnh vật lý
-        if ($product->hinhanh && !str_starts_with($product->hinhanh, 'http')) {
-            // Dùng ltrim để cắt bỏ dấu '/' ở đầu chuỗi (nếu có)
-            // Đảm bảo đường dẫn truyền vào delete() luôn chuẩn: "image/products/ten_file.png" hoặc "image/ten_file.png"
-            $imagePath = ltrim($product->hinhanh, '/');
-            Storage::disk('public')->delete($imagePath);
+        // Xóa ảnh
+        if ($product->hinhanh) {
+            if (!str_starts_with($product->hinhanh, 'http')) {
+                // Ảnh local → xóa khỏi ổ cứng
+                $imagePath = ltrim($product->hinhanh, '/');
+                Storage::disk('public')->delete($imagePath);
+            } else {
+                // Ảnh Cloudinary → xóa trên cloud
+                try {
+                    $publicId = $this->extractCloudinaryPublicId($product->hinhanh);
+                    if ($publicId) {
+                        $cloudinary = new Cloudinary(config('cloudinary.url'));
+                        $cloudinary->uploadApi()->destroy($publicId);
+                    }
+                } catch (\Exception $e) {
+                    \Log::warning('Không thể xóa ảnh Cloudinary khi xóa SP: ' . $e->getMessage());
+                }
+            }
         }
+
+        // Xóa tất cả ảnh phụ trên Cloudinary
+        foreach ($product->hinhAnhPhu as $anhPhu) {
+            try {
+                $publicId = $this->extractCloudinaryPublicId($anhPhu->duong_dan);
+                if ($publicId) {
+                    $cloudinaryGallery = $cloudinaryGallery ?? new Cloudinary(config('cloudinary.url'));
+                    $cloudinaryGallery->uploadApi()->destroy($publicId);
+                }
+            } catch (\Exception $e) {
+                \Log::warning('Lỗi xóa ảnh phụ khi xóa SP: ' . $e->getMessage());
+            }
+        }
+        // Bảng hinhanh_sanpham sẽ tự xóa cascade theo FK
 
         $product->delete();
 

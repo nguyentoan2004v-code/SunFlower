@@ -183,6 +183,43 @@
                                         <div class="invalid-feedback">{{ $message }}</div>
                                     @enderror
                                 </div>
+
+                                {{-- ẢNH PHỤ HIỆN CÓ --}}
+                                <div class="mb-3">
+                                    <label class="form-label fw-bold d-block">
+                                        Ảnh phụ (Gallery) 
+                                        <span class="text-muted fw-normal">— {{ $product->hinhAnhPhu->count() }}/5 ảnh</span>
+                                    </label>
+                                    
+                                    @if($product->hinhAnhPhu->count() > 0)
+                                        <div class="d-flex flex-wrap gap-2 mb-3">
+                                            @foreach($product->hinhAnhPhu as $anhPhu)
+                                                <div class="position-relative" style="width: 90px;">
+                                                    <img src="{{ $anhPhu->duong_dan }}" class="rounded border" 
+                                                         style="width:90px; height:90px; object-fit:cover;">
+                                                    <div class="form-check position-absolute bottom-0 start-0 w-100 text-center" style="background: rgba(0,0,0,0.6); border-radius: 0 0 4px 4px;">
+                                                        <label class="form-check-label text-white" style="font-size: 10px; cursor: pointer;">
+                                                            <input type="checkbox" name="xoa_anh_phu[]" value="{{ $anhPhu->id }}" class="form-check-input" style="width:12px; height:12px;">
+                                                            Xóa
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                        <small class="text-danger d-block mb-2"><i class="fa-solid fa-info-circle"></i> Tick vào ảnh muốn xóa, rồi nhấn "Cập nhật".</small>
+                                    @endif
+
+                                    @if($product->hinhAnhPhu->count() < 5)
+                                        <label class="form-label fw-bold">Thêm ảnh phụ mới</label>
+                                        <input type="file" name="hinhanh_phu[]" id="hinhanh_phu" class="form-control @error('hinhanh_phu.*') is-invalid @enderror" 
+                                               accept="image/*" multiple onchange="previewGallery(event)">
+                                        @error('hinhanh_phu.*')
+                                            <div class="invalid-feedback">{{ $message }}</div>
+                                        @enderror
+                                        <small class="text-muted mt-1 d-block">Còn có thể thêm {{ 5 - $product->hinhAnhPhu->count() }} ảnh nữa.</small>
+                                        <div id="gallery-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
+                                    @endif
+                                </div>
                             </div>
                         </div>
 
@@ -276,5 +313,26 @@
             btn.disabled = false;
         });
     });
+
+    // Preview ảnh phụ mới
+    function previewGallery(event) {
+        const container = document.getElementById('gallery-preview');
+        if (!container) return;
+        container.innerHTML = '';
+        const files = event.target.files;
+        const maxFiles = Math.min(files.length, 5);
+        
+        for (let i = 0; i < maxFiles; i++) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const div = document.createElement('div');
+                div.style.cssText = 'position:relative; width:80px; height:80px;';
+                div.innerHTML = `<img src="${e.target.result}" class="rounded border" style="width:80px; height:80px; object-fit:cover;">
+                                 <span class="position-absolute top-0 end-0 badge bg-success" style="font-size:10px;">Mới</span>`;
+                container.appendChild(div);
+            };
+            reader.readAsDataURL(files[i]);
+        }
+    }
 </script>
 @endsection

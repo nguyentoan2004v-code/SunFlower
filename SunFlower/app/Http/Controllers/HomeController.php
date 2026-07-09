@@ -58,7 +58,7 @@ class HomeController extends Controller {
     // 3. Trang Chi tiết 1 Sản phẩm
     public function productDetail($masp) {
         // Nạp thêm tổng tồn kho của sản phẩm (withSum)
-        $product = \App\Models\SanPham::with('danhmuc')
+        $product = \App\Models\SanPham::with('danhmuc', 'hinhAnhPhu')
             ->withSum('lohangs', 'soluong_ton')
             ->find($masp);
         

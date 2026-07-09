@@ -158,12 +158,54 @@
                         </div>
 
                         <!-- Địa chỉ -->
-                        <div>
-                            <label for="diachi" class="flex items-center gap-2 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 ml-1">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                        <!-- Địa chỉ -->
+                        <div class="space-y-4">
+                            <label class="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wide ml-1">
+                                <svg class="w-4 h-4 text-[#FF6B35]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                                 Địa chỉ giao hàng
                             </label>
-                            <input type="text" id="diachi" name="diachi" value="{{ old('diachi', $user->diachi) }}" class="w-full bg-[#FAFAFA] border border-transparent focus:border-gray-200 focus:bg-white text-gray-700 text-sm rounded-2xl px-5 py-3.5 outline-none transition-all">
+                            
+                            <div class="bg-[#FAFAFA] border border-gray-100 rounded-3xl p-5 space-y-4">
+                                <p class="text-xs text-gray-500 mb-2">Chọn lại địa chỉ nếu bạn muốn thay đổi:</p>
+                                
+                                {{-- Cấp 1: Tỉnh/Thành phố --}}
+                                <div class="relative">
+                                    <select id="addr_province" class="address-select w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-[#FF6B35] outline-none appearance-none text-sm text-gray-700 disabled:opacity-50">
+                                        <option value="" disabled selected>-- Chọn Tỉnh/Thành phố --</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+
+                                {{-- Cấp 2: Quận/Huyện --}}
+                                <div class="relative">
+                                    <select id="addr_district" disabled class="address-select w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-[#FF6B35] outline-none appearance-none text-sm text-gray-700 disabled:opacity-50">
+                                        <option value="" disabled selected>-- Chọn Quận/Huyện --</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+
+                                {{-- Cấp 3: Phường/Xã --}}
+                                <div class="relative">
+                                    <select id="addr_ward" disabled class="address-select w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-[#FF6B35] outline-none appearance-none text-sm text-gray-700 disabled:opacity-50">
+                                        <option value="" disabled selected>-- Chọn Phường/Xã --</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
+                                        <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+
+                                {{-- Cấp 4: Số nhà, tên đường --}}
+                                <div>
+                                    <input type="text" id="addr_detail" placeholder="VD: 123 Nguyễn Văn A, Tổ 5" class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-[#FF6B35] outline-none text-sm">
+                                </div>
+                            </div>
+                            
+                            <p class="text-xs text-gray-500 font-semibold mt-2 ml-1">Địa chỉ hiện tại / Địa chỉ sẽ được lưu:</p>
+                            <input type="text" id="diachi" name="diachi" value="{{ old('diachi', $user->diachi) }}" class="w-full bg-white border border-gray-300 focus:border-[#FF6B35] focus:ring-1 focus:ring-[#FF6B35] text-gray-900 font-medium text-sm rounded-2xl px-5 py-3.5 outline-none transition-all" readonly>
                             @error('diachi') <p class="text-xs text-red-500 mt-1 ml-1">{{ $message }}</p> @enderror
                         </div>
 
@@ -436,6 +478,128 @@
     @endif
 }
 
+    // XỬ LÝ ĐỊA CHỈ GIAO HÀNG (API Tỉnh/Thành)
+    (function() {
+        const provinceSelect = document.getElementById('addr_province');
+        const districtSelect = document.getElementById('addr_district');
+        const wardSelect = document.getElementById('addr_ward');
+        const detailInput = document.getElementById('addr_detail');
+        const finalInput = document.getElementById('diachi');
+        
+        if(!provinceSelect) return;
+
+        const API_BASE = 'https://provinces.open-api.vn/api';
+        let selectedProvince = '', selectedDistrict = '', selectedWard = '';
+
+        function setLoading(el, isLoading) {
+            if(isLoading) {
+                el.classList.add('opacity-50');
+                el.disabled = true;
+            } else {
+                el.classList.remove('opacity-50');
+                el.disabled = false;
+            }
+        }
+
+        function resetSelect(el, defaultText) {
+            el.innerHTML = `<option value="" disabled selected>${defaultText}</option>`;
+            el.disabled = true;
+        }
+
+        function composeAddress() {
+            const detail = detailInput.value.trim();
+            const parts = [];
+            if (detail) parts.push(detail);
+            if (selectedWard) parts.push(selectedWard);
+            if (selectedDistrict) parts.push(selectedDistrict);
+            if (selectedProvince) parts.push(selectedProvince);
+            
+            if(parts.length > 0) {
+                finalInput.value = parts.join(', ');
+            }
+        }
+
+        async function loadProvinces() {
+            setLoading(provinceSelect, true);
+            try {
+                const res = await fetch(`${API_BASE}/p/`);
+                const data = await res.json();
+                data.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.code;
+                    opt.textContent = p.name;
+                    provinceSelect.appendChild(opt);
+                });
+            } catch (err) {
+                console.error('Error loading provinces:', err);
+                resetSelect(provinceSelect, '⚠ Lỗi tải dữ liệu');
+            }
+            setLoading(provinceSelect, false);
+        }
+
+        provinceSelect.addEventListener('change', async function() {
+            const code = this.value;
+            selectedProvince = this.options[this.selectedIndex].text;
+            selectedDistrict = '';
+            selectedWard = '';
+
+            resetSelect(districtSelect, '-- Đang tải Quận/Huyện... --');
+            resetSelect(wardSelect, '-- Chọn Phường/Xã --');
+            setLoading(districtSelect, true);
+
+            try {
+                const res = await fetch(`${API_BASE}/p/${code}?depth=2`);
+                const data = await res.json();
+                resetSelect(districtSelect, '-- Chọn Quận/Huyện --');
+                data.districts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.code;
+                    opt.textContent = d.name;
+                    districtSelect.appendChild(opt);
+                });
+                districtSelect.disabled = false;
+            } catch (err) {
+                resetSelect(districtSelect, '⚠ Lỗi tải dữ liệu');
+            }
+            setLoading(districtSelect, false);
+            composeAddress();
+        });
+
+        districtSelect.addEventListener('change', async function() {
+            const code = this.value;
+            selectedDistrict = this.options[this.selectedIndex].text;
+            selectedWard = '';
+
+            resetSelect(wardSelect, '-- Đang tải Phường/Xã... --');
+            setLoading(wardSelect, true);
+
+            try {
+                const res = await fetch(`${API_BASE}/d/${code}?depth=2`);
+                const data = await res.json();
+                resetSelect(wardSelect, '-- Chọn Phường/Xã --');
+                data.wards.forEach(w => {
+                    const opt = document.createElement('option');
+                    opt.value = w.code;
+                    opt.textContent = w.name;
+                    wardSelect.appendChild(opt);
+                });
+                wardSelect.disabled = false;
+            } catch (err) {
+                resetSelect(wardSelect, '⚠ Lỗi tải dữ liệu');
+            }
+            setLoading(wardSelect, false);
+            composeAddress();
+        });
+
+        wardSelect.addEventListener('change', function() {
+            selectedWard = this.options[this.selectedIndex].text;
+            composeAddress();
+        });
+
+        detailInput.addEventListener('input', composeAddress);
+
+        loadProvinces();
+    })();
         const togglePasswordBtns = document.querySelectorAll('.btn-toggle-password');
 
         togglePasswordBtns.forEach(button => {
