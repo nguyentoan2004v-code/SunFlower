@@ -8,8 +8,8 @@
     <link rel="shortcut icon" type="image/png" href="https://res.cloudinary.com/drgrh0yeo/image/upload/v1780496206/5drg92D3VeOdSV5C41Lipg_2k_q40cvj.webp">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="min-h-screen bg-background font-sans antialiased text-foreground selection:bg-primary/20">
-    <div class="relative flex min-h-screen flex-col flex-1 overflow-x-hidden">
+<body class="min-h-screen bg-background font-sans antialiased text-foreground selection:bg-primary/20 overflow-x-hidden">
+    <div class="relative flex min-h-screen flex-col flex-1">
         
         {{-- Chỉ hiển thị Header nếu không phải trang auth (login, register, quên/đặt lại mật khẩu) --}}
         @if(!request()->routeIs('login', 'register', 'password.*'))

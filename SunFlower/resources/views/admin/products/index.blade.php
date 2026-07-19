@@ -123,6 +123,33 @@
                 <i class="fa-solid fa-plus me-1"></i> Thêm sản phẩm mới
             </a>
         </div>
+
+        {{-- Thanh tìm kiếm --}}
+        <div class="card-body border-bottom py-3">
+            <form method="GET" action="{{ route('admin.products.index') }}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Tìm theo mã SP hoặc tên sản phẩm..." value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="madm" class="form-select form-select-sm">
+                            <option value="">-- Tất cả danh mục --</option>
+                            @foreach($categories as $dm)
+                                <option value="{{ $dm->madm }}" {{ request('madm') == $dm->madm ? 'selected' : '' }}>{{ $dm->tendm }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex gap-1">
+                        <button type="submit" class="btn btn-sm text-white" style="background-color: var(--sunflower-orange);">
+                            <i class="fa-solid fa-search me-1"></i> Tìm
+                        </button>
+                        <a href="{{ route('admin.products.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
         
         <div class="card-body p-0">
             <div class="table-responsive">

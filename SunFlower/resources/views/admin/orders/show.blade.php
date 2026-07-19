@@ -66,6 +66,8 @@
                         <div class="mt-1">
                             @if($order->trangthai == 'Chờ xác nhận')
                                 <span class="badge bg-warning text-dark px-3 py-2 fs-6 rounded-pill">Chờ xác nhận</span>
+                            @elseif($order->trangthai == 'Đã xác nhận')
+                                <span class="badge bg-primary px-3 py-2 fs-6 rounded-pill">Đã xác nhận</span>
                             @elseif($order->trangthai == 'Đang giao')
                                 <span class="badge bg-info text-dark px-3 py-2 fs-6 rounded-pill">Đang giao</span>
                             @elseif($order->trangthai == 'Đã hoàn thành')
@@ -86,9 +88,20 @@
                                 <form action="{{ route('admin.orders.update', $order->madon) }}" method="POST">
                                     @csrf
                                     @method('PUT')
+                                    <input type="hidden" name="trangthai" value="Đã xác nhận">
+                                    <button type="submit" class="btn btn-primary w-100 fw-bold">
+                                        <i class="fa-solid fa-clipboard-check me-2"></i> Xác nhận đơn hàng
+                                    </button>
+                                </form>
+                            @endif
+
+                            @if($order->trangthai == 'Đã xác nhận')
+                                <form action="{{ route('admin.orders.update', $order->madon) }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
                                     <input type="hidden" name="trangthai" value="Đang giao">
                                     <button type="submit" class="btn text-dark w-100 fw-bold" style="background-color: #0dcaf0;">
-                                        <i class="fa-solid fa-truck-arrow-right me-2"></i> Xác nhận & Chuyển giao hàng
+                                        <i class="fa-solid fa-truck-arrow-right me-2"></i> Chuyển giao hàng
                                     </button>
                                 </form>
                             @endif

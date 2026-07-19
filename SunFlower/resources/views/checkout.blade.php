@@ -591,8 +591,65 @@
                 });
             }
 
+            async function autoFillFromAddress() {
+                const fullAddress = hiddenInput.value.trim();
+                if (!fullAddress) return;
+                
+                const parts = fullAddress.split(',').map(s => s.trim());
+                if (parts.length < 3) return;
+                
+                const savedProvince = parts[parts.length - 1];
+                const savedDistrict = parts[parts.length - 2];
+                const savedWard = parts[parts.length - 3];
+                const savedDetail = parts.slice(0, parts.length - 3).join(', ');
+                
+                let wasModified = addressModified;
+                addressModified = false; // Prevent composeAddress from running during auto-fill
+                
+                try {
+                    while(provinceSelect.options.length <= 1) await new Promise(r => setTimeout(r, 100));
+                    
+                    let pMatch = Array.from(provinceSelect.options).find(opt => opt.text.toLowerCase() === savedProvince.toLowerCase());
+                    if (!pMatch) pMatch = Array.from(provinceSelect.options).find(opt => opt.text.toLowerCase().includes(savedProvince.toLowerCase()) || savedProvince.toLowerCase().includes(opt.text.toLowerCase()));
+                    
+                    if (pMatch) {
+                        provinceSelect.value = pMatch.value;
+                        selectedProvince = pMatch.text;
+                        provinceSelect.dispatchEvent(new Event('change'));
+                        
+                        while(districtSelect.disabled || districtSelect.options.length <= 1) await new Promise(r => setTimeout(r, 100));
+                        
+                        let dMatch = Array.from(districtSelect.options).find(opt => opt.text.toLowerCase() === savedDistrict.toLowerCase());
+                        if (!dMatch) dMatch = Array.from(districtSelect.options).find(opt => opt.text.toLowerCase().includes(savedDistrict.toLowerCase()) || savedDistrict.toLowerCase().includes(opt.text.toLowerCase()));
+                        
+                        if (dMatch) {
+                            districtSelect.value = dMatch.value;
+                            selectedDistrict = dMatch.text;
+                            districtSelect.dispatchEvent(new Event('change'));
+                            
+                            while(wardSelect.disabled || wardSelect.options.length <= 1) await new Promise(r => setTimeout(r, 100));
+                            
+                            let wMatch = Array.from(wardSelect.options).find(opt => opt.text.toLowerCase() === savedWard.toLowerCase());
+                            if (!wMatch) wMatch = Array.from(wardSelect.options).find(opt => opt.text.toLowerCase().includes(savedWard.toLowerCase()) || savedWard.toLowerCase().includes(opt.text.toLowerCase()));
+                            
+                            if (wMatch) {
+                                wardSelect.value = wMatch.value;
+                                selectedWard = wMatch.text;
+                                detailInput.value = savedDetail;
+                            }
+                        }
+                    }
+                } catch (err) {
+                    console.error("Auto fill error:", err);
+                } finally {
+                    addressModified = wasModified;
+                }
+            }
+
             // Initialize
-            loadProvinces();
+            loadProvinces().then(() => {
+                autoFillFromAddress();
+            });
         })();
     </script>
     <style>

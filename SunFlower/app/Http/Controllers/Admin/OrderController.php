@@ -33,10 +33,24 @@ class OrderController extends Controller implements HasMiddleware
         ];
     }
     // 1. Danh sách đơn hàng
-    public function index()
+    public function index(Request $request)
     {
-        // Lấy danh sách đơn hàng, mới nhất lên trước
-        $orders = DonHang::orderBy('ngaydat', 'desc')->paginate(8);
+        $query = DonHang::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('madon', 'like', "%{$search}%")
+                  ->orWhere('hoten_nhan', 'like', "%{$search}%")
+                  ->orWhere('sdt_nhan', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('trangthai')) {
+            $query->where('trangthai', $request->trangthai);
+        }
+
+        $orders = $query->orderBy('ngaydat', 'desc')->paginate(8)->withQueryString();
         return view('admin.orders.index', compact('orders'));
     }
 

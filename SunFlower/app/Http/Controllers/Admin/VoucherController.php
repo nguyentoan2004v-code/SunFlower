@@ -32,7 +32,7 @@ class VoucherController extends Controller implements HasMiddleware
     // 2. Hiển thị danh sách Voucher
     public function index()
     {
-        $vouchers = Voucher::orderBy('created_at', 'desc')->paginate(10);
+        $vouchers = Voucher::orderBy('created_at', 'desc')->paginate(8);
         return view('admin.vouchers.index', compact('vouchers'));
     }
 

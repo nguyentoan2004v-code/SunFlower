@@ -44,10 +44,19 @@ class CategoryController extends Controller implements HasMiddleware
         ];
     }
     // 1. Hiển thị danh sách danh mục
-    public function index()
+    public function index(Request $request)
     {
-        // Lấy danh sách, danh mục mới tạo lên trước, kèm số lượng sản phẩm
-        $categories = DanhMuc::withCount('sanphams')->orderBy('created_at', 'desc')->paginate(8);
+        $query = DanhMuc::withCount('sanphams');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('tendm', 'LIKE', "%{$search}%")
+                  ->orWhere('madm', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $categories = $query->orderBy('created_at', 'desc')->paginate(8)->withQueryString();
         return view('admin.categories.index', compact('categories'));
     }
 

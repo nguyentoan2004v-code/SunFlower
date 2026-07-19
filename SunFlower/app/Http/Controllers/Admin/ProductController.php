@@ -66,7 +66,7 @@ class ProductController extends Controller implements HasMiddleware
             $query->where('madm', $request->madm);
         }
 
-        $products = $query->orderBy('created_at', 'desc')->paginate(8);
+        $products = $query->orderBy('created_at', 'desc')->paginate(8)->withQueryString();
         $categories = DanhMuc::all();
 
         return view('admin.products.index', compact('products', 'categories'));

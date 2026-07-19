@@ -21,10 +21,22 @@ class KhachHangController extends Controller
     }
 
     // 1. Danh sách khách hàng
-    public function index()
+    public function index(Request $request)
     {
         $this->checkPermission();
-        $khachhangs = KhachHang::orderBy('created_at', 'desc')->paginate(10);
+
+        $query = KhachHang::query();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('hoten', 'like', "%{$search}%")
+                  ->orWhere('sdt', 'like', "%{$search}%")
+                  ->orWhere('makh', 'like', "%{$search}%");
+            });
+        }
+
+        $khachhangs = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
         return view('admin.khachhang.index', compact('khachhangs'));
     }
 

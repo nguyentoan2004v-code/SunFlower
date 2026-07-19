@@ -66,6 +66,10 @@
                                 <td>
                                     @if($dh->trangthai == 'Đã hoàn thành' || $dh->trangthai == 'Đã giao')
                                         <span class="badge bg-success rounded-pill px-3">{{ $dh->trangthai }}</span>
+                                    @elseif($dh->trangthai == 'Đã xác nhận')
+                                        <span class="badge bg-primary rounded-pill px-3">{{ $dh->trangthai }}</span>
+                                    @elseif($dh->trangthai == 'Đang giao')
+                                        <span class="badge bg-info text-dark rounded-pill px-3">{{ $dh->trangthai }}</span>
                                     @elseif($dh->trangthai == 'Đã hủy')
                                         <span class="badge bg-danger rounded-pill px-3">{{ $dh->trangthai }}</span>
                                     @else

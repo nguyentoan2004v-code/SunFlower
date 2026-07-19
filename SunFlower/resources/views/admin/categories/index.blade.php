@@ -47,6 +47,25 @@
                 <i class="fa-solid fa-plus"></i> Thêm Danh mục
             </a>
         </div>
+
+        {{-- Thanh tìm kiếm --}}
+        <div class="card-body border-bottom py-3">
+            <form method="GET" action="{{ route('admin.categories.index') }}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-6">
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Tìm theo mã hoặc tên danh mục..." value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-6 d-flex gap-1">
+                        <button type="submit" class="btn btn-sm text-white" style="background-color: var(--sunflower-orange);">
+                            <i class="fa-solid fa-search me-1"></i> Tìm
+                        </button>
+                        <a href="{{ route('admin.categories.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
         
         <div class="card-body p-0">
             <div class="table-responsive">

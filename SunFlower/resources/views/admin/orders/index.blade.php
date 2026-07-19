@@ -30,6 +30,35 @@
                 <i class="fa-solid fa-cart-shopping me-2"></i> Danh sách Đơn đặt hàng
             </h5>
         </div>
+
+        {{-- Thanh tìm kiếm --}}
+        <div class="card-body border-bottom py-3">
+            <form method="GET" action="{{ route('admin.orders.index') }}">
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-5">
+                        <input type="text" name="search" class="form-control form-control-sm" placeholder="Tìm theo mã đơn, tên hoặc SĐT người nhận..." value="{{ request('search') }}">
+                    </div>
+                    <div class="col-md-3">
+                        <select name="trangthai" class="form-select form-select-sm">
+                            <option value="">-- Tất cả trạng thái --</option>
+                            <option value="Chờ xác nhận" {{ request('trangthai') == 'Chờ xác nhận' ? 'selected' : '' }}>Chờ xác nhận</option>
+                            <option value="Đã xác nhận" {{ request('trangthai') == 'Đã xác nhận' ? 'selected' : '' }}>Đã xác nhận</option>
+                            <option value="Đang giao" {{ request('trangthai') == 'Đang giao' ? 'selected' : '' }}>Đang giao</option>
+                            <option value="Đã hoàn thành" {{ request('trangthai') == 'Đã hoàn thành' ? 'selected' : '' }}>Đã hoàn thành</option>
+                            <option value="Đã hủy" {{ request('trangthai') == 'Đã hủy' ? 'selected' : '' }}>Đã hủy</option>
+                        </select>
+                    </div>
+                    <div class="col-md-4 d-flex gap-1">
+                        <button type="submit" class="btn btn-sm text-white" style="background-color: var(--sunflower-orange);">
+                            <i class="fa-solid fa-search me-1"></i> Tìm
+                        </button>
+                        <a href="{{ route('admin.orders.index') }}" class="btn btn-sm btn-outline-secondary">
+                            <i class="fa-solid fa-rotate-left"></i>
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
         
         <div class="card-body p-0">
             <div class="table-responsive">
@@ -54,6 +83,8 @@
                             <td>
                                 @if($order->trangthai == 'Chờ xác nhận')
                                     <span class="badge bg-warning text-dark px-3 py-2 rounded-pill">Chờ xác nhận</span>
+                                @elseif($order->trangthai == 'Đã xác nhận')
+                                    <span class="badge bg-primary px-3 py-2 rounded-pill">Đã xác nhận</span>
                                 @elseif($order->trangthai == 'Đang giao')
                                     <span class="badge bg-info text-dark px-3 py-2 rounded-pill">Đang giao</span>
                                 @elseif($order->trangthai == 'Đã hoàn thành')

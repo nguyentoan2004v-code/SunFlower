@@ -76,11 +76,22 @@ class PhieuHuyHangController extends Controller implements HasMiddleware
         }
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $phieuHuys = PhieuHuyHang::with(['lohang', 'sanpham', 'nhanvien'])
-                        ->orderBy('ngayhuy', 'desc')
-                        ->get();
+        $query = PhieuHuyHang::with(['lohang', 'sanpham', 'nhanvien']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('maphieu', 'like', "%{$search}%")
+                  ->orWhere('malo', 'like', "%{$search}%")
+                  ->orWhereHas('sanpham', function($q2) use ($search) {
+                      $q2->where('tensp', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $phieuHuys = $query->orderBy('ngayhuy', 'desc')->paginate(10)->withQueryString();
         return view('admin.phieuhuyhang.index', compact('phieuHuys'));
     }
 

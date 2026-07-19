@@ -118,6 +118,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/orders/{madon}/export-invoice', [AdminOrderController::class, 'exportInvoice'])->name('orders.export-invoice');
         Route::get('/invoices/{mahd}/print', [AdminOrderController::class, 'printInvoice'])->name('orders.print-invoice');
         // --- QUẢN LÝ LÔ HÀNG VÀ PHIẾU HỦY HÀNG ---
+        Route::get('lohang/product-info/{masp}', [LoHangController::class, 'getProductInfo'])->name('lohang.productInfo');
         Route::resource('lohang', LoHangController::class);
         // Chỉ khai báo 1 lần qua resource — views và controller đều dùng admin.phieuhuyhang.*
         Route::resource('phieuhuyhang', PhieuHuyHangController::class);

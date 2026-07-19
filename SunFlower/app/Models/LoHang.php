@@ -13,7 +13,7 @@ class LoHang extends Model
     public $incrementing = false;
     protected $keyType = 'string';
 
-    protected $fillable = ['malo', 'masp','manv', 'soluong_nhap', 'soluong_ton', 'ngaynhap', 'ngayhethan'];
+    protected $fillable = ['malo', 'masp','manv', 'soluong_nhap', 'soluong_ton', 'gia_nhap', 'ngaynhap', 'ngayhethan', 'nhacungcap', 'ghichu'];
 
     public function sanpham()
     {
