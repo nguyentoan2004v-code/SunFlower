@@ -91,6 +91,9 @@ class LoHangController extends Controller implements HasMiddleware
                                       ->whereDate('ngayhethan', '<=', $today->copy()->addDays(3))
                                       ->count(),
             'het_hang'       => LoHang::where('soluong_ton', '<=', 0)->count(),
+            'can_xu_ly'      => LoHang::where('soluong_ton', '>', 0)
+                                      ->whereDate('ngayhethan', '<=', $today)
+                                      ->count(),
         ];
 
         // Sắp xếp và phân trang

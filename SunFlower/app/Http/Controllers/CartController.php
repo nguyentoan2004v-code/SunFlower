@@ -302,6 +302,20 @@ class CartController extends Controller
         // Tổng số tiền được giảm thực tế = Voucher + Giảm theo Hạng
         $tongTienDuocGiam = $tienGiamVoucher + $tienGiamTheoHang;
 
+        // KIỂM TRA TỒN KHO TRƯỚC (fail-fast) — tránh tạo đơn hàng "ma" khi không đủ hàng
+        foreach ($checkoutItems as $id => $item) {
+            $tongTon = LoHang::where('masp', $id)
+                        ->where('soluong_ton', '>', 0)
+                        ->where('ngayhethan', '>', now())
+                        ->sum('soluong_ton');
+
+            if ($tongTon < $item['quantity']) {
+                $tenSP = $item['name'];
+                return redirect()->route('cart.index')
+                    ->with('error', "Sản phẩm \"{$tenSP}\" hiện không đủ số lượng trong kho (Còn: {$tongTon}). Vui lòng điều chỉnh số lượng.");
+            }
+        }
+
         DB::beginTransaction();
         try {
             $donHang = new DonHang();
@@ -380,8 +394,9 @@ class CartController extends Controller
                 $qtyNeeded = $item['quantity'];
                 $loHangs = LoHang::where('masp', $id)
                             ->where('soluong_ton', '>', 0)
-                            ->where('ngayhethan', '>=', now())
+                            ->where('ngayhethan', '>', now())
                             ->orderBy('ngayhethan', 'asc')
+                            ->lockForUpdate()
                             ->get();
 
                 if ($loHangs->sum('soluong_ton') < $qtyNeeded) {

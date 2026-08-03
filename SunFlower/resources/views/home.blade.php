@@ -4,7 +4,10 @@
 
 @section('content')
 <div class="bg-gray-50 space-y-20 pb-20">
-    
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
 
 <section class="relative w-full max-w-7xl mx-auto px-4 mt-8 h-[250px] sm:h-[350px] lg:h-[500px]">
@@ -73,29 +76,49 @@
 </script>
 
     <section class="max-w-7xl mx-auto px-4">
-        <div class="flex items-center justify-between mb-10">
-            <h2 class="text-3xl font-extrabold text-gray-900">Tất Cả Danh Mục</h2>
-            <a href="{{ route('categories.index') }}" class="text-[#FF6B35] font-bold hover:underline">Xem tất cả →</a>
+        <div class="flex items-end justify-between mb-8">
+            <div>
+                <span class="text-xs font-semibold tracking-[0.2em] text-[#FF6B35] uppercase">Khám phá</span>
+                <h2 class="font-['Fraunces'] text-3xl md:text-4xl font-medium text-gray-900 mt-1">Danh mục hoa</h2>
+            </div>
+            <a href="{{ route('categories.index') }}" class="text-sm font-semibold text-gray-500 hover:text-[#FF6B35] transition-colors flex items-center gap-1 shrink-0">
+                Xem tất cả <span aria-hidden="true">→</span>
+            </a>
         </div>
-        <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+
+        <div class="grid grid-cols-2 gap-4 md:gap-5 lg:grid-cols-4 lg:auto-rows-[180px]">
             @if(isset($categories) && $categories->count() > 0)
-                @foreach($categories->take(5) as $category)
-                    <a href="{{ route('category.show', $category->madm) }}" class="relative h-56 rounded-3xl overflow-hidden group shadow-sm block border border-white">
-                        
-                        @php
-                            // SỬA LỖI 2: Ảnh Danh Mục
-                            $catImage = 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60'; // Mặc định
-                            if (!empty($category->hinhanh)) {
-                                $catImage = str_starts_with($category->hinhanh, 'http') 
-                                            ? $category->hinhanh 
-                                            : asset('storage/' . ltrim($category->hinhanh, '/'));
-                            }
-                        @endphp
-                        
-                        <img src="{{ $catImage }}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500" alt="{{ $category->tendm }}">
-                        
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-                        <h3 class="absolute bottom-6 left-6 text-white font-bold text-lg pr-4">{{ $category->tendm }}</h3>
+                @foreach($categories->take(5) as $i => $category)
+                    @php
+                        // SỬA LỖI 2: Ảnh Danh Mục
+                        $catImage = 'https://images.unsplash.com/photo-1563241527-3004b7be0ffd?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=60'; // Mặc định
+                        if (!empty($category->hinhanh)) {
+                            $catImage = str_starts_with($category->hinhanh, 'http')
+                                        ? $category->hinhanh
+                                        : asset('storage/' . ltrim($category->hinhanh, '/'));
+                        }
+                        // Danh mục đầu tiên được ưu tiên hiển thị lớn hơn để tạo điểm nhấn thị giác,
+                        // thay vì chia đều 5 ô bằng nhau khiến bố cục bị chật và đơn điệu.
+                        $isFeatured = $i === 0;
+                    @endphp
+                    <a href="{{ route('category.show', $category->madm) }}"
+                       class="group relative block overflow-hidden rounded-2xl bg-gray-100
+                              {{ $isFeatured
+                                    ? 'col-span-2 aspect-[16/10] lg:aspect-auto lg:row-span-2'
+                                    : 'aspect-[4/5] lg:aspect-auto' }}">
+
+                        <img src="{{ $catImage }}"
+                             class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                             alt="{{ $category->tendm }}">
+
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/5 to-transparent"></div>
+
+                        <div class="absolute inset-x-0 bottom-0 p-4 md:p-5 {{ $isFeatured ? 'lg:p-7' : '' }}">
+                            <h3 class="font-['Fraunces'] text-white font-medium leading-tight {{ $isFeatured ? 'text-xl md:text-2xl' : 'text-base md:text-lg' }}">
+                                {{ $category->tendm }}
+                            </h3>
+                            <span class="inline-block mt-2 h-[2px] w-6 bg-[#FF6B35] transition-all duration-300 group-hover:w-10"></span>
+                        </div>
                     </a>
                 @endforeach
             @else
@@ -106,77 +129,77 @@
 
     <section id="products" class="max-w-7xl mx-auto px-4">
         <div class="text-center mb-12">
-            <h2 class="text-4xl font-extrabold text-gray-900 mb-4">Sản Phẩm Mới</h2>
-            <div class="w-20 h-1.5 bg-[#FF6B35] mx-auto rounded-full"></div>
+            <span class="text-xs font-semibold tracking-[0.2em] text-[#FF6B35] uppercase">Vừa về cửa hàng</span>
+            <h2 class="font-['Fraunces'] text-3xl md:text-4xl font-medium text-gray-900 mt-2">Sản phẩm mới</h2>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6">
             @if(isset($products) && $products->count() > 0)
                 @foreach($products as $product)
-                    <div class="group bg-white border border-gray-100 rounded-3xl p-4 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-1 relative">
-                        <div class="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-5">
-                            
-                            @php
-                                // SỬA LỖI 3: Ảnh Lưới Sản Phẩm
-                                $gridImage = asset('images/bg-sunflower.jpg');
-                                if (!empty($product->hinhanh)) {
-                                    $gridImage = str_starts_with($product->hinhanh, 'http') 
-                                                ? $product->hinhanh 
-                                                : asset('storage/' . ltrim($product->hinhanh, '/'));
-                                }
-                            @endphp
+                    @php
+                        // SỬA LỖI 3: Ảnh Lưới Sản Phẩm
+                        $gridImage = asset('images/bg-sunflower.jpg');
+                        if (!empty($product->hinhanh)) {
+                            $gridImage = str_starts_with($product->hinhanh, 'http')
+                                        ? $product->hinhanh
+                                        : asset('storage/' . ltrim($product->hinhanh, '/'));
+                        }
+                        $onSale = !empty($product->giakm) && $product->giakm < $product->giaban;
+                    @endphp
+                    <div class="group relative">
+                        <div class="relative aspect-square overflow-hidden bg-gray-100">
 
-                            <img src="{{ $gridImage }}" 
-                                 class="w-full h-full object-cover transition duration-500 group-hover:scale-110" 
+                            {{-- Toàn bộ ảnh dẫn đến trang chi tiết; nằm dưới cùng để 2 nút phía trên không bị lồng vào link --}}
+                            <a href="{{ route('product.show', $product->masp) }}" class="absolute inset-0 z-0" aria-label="Xem chi tiết {{ $product->tensp }}"></a>
+
+                            <img src="{{ $gridImage }}"
+                                 class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105 pointer-events-none"
                                  alt="{{ $product->tensp }}">
-                            
-                            <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                        </div>
 
-                        <div class="px-2">
-                            <h3 class="font-bold text-gray-800 text-lg mb-1 group-hover:text-[#FF6B35] transition-colors line-clamp-1" title="{{ $product->tensp }}">
-                                {{ $product->tensp }}
-                            </h3>
-                           <div class="mt-4 flex items-center justify-between">
-                        <div>
-                            @if(!empty($product->giakm) && $product->giakm < $product->giaban)
-                                <span class="text-xl font-extrabold text-[#FF6B35]">
-                                    {{ number_format($product->giakm, 0, ',', '.') }} ₫
-                                </span>
-                                <span class="text-xs text-gray-400 line-through ml-2">
-                                    {{ number_format($product->giaban, 0, ',', '.') }} ₫
-                                </span>
-                            @else
-                                <span class="text-xl font-extrabold text-[#FF6B35]">
-                                    {{ number_format($product->giaban ?? 0, 0, ',', '.') }} ₫
+                            @if($onSale)
+                                <span class="absolute top-3 left-3 z-10 bg-[#FF6B35] text-white text-[10px] font-bold uppercase tracking-wide px-2.5 py-1 rounded-full pointer-events-none">
+                                    Giảm giá
                                 </span>
                             @endif
-                        </div>
-                        <span class="bg-orange-50 text-[#FF6B35] text-xs font-bold px-2.5 py-1 rounded-lg">
-                            Mới
-                        </span>
-                        </div>
-                            
-                        <div class="mt-6 pt-4 border-t border-gray-50 flex flex-col gap-3">
-                            <div class="flex gap-2">
-                                <a href="{{ route('product.show', $product->masp) }}" 
-                                   class="flex-1 bg-gray-50 text-gray-600 text-center py-3 rounded-xl font-bold text-sm hover:bg-gray-100 transition">
-                                    Chi tiết
-                                </a>
+
+                            {{-- Lớp gradient mờ nhẹ phía dưới, chỉ hiện khi hover để làm nền cho 2 nút — thay cho một khối màu đặc gắt --}}
+                            <div class="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/40 via-black/5 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100 pointer-events-none"></div>
+
+                            {{-- 2 nút hành động dạng viên thuốc, nổi nhẹ và mờ dần vào khi hover — mềm mại thay vì một thanh vuông cứng --}}
+                            <div class="absolute inset-x-0 bottom-4 z-10 flex items-center justify-center gap-2 px-4 opacity-0 translate-y-2 transition-all duration-500 ease-out group-hover:opacity-100 group-hover:translate-y-0">
                                 <form action="{{ route('cart.add', $product->masp) }}" method="POST">
                                     @csrf
-                                    <button type="submit" class="w-12 h-12 bg-[#FF6B35] text-white flex items-center justify-center rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-100">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                                    <button type="submit" title="Thêm vào giỏ hàng"
+                                            class="w-10 h-10 rounded-full bg-white/95 backdrop-blur-sm shadow-lg shadow-black/10 flex items-center justify-center text-gray-700 transition-colors duration-300 hover:bg-[#FF6B35] hover:text-white">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                                     </button>
                                 </form>
-                                
-                            </div>
-                                <a href="{{ route('cart.buyNow', $product->masp) }}" 
-                                   class="w-full h-11 bg-[#FF6B35] text-white flex items-center justify-center rounded-xl font-bold text-sm hover:bg-orange-600 transition shadow-lg shadow-orange-100 active:scale-95">
+                                <a href="{{ route('cart.buyNow', $product->masp) }}"
+                                   class="h-10 px-5 rounded-full bg-white/95 backdrop-blur-sm shadow-lg shadow-black/10 flex items-center justify-center text-gray-800 text-xs font-bold transition-colors duration-300 hover:bg-[#FF6B35] hover:text-white">
                                     Mua ngay
                                 </a>
-                            </div>    
+                            </div>
                         </div>
+
+                        <a href="{{ route('product.show', $product->masp) }}" class="mt-4 block">
+                            <h3 class="text-gray-900 text-base font-semibold leading-snug line-clamp-1 group-hover:text-[#FF6B35] transition-colors" title="{{ $product->tensp }}">
+                                {{ $product->tensp }}
+                            </h3>
+                            <div class="mt-2 flex items-baseline gap-2">
+                                @if($onSale)
+                                    <span class="font-['Fraunces'] text-xl font-semibold text-[#FF6B35]">
+                                        {{ number_format($product->giakm, 0, ',', '.') }} ₫
+                                    </span>
+                                    <span class="text-sm text-gray-400 line-through">
+                                        {{ number_format($product->giaban, 0, ',', '.') }} ₫
+                                    </span>
+                                @else
+                                    <span class="font-['Fraunces'] text-xl font-semibold text-gray-900">
+                                        {{ number_format($product->giaban ?? 0, 0, ',', '.') }} ₫
+                                    </span>
+                                @endif
+                            </div>
+                        </a>
                     </div>
                 @endforeach
             @else

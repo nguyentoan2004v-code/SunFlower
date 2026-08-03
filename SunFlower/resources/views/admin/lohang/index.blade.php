@@ -147,6 +147,26 @@
         </div>
     </div>
 
+    {{-- ====== CẢNH BÁO LÔ HÀNG HẾT HẠN CẦN XỬ LÝ ====== --}}
+    @if(($stats['can_xu_ly'] ?? 0) > 0)
+        <div class="alert alert-danger d-flex align-items-center shadow-sm mb-4" role="alert" style="border-left: 5px solid #dc3545;">
+            <div class="me-3" style="font-size: 2rem;">
+                <i class="fa-solid fa-triangle-exclamation text-danger"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="alert-heading fw-bold mb-1">
+                    <i class="fa-solid fa-exclamation-circle me-1"></i>
+                    Có {{ $stats['can_xu_ly'] }} lô hàng đã hết hạn nhưng còn tồn kho!
+                </h6>
+                <p class="mb-0 small">
+                    Các lô hàng này cần được nhân viên kiểm tra và <strong>lập phiếu hủy thủ công</strong> qua chức năng 
+                    <a href="{{ route('admin.phieuhuyhang.create') }}" class="alert-link fw-bold">Lập phiếu hủy hàng</a>.
+                    Hoặc <a href="{{ route('admin.lohang.index', ['trang_thai' => 'het_han']) }}" class="alert-link fw-bold">xem danh sách lô hết hạn</a> để xử lý.
+                </p>
+            </div>
+        </div>
+    @endif
+
     {{-- ====== BỘ LỌC ====== --}}
     <div class="card shadow-sm border-0 mb-4 filter-card">
         <div class="card-body py-3">
