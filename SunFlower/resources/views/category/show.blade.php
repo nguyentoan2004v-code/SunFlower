@@ -56,63 +56,9 @@
                 </div>
 
                 @if($products->count() > 0)
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="grid grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-10 md:gap-x-6">
                         @foreach($products as $product)
-                            <div class="group bg-white border border-gray-100 rounded-3xl p-4 transition-all duration-300 hover:shadow-2xl hover:shadow-orange-100/50 hover:-translate-y-1 flex flex-col h-full">
-                                <div class="relative aspect-square overflow-hidden rounded-2xl bg-gray-50 mb-5">
-                                    @php
-                                        $catProdImg = asset('images/bg-sunflower.jpg');
-                                        if(!empty($product->hinhanh)){
-                                            $catProdImg = str_starts_with($product->hinhanh, 'http') ? $product->hinhanh : asset('storage/' . ltrim($product->hinhanh, '/'));
-                                        }
-                                    @endphp
-                                    <img src="{{ $catProdImg }}" 
-                                        class="w-full h-full object-cover transition duration-500 group-hover:scale-110" 
-                                        alt="{{ $product->tensp }}">
-                                    
-                                    <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                                </div>
-
-                                <div class="px-2 flex flex-col flex-grow">
-                                    <h3 class="font-bold text-gray-800 text-lg mb-1 group-hover:text-[#FF6B35] transition-colors line-clamp-1">
-                                        <a href="{{ route('product.show', $product->masp) }}">{{ $product->tensp }}</a>
-                                    </h3>
-                                    
-                                    <div class="flex items-center gap-3 mb-5">
-                                            @if(!empty($product->giakm) && $product->giakm < $product->giaban)
-                                                <span class="text-[#FF6B35] font-black text-xl">
-                                                    {{ number_format($product->giakm, 0, ',', '.') }} ₫
-                                                </span>
-                                                <span class="text-gray-400 line-through text-xs italic">
-                                                    {{ number_format($product->giaban, 0, ',', '.') }} ₫
-                                                </span>
-                                            @else
-                                                <span class="text-[#FF6B35] font-black text-xl">
-                                                    {{ number_format($product->giaban ?? 0, 0, ',', '.') }} ₫
-                                                </span>
-                                            @endif
-                                    </div>
-                                    
-                                    <div class="mt-auto pt-4 border-t border-gray-50 flex flex-col gap-3">
-                                        <div class="flex gap-2">
-                                            <a href="{{ route('product.show', $product->masp) }}" 
-                                               class="flex-1 bg-gray-50 text-gray-600 text-center flex items-center justify-center rounded-xl font-bold text-sm hover:bg-gray-100 transition">
-                                                Chi tiết
-                                            </a>
-                                            <form action="{{ route('cart.add', $product->masp) }}" method="POST" class="w-12 h-12">
-                                                @csrf
-                                                <button type="submit" class="w-full h-full bg-[#FF6B35] text-white flex items-center justify-center rounded-xl hover:bg-orange-600 transition shadow-lg shadow-orange-100">
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                                </button>
-                                            </form>
-                                        </div>
-                                        <a href="{{ route('cart.buyNow', $product->masp) }}" 
-                                           class="w-full h-11 bg-[#FF6B35] text-white flex items-center justify-center rounded-xl font-bold text-sm hover:bg-orange-600 transition shadow-lg shadow-orange-100 active:scale-95">
-                                            Mua ngay
-                                        </a>
-                                    </div> 
-                                </div>
-                            </div>
+                            @include('partials.product-card', ['product' => $product])
                         @endforeach
                     </div>
                     <div class="mt-8 flex justify-center">

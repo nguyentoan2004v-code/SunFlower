@@ -2,38 +2,35 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class PhieuHuyHang extends Model
 {
-    use \Illuminate\Database\Eloquent\SoftDeletes;
+    use HasFactory;
 
     protected $table = 'phieu_huy_hang';
-    protected $primaryKey = 'maphieu';
-    public $incrementing = false;
-    protected $keyType = 'string';
 
-    protected $fillable = ['maphieu', 'malo', 'masp','manv', 'soluong_huy', 'ngayhuy', 'lydo'];
+    protected $fillable = [
+        'ma_phieu_huy',
+        'manv_lap',
+        'manv_duyet',
+        'ghi_chu_chung',
+        'trang_thai',
+    ];
 
-    public function lohang()
+    public function nguoiLap()
     {
-        return $this->belongsTo(LoHang::class, 'malo', 'malo');
-    }
-    public function sanpham()
-    {
-        return $this->belongsTo(SanPham::class, 'masp', 'masp');
+        return $this->belongsTo(NhanVien::class, 'manv_lap', 'manv');
     }
 
-    public function nhanvien()
+    public function nguoiDuyet()
     {
-        return $this->belongsTo(NhanVien::class, 'manv', 'manv');
+        return $this->belongsTo(NhanVien::class, 'manv_duyet', 'manv');
     }
-    protected static function booted()
+
+    public function chiTiet()
     {
-        static::retrieved(function ($model) {
-            $model->maphieu = trim($model->maphieu);
-            $model->malo = trim($model->malo);
-            $model->masp = trim($model->masp);
-        });
+        return $this->hasMany(ChiTietPhieuHuy::class, 'id_phieu_huy');
     }
 }

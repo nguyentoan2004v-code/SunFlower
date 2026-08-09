@@ -5,7 +5,10 @@ use Illuminate\Http\Request;
 use App\Models\SanPham;
 use App\Models\DonHang;         // Import Model Đơn Hàng
 use App\Models\ChiTietDonHang;
-use App\Models\LoHang;          // Thêm Model LoHang
+
+use App\Models\NguyenLieu;
+use App\Models\ChiTietDonHangNguyenLieu;
+use App\Models\LichSuKho;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str; 
@@ -302,17 +305,26 @@ class CartController extends Controller
         // Tổng số tiền được giảm thực tế = Voucher + Giảm theo Hạng
         $tongTienDuocGiam = $tienGiamVoucher + $tienGiamTheoHang;
 
-        // KIỂM TRA TỒN KHO TRƯỚC (fail-fast) — tránh tạo đơn hàng "ma" khi không đủ hàng
+        // KIỂM TRA TỒN KHO (BOM) TRƯỜC — fail-fast
         foreach ($checkoutItems as $id => $item) {
-            $tongTon = LoHang::where('masp', $id)
-                        ->where('soluong_ton', '>', 0)
-                        ->where('ngayhethan', '>', now())
-                        ->sum('soluong_ton');
-
-            if ($tongTon < $item['quantity']) {
-                $tenSP = $item['name'];
+            $sanPham = SanPham::with('materials')->find($id);
+            
+            if (!$sanPham || $sanPham->nguyenLieus->isEmpty()) {
                 return redirect()->route('cart.index')
-                    ->with('error', "Sản phẩm \"{$tenSP}\" hiện không đủ số lượng trong kho (Còn: {$tongTon}). Vui lòng điều chỉnh số lượng.");
+                    ->with('error', "Sản phẩm \"" . ($item['ten_nl'] ?? '') . "\" chưa có công thức nguyên liệu, không thể đặt hàng.");
+            }
+
+            // Kiểm tra từng nguyên liệu có đủ không
+            foreach ($sanPham->nguyenLieus as $material) {
+                $dinhMuc = $material->pivot->dinh_muc;
+                $canTong = $dinhMuc * $item['quantity'];
+                $khaDũng = $material->tonkho_thucte - $material->tonkho_datruoc;
+
+                if ($khaDũng < $canTong) {
+                    $tenSP = $item['ten_nl'];
+                    return redirect()->route('cart.index')
+                        ->with('error', "Sản phẩm \"$tenSP\" không đủ nguyên liệu \"" . $material->name . "\" (Cần: $canTong " . $material->unit . ", Khả dụng: $khaDũng).");
+                }
             }
         }
 
@@ -382,7 +394,7 @@ class CartController extends Controller
                 }
             }
             
-            // Lưu chi tiết đơn hàng VÀ TRỪ TỒN KHO THEO LÔ
+            // Lưu chi tiết đơn hàng VÀ COPY BOM + CỘNG RESERVED_STOCK
             foreach ($checkoutItems as $id => $item) {
                 $chiTiet = new ChiTietDonHang();
                 $chiTiet->madon = $maDonMoi; 
@@ -391,29 +403,32 @@ class CartController extends Controller
                 $chiTiet->giaban = $item['price']; 
                 $chiTiet->save();
 
-                $qtyNeeded = $item['quantity'];
-                $loHangs = LoHang::where('masp', $id)
-                            ->where('soluong_ton', '>', 0)
-                            ->where('ngayhethan', '>', now())
-                            ->orderBy('ngayhethan', 'asc')
+                // BOM: Lấy công thức gốc của sản phẩm và copy sang order_item_materials
+                $sanPham = SanPham::with('materials')->find($id);
+                if ($sanPham) {
+                    foreach ($sanPham->nguyenLieus as $material) {
+                        $dinhMuc = $material->pivot->dinh_muc;
+                        $tongCanDung = $dinhMuc * $item['quantity'];
+
+                        // 1. Copy công thức vào bảng bản sao
+                        OrderItemNguyenLieu::create([
+                            'id_chitiet_donhang' => $chiTiet->id,
+                            'id_nguyen_lieu'     => $material->id,
+                            'quantity'        => $tongCanDung,
+                        ]);
+
+                        // 2. Cộng reserved_stock (giữ hàng cho đơn)
+                        NguyenLieu::where('id', $material->id)
                             ->lockForUpdate()
-                            ->get();
+                            ->increment('reserved_stock', $tongCanDung);
 
-                if ($loHangs->sum('soluong_ton') < $qtyNeeded) {
-                    throw new \Exception('Sản phẩm ' . $item['name'] . ' không đủ số lượng trong kho!');
-                }
-
-                foreach ($loHangs as $loHang) {
-                    if ($qtyNeeded <= 0) break;
-
-                    if ($loHang->soluong_ton >= $qtyNeeded) {
-                        $loHang->soluong_ton -= $qtyNeeded;
-                        $loHang->save();
-                        $qtyNeeded = 0;
-                    } else {
-                        $qtyNeeded -= $loHang->soluong_ton;
-                        $loHang->soluong_ton = 0;
-                        $loHang->save();
+                        // 3. Ghi log biến động kho
+                        LichSuKho::create([
+                            'id_nguyen_lieu' => $material->id,
+                            'type'        => 'order_reserve',
+                            'quantity'    => -$tongCanDung,
+                            'note'        => 'Giữ hàng cho đơn ' . $maDonMoi . ' (SP: ' . $sanPham->tensp . ' x' . $item['quantity'] . ')',
+                        ]);
                     }
                 }
             }
@@ -456,9 +471,15 @@ class CartController extends Controller
     }
     public function applyVoucher(Request $request)
     {
+        // Helper: trả về JSON nếu là AJAX, ngược lại back() như cũ
+        $isAjax = $request->ajax() || $request->wantsJson();
+
         // 1. Kiểm tra đăng nhập (Bắt buộc)
         if (!Auth::guard('khachhang')->check()) {
-            return back()->with('error', 'Vui lòng đăng nhập để sử dụng mã giảm giá!');
+            $msg = 'Vui lòng đăng nhập để sử dụng mã giảm giá!';
+            return $isAjax
+                ? response()->json(['status' => 'error', 'message' => $msg], 401)
+                : back()->with('error', $msg);
         }
 
         $mavoucher = strtoupper($request->mavoucher);
@@ -466,12 +487,18 @@ class CartController extends Controller
 
         // 2. Kiểm tra mã tồn tại và thời hạn
         if (!$voucher || now() < $voucher->ngay_bd || now() > $voucher->ngay_kt) {
-            return back()->with('error', 'Mã giảm giá không hợp lệ hoặc đã hết hạn!');
+            $msg = 'Mã giảm giá không hợp lệ hoặc đã hết hạn!';
+            return $isAjax
+                ? response()->json(['status' => 'error', 'message' => $msg])
+                : back()->with('error', $msg);
         }
 
         // 3. Kiểm tra số lượng
         if ($voucher->soluong > 0 && $voucher->da_sudung >= $voucher->soluong) {
-            return back()->with('error', 'Mã giảm giá đã hết lượt sử dụng!');
+            $msg = 'Mã giảm giá đã hết lượt sử dụng!';
+            return $isAjax
+                ? response()->json(['status' => 'error', 'message' => $msg])
+                : back()->with('error', $msg);
         }
 
         // 4. Kiểm tra xem người này đã dùng mã này chưa (Chặn 1 người dùng 1 mã nhiều lần)
@@ -481,7 +508,10 @@ class CartController extends Controller
                          ->where('trangthai', '!=', 'Đã hủy')
                          ->exists();
         if ($daDung) {
-            return back()->with('error', 'Bạn đã sử dụng mã giảm giá này rồi (Mỗi khách chỉ được dùng 1 lần)!');
+            $msg = 'Bạn đã sử dụng mã giảm giá này rồi (Mỗi khách chỉ được dùng 1 lần)!';
+            return $isAjax
+                ? response()->json(['status' => 'error', 'message' => $msg])
+                : back()->with('error', $msg);
         }
 
         // [BỔ SUNG] Chặn áp dụng lậu Voucher đổi điểm nếu chưa thực hiện đổi trong ví
@@ -494,13 +524,19 @@ class CartController extends Controller
                          ->exists();
 
             if (!$coSohuu) {
-                return back()->with('error', 'Mã giảm giá này yêu cầu phải đổi bằng điểm thưởng mới có thể sử dụng!');
+                $msg = 'Mã giảm giá này yêu cầu phải đổi bằng điểm thưởng mới có thể sử dụng!';
+                return $isAjax
+                    ? response()->json(['status' => 'error', 'message' => $msg])
+                    : back()->with('error', $msg);
             }
         }
         // Lấy dữ liệu sản phẩm CHUẨN BỊ THANH TOÁN
         $checkoutItems = session()->get('checkout_data', []);
         if (empty($checkoutItems)) {
-            return back()->with('error', 'Không có sản phẩm nào để áp dụng!');
+            $msg = 'Không có sản phẩm nào để áp dụng!';
+            return $isAjax
+                ? response()->json(['status' => 'error', 'message' => $msg])
+                : back()->with('error', $msg);
         }
 
         // 5. Tính toán tổng tiền hợp lệ (dựa trên Danh mục hoặc Tất cả)
@@ -522,10 +558,16 @@ class CartController extends Controller
 
         // 6. Kiểm tra các điều kiện cuối cùng
         if ($tongTienHopLe == 0) {
-             return back()->with('error', 'Sản phẩm bạn mua không thuộc danh mục được áp dụng mã này!');
+            $msg = 'Sản phẩm bạn mua không thuộc danh mục được áp dụng mã này!';
+            return $isAjax
+                ? response()->json(['status' => 'error', 'message' => $msg])
+                : back()->with('error', $msg);
         }
         if ($tongTienHopLe < $voucher->don_min) {
-            return back()->with('error', 'Các sản phẩm hợp lệ chưa đạt giá trị tối thiểu (' . number_format($voucher->don_min, 0, ',', '.') . 'đ) để dùng mã này!');
+            $msg = 'Các sản phẩm hợp lệ chưa đạt giá trị tối thiểu (' . number_format($voucher->don_min, 0, ',', '.') . 'đ) để dùng mã này!';
+            return $isAjax
+                ? response()->json(['status' => 'error', 'message' => $msg])
+                : back()->with('error', $msg);
         }
 
         // 7. Tiến hành tính số tiền thực tế được giảm
@@ -554,12 +596,62 @@ class CartController extends Controller
             'tien_giam' => $tienGiam
         ]);
 
+        // Tính tổng thanh toán cuối cùng (bao gồm giảm theo hạng nếu có)
+        $tienGiamTheoHang = 0;
+        if (Auth::guard('khachhang')->check()) {
+            $user = Auth::guard('khachhang')->user()->load('hangThanhVien');
+            if ($user->hangThanhVien && $user->hangThanhVien->phan_tram_giam > 0) {
+                $tienGiamTheoHang = $tongThanhToan * ($user->hangThanhVien->phan_tram_giam / 100);
+            }
+        }
+        $tongThanhToanCuoiCung = max(0, $tongThanhToan - $tienGiam - $tienGiamTheoHang);
+
+        if ($isAjax) {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Đã áp dụng mã giảm giá thành công!',
+                'tien_giam' => $tienGiam,
+                'tien_giam_formatted' => number_format($tienGiam, 0, ',', '.'),
+                'tong_thanh_toan' => $tongThanhToanCuoiCung,
+                'tong_thanh_toan_formatted' => number_format($tongThanhToanCuoiCung, 0, ',', '.'),
+                'mavoucher' => $voucher->mavoucher,
+            ]);
+        }
+
         return back()->with('success', 'Đã áp dụng mã giảm giá thành công!');
     }
 
-    public function removeVoucher()
+    public function removeVoucher(Request $request)
     {
         session()->forget('voucher');
+
+        $isAjax = $request->ajax() || $request->wantsJson();
+
+        if ($isAjax) {
+            // Tính lại tổng thanh toán sau khi gỡ voucher
+            $checkoutItems = session()->get('checkout_data', []);
+            $tongThanhToan = 0;
+            foreach ($checkoutItems as $item) {
+                $tongThanhToan += $item['price'] * $item['quantity'];
+            }
+
+            $tienGiamTheoHang = 0;
+            if (Auth::guard('khachhang')->check()) {
+                $user = Auth::guard('khachhang')->user()->load('hangThanhVien');
+                if ($user->hangThanhVien && $user->hangThanhVien->phan_tram_giam > 0) {
+                    $tienGiamTheoHang = $tongThanhToan * ($user->hangThanhVien->phan_tram_giam / 100);
+                }
+            }
+            $tongThanhToanCuoiCung = max(0, $tongThanhToan - $tienGiamTheoHang);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Đã gỡ mã giảm giá!',
+                'tong_thanh_toan' => $tongThanhToanCuoiCung,
+                'tong_thanh_toan_formatted' => number_format($tongThanhToanCuoiCung, 0, ',', '.'),
+            ]);
+        }
+
         return back()->with('success', 'Đã gỡ mã giảm giá!');
     }
 }

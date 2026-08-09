@@ -97,7 +97,7 @@
                         <span class="text-sm text-gray-500">Mã SP: <strong class="text-gray-800">{{ $product->masp }}</strong></span>
                         <div class="h-4 w-px bg-gray-300 hidden sm:block"></div>
                         @php
-                            $tonKho = $product->lohangs_sum_soluong_ton ?? 0;
+                            $tonKho = $product->available_quantity;
                         @endphp
                         @if($tonKho > 0)
                             <span class="text-sm text-green-600 font-medium hidden sm:block">

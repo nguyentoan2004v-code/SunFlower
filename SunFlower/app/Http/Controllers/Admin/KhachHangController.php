@@ -107,6 +107,10 @@ class KhachHangController extends Controller
         $khachhang = KhachHang::where('makh', $makh)->firstOrFail();
         $donhangs = DonHang::where('makh', $makh)->orderBy('ngaydat', 'desc')->paginate(10);
         
-        return view('admin.khachhang.history', compact('khachhang', 'donhangs'));
+        $tongDonHang = DonHang::where('makh', $makh)->count();
+        $donHoanThanh = DonHang::where('makh', $makh)->where('trangthai', 'Đã hoàn thành')->count();
+        $donHuy = DonHang::where('makh', $makh)->where('trangthai', 'Đã hủy')->count();
+        
+        return view('admin.khachhang.history', compact('khachhang', 'donhangs', 'tongDonHang', 'donHoanThanh', 'donHuy'));
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\SanPham;
 use App\Models\DanhMuc;
 use App\Models\HinhAnhSanPham;
+use App\Models\NguyenLieu;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
@@ -50,7 +51,7 @@ class ProductController extends Controller implements HasMiddleware
     // 1. Xem danh sách sản phẩm
     public function index(Request $request)
     {
-        $query = SanPham::with('danhmuc')->withSum('lohangs', 'soluong_ton');
+        $query = SanPham::with(['danhmuc', 'nguyenLieus']);
 
         // Tìm theo tên hoặc mã sản phẩm
         if ($request->filled('search')) {
@@ -68,17 +69,19 @@ class ProductController extends Controller implements HasMiddleware
 
         $products = $query->orderBy('created_at', 'desc')->paginate(8)->withQueryString();
         $categories = DanhMuc::all();
+        $trashedCount = SanPham::onlyTrashed()->count();
 
-        return view('admin.products.index', compact('products', 'categories'));
+        return view('admin.products.index', compact('products', 'categories', 'trashedCount'));
     }
 
     // 2. Hiển thị form thêm mới
     public function create()
     {
         $categories = DanhMuc::all(); // Lấy danh sách danh mục để đưa vào thẻ <select>
+        $nguyenlieus = NguyenLieu::orderBy('ten_nl')->get(); // BOM: Danh sách nguyên liệu cho BOM Builder
 
         // LOGIC TỰ ĐỘNG TẠO MÃ SẢN PHẨM (Định dạng: SP + 8 số, tổng 10 ký tự)
-        $lastProduct = SanPham::orderBy('masp', 'desc')->first();
+        $lastProduct = SanPham::withTrashed()->orderBy('masp', 'desc')->first();
 
         if (!$lastProduct) {
             // Nếu chưa có sản phẩm nào, bắt đầu bằng SP00000001
@@ -93,7 +96,7 @@ class ProductController extends Controller implements HasMiddleware
         }
 
         // Truyền $newMaSp ra ngoài View
-        return view('admin.products.create', compact('categories', 'newMaSp'));
+        return view('admin.products.create', compact('categories', 'newMaSp', 'nguyenlieus'));
     }
 
     // 3. Xử lý lưu sản phẩm mới
@@ -128,6 +131,23 @@ class ProductController extends Controller implements HasMiddleware
 
         $sanPham = SanPham::create($data);
 
+        // BOM: Lưu công thức nguyên liệu (nếu có)
+        if ($request->has('id_nguyen_lieus')) {
+            $nguyenlieusData = [];
+            $nguyenLieuIds = $request->input('id_nguyen_lieus', []);
+            $nguyenLieuQuantities = $request->input('material_quantities', []);
+            
+            foreach ($nguyenLieuIds as $index => $nguyenLieuId) {
+                if (!empty($nguyenLieuId) && isset($nguyenLieuQuantities[$index]) && $nguyenLieuQuantities[$index] > 0) {
+                    $nguyenlieusData[$nguyenLieuId] = ['dinh_muc' => (int)$nguyenLieuQuantities[$index]];
+                }
+            }
+            
+            if (!empty($nguyenlieusData)) {
+                $sanPham->nguyenLieus()->sync($nguyenlieusData);
+            }
+        }
+
         // XỬ LÝ UPLOAD ẢNH PHỤ (GALLERY)
         if ($request->hasFile('hinhanh_phu')) {
             $cloudinary = $cloudinary ?? new Cloudinary(config('cloudinary.url'));
@@ -157,9 +177,10 @@ class ProductController extends Controller implements HasMiddleware
     // 4. Hiển thị form sửa sản phẩm
     public function edit($masp)
     {
-        $product = SanPham::with('hinhAnhPhu')->findOrFail($masp);
+        $product = SanPham::with(['hinhAnhPhu', 'nguyenLieus'])->findOrFail($masp);
         $categories = DanhMuc::all();
-        return view('admin.products.edit', compact('product', 'categories'));
+        $nguyenlieus = NguyenLieu::orderBy('ten_nl')->get(); // BOM: Danh sách nguyên liệu cho BOM Builder
+        return view('admin.products.edit', compact('product', 'categories', 'nguyenlieus'));
     }
 
     // 5. Xử lý cập nhật sản phẩm
@@ -226,6 +247,21 @@ class ProductController extends Controller implements HasMiddleware
 
         $product->update($data);
 
+        // BOM: Cập nhật công thức nguyên liệu
+        if ($request->has('id_nguyen_lieus')) {
+            $nguyenlieusData = [];
+            $nguyenLieuIds = $request->input('id_nguyen_lieus', []);
+            $nguyenLieuQuantities = $request->input('material_quantities', []);
+            
+            foreach ($nguyenLieuIds as $index => $nguyenLieuId) {
+                if (!empty($nguyenLieuId) && isset($nguyenLieuQuantities[$index]) && $nguyenLieuQuantities[$index] > 0) {
+                    $nguyenlieusData[$nguyenLieuId] = ['dinh_muc' => (int)$nguyenLieuQuantities[$index]];
+                }
+            }
+            
+            $product->nguyenLieus()->sync($nguyenlieusData);
+        }
+
         // XỬ LÝ XÓA ẢNH PHỤ (nếu admin tick chọn xóa)
         if ($request->has('xoa_anh_phu')) {
             $idsToDelete = $request->input('xoa_anh_phu', []);
@@ -275,56 +311,46 @@ class ProductController extends Controller implements HasMiddleware
         return redirect()->route('admin.products.index')->with('success', 'Cập nhật sản phẩm thành công!');
     }
 
-    // 6. Xóa sản phẩm
+    // 6. Xóa mềm sản phẩm (Ẩn sản phẩm, không xóa vĩnh viễn)
    public function destroy($masp)
     {
         $product = SanPham::findOrFail($masp);
-        
-        // Kiểm tra xem sản phẩm có nằm trong đơn hàng/lô hàng nào không trước khi xóa
-        if ($product->donhangs()->count() > 0) {
-            return redirect()->route('admin.products.index')->with('error', 'Không thể xóa sản phẩm đã có trong đơn hàng!');
-        }
 
-        // Xóa ảnh
-        if ($product->hinhanh) {
-            if (!str_starts_with($product->hinhanh, 'http')) {
-                // Ảnh local → xóa khỏi ổ cứng
-                $imagePath = ltrim($product->hinhanh, '/');
-                Storage::disk('public')->delete($imagePath);
-            } else {
-                // Ảnh Cloudinary → xóa trên cloud
-                try {
-                    $publicId = $this->extractCloudinaryPublicId($product->hinhanh);
-                    if ($publicId) {
-                        $cloudinary = new Cloudinary(config('cloudinary.url'));
-                        $cloudinary->uploadApi()->destroy($publicId);
-                    }
-                } catch (\Exception $e) {
-                    \Log::warning('Không thể xóa ảnh Cloudinary khi xóa SP: ' . $e->getMessage());
-                }
-            }
-        }
-
-        // Xóa tất cả ảnh phụ trên Cloudinary
-        foreach ($product->hinhAnhPhu as $anhPhu) {
-            try {
-                $publicId = $this->extractCloudinaryPublicId($anhPhu->duong_dan);
-                if ($publicId) {
-                    $cloudinaryGallery = $cloudinaryGallery ?? new Cloudinary(config('cloudinary.url'));
-                    $cloudinaryGallery->uploadApi()->destroy($publicId);
-                }
-            } catch (\Exception $e) {
-                \Log::warning('Lỗi xóa ảnh phụ khi xóa SP: ' . $e->getMessage());
-            }
-        }
-        // Bảng hinhanh_sanpham sẽ tự xóa cascade theo FK
-
+        // Soft delete — chỉ đánh dấu deleted_at, không xóa dữ liệu hay ảnh
         $product->delete();
 
-        return redirect()->route('admin.products.index')->with('success', 'Xóa sản phẩm thành công!');
+        return redirect()->route('admin.products.index')->with('success', 'Đã ẩn sản phẩm thành công! Sản phẩm sẽ không hiển thị trên trang web nữa.');
     }
 
-    // 7. Xử lý AI Sinh mô tả sản phẩm (Sử dụng Gemini API)
+    // 7. Xem danh sách sản phẩm đã ẩn
+    public function trashed(Request $request)
+    {
+        $query = SanPham::onlyTrashed()->with(['danhmuc', 'nguyenLieus']);
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function($q) use ($search) {
+                $q->where('tensp', 'LIKE', "%{$search}%")
+                  ->orWhere('masp', 'LIKE', "%{$search}%");
+            });
+        }
+
+        $trashedProducts = $query->orderBy('deleted_at', 'desc')->paginate(8)->withQueryString();
+        $categories = DanhMuc::all();
+
+        return view('admin.products.trashed', compact('trashedProducts', 'categories'));
+    }
+
+    // 8. Khôi phục sản phẩm đã ẩn
+    public function restore($masp)
+    {
+        $product = SanPham::onlyTrashed()->where('masp', $masp)->firstOrFail();
+        $product->restore();
+
+        return redirect()->route('admin.products.trashed')->with('success', 'Đã khôi phục sản phẩm "' . $product->tensp . '" thành công!');
+    }
+
+    // 9. Xử lý AI Sinh mô tả sản phẩm (Sử dụng Gemini API)
     public function generateDescription(Request $request)
     {
         $request->validate([

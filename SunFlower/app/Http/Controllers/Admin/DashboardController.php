@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\DonHang;
 use App\Models\SanPham;
 use App\Models\NhanVien;
-use App\Models\LoHang;
+
 use App\Models\ChiTietDonHang;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -38,9 +38,10 @@ class DashboardController extends Controller
             ->where('donhang.trangthai', 'Đã hoàn thành')
             ->sum('chitiet_donhang.soluong');
 
-        // Tổng số lượng hoa bị hủy (trong 30 ngày)
-        $tongHuy30Ngay = \App\Models\PhieuHuyHang::where('ngayhuy', '>=', $thirtyDaysAgo)
-            ->sum('soluong_huy');
+        // Tổng số lượng nguyên liệu bị hủy (trong 30 ngày)
+        $tongHuy30Ngay = \App\Models\LichSuKho::where('loai_gd', 'waste')
+            ->where('created_at', '>=', $thirtyDaysAgo)
+            ->sum('soluong');
 
         $tongHoaXuat = $tongBan30Ngay + $tongHuy30Ngay;
         $tyLeHaoHut = $tongHoaXuat > 0 ? round(($tongHuy30Ngay / $tongHoaXuat) * 100, 2) : 0;
@@ -88,10 +89,8 @@ class DashboardController extends Controller
         // ============================================================
         // 5. CẢNH BÁO TỒN KHO THẤP (Sử dụng ngưỡng động tonkho_toithieu)
         // ============================================================
-        $lowStockProducts = SanPham::join('lo_hang', 'sanpham.masp', '=', 'lo_hang.masp')
-            ->selectRaw('sanpham.masp, sanpham.tensp, sanpham.tonkho_toithieu, sum(lo_hang.soluong_ton) as soluong')
-            ->groupBy('sanpham.masp', 'sanpham.tensp', 'sanpham.tonkho_toithieu')
-            ->havingRaw('sum(lo_hang.soluong_ton) <= sanpham.tonkho_toithieu')
+        // Cảnh báo tồn kho thấp dựa trên bảng nguyen_lieu
+        $lowStockProducts = \App\Models\NguyenLieu::whereColumn('tonkho_thucte', '<=', 'tonkho_toithieu')
             ->take(3)
             ->get();
  
@@ -148,10 +147,11 @@ class DashboardController extends Controller
         // ============================================================
         // 8. LẤY TỒN KHO TỪNG SẢN PHẨM (dùng cho AI)
         // ============================================================
-        $stockMap = LoHang::selectRaw('masp, SUM(soluong_ton) as tong_ton')
-            ->whereIn('masp', $topProducts30Days->pluck('masp'))
-            ->groupBy('masp')
-            ->pluck('tong_ton', 'masp');
+        $stockMap = [];
+        $productsForAI = \App\Models\SanPham::with('nguyenLieus')->whereIn('masp', $topProducts30Days->pluck('masp'))->get();
+        foreach ($productsForAI as $product) {
+            $stockMap[$product->masp] = $product->available_quantity;
+        }
  
         // ============================================================
         // 9. AI GỢI Ý NHẬP KHO – TỰ XÂY DỰNG, KHÔNG CẦN API NGOÀI

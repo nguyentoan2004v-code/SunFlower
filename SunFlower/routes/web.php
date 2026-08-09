@@ -13,8 +13,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-use App\Http\Controllers\Admin\LoHangController;
-use App\Http\Controllers\Admin\PhieuHuyHangController;
+
 use App\Http\Controllers\Admin\NhanVienController;
 use App\Http\Controllers\Admin\LichLamViecController;
 use App\Http\Controllers\DanhGiaController;
@@ -107,6 +106,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // --- QUẢN LÝ SẢN PHẨM ---
         Route::post('products/generate-description', [AdminProductController::class, 'generateDescription'])->name('products.generate-desc');
+        Route::get('products/trashed', [AdminProductController::class, 'trashed'])->name('products.trashed');
+        Route::patch('products/{masp}/restore', [AdminProductController::class, 'restore'])->name('products.restore');
         Route::resource('products', AdminProductController::class);
         // --- QUẢN LÝ DANH MỤC ---
         Route::resource('categories', AdminCategoryController::class);
@@ -117,11 +118,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // --- Xuất hóa đơn và in hóa đơn ---
         Route::post('/orders/{madon}/export-invoice', [AdminOrderController::class, 'exportInvoice'])->name('orders.export-invoice');
         Route::get('/invoices/{mahd}/print', [AdminOrderController::class, 'printInvoice'])->name('orders.print-invoice');
-        // --- QUẢN LÝ LÔ HÀNG VÀ PHIẾU HỦY HÀNG ---
-        Route::get('lohang/product-info/{masp}', [LoHangController::class, 'getProductInfo'])->name('lohang.productInfo');
-        Route::resource('lohang', LoHangController::class);
-        // Chỉ khai báo 1 lần qua resource — views và controller đều dùng admin.phieuhuyhang.*
-        Route::resource('phieuhuyhang', PhieuHuyHangController::class);
+        // --- BOM: Điều chỉnh nguyên        // Quản lý Kho - BOM
+        Route::post('/orders/{madon}/adjust-materials/{detail_id}', [AdminOrderController::class, 'adjustMaterials'])->name('orders.adjust-materials');
+
+        Route::get('nguyenlieu/info/{id}', [\App\Http\Controllers\Admin\NguyenLieuController::class, 'getInfo'])->name('nguyenlieu.info');
+        Route::resource('nguyenlieu', \App\Http\Controllers\Admin\NguyenLieuController::class);
+
+        // --- PHIẾU NHẬP KHO NGUYÊN LIỆU (BOM) ---
+        Route::post('phieunhapkho/{id}/approve', [\App\Http\Controllers\Admin\PhieuNhapKhoController::class, 'approve'])->name('phieunhapkho.approve');
+        Route::post('phieunhapkho/{id}/cancel', [\App\Http\Controllers\Admin\PhieuNhapKhoController::class, 'cancel'])->name('phieunhapkho.cancel');
+        Route::resource('phieunhapkho', \App\Http\Controllers\Admin\PhieuNhapKhoController::class)->except(['edit', 'update', 'destroy']);
+        
+        // --- QUẢN LÝ LÔ NGUYÊN LIỆU (LOT TRACKING) ---
+        Route::get('longuyenlieu', [\App\Http\Controllers\Admin\LoNguyenLieuController::class, 'index'])->name('longuyenlieu.index');
+        Route::post('longuyenlieu/{id}/extend', [\App\Http\Controllers\Admin\LoNguyenLieuController::class, 'extendExpiry'])->name('longuyenlieu.extend');
+        Route::post('longuyenlieu/{id}/waste', [\App\Http\Controllers\Admin\LoNguyenLieuController::class, 'wasteLot'])->name('longuyenlieu.waste');
+        Route::get('longuyenlieu/{id}/trace', [\App\Http\Controllers\Admin\LoNguyenLieuController::class, 'trace'])->name('longuyenlieu.trace');
+        Route::get('inventory/waste', [\App\Http\Controllers\Admin\KhoController::class, 'wasteForm'])->name('inventory.waste.form');
+        Route::post('inventory/waste', [\App\Http\Controllers\Admin\KhoController::class, 'waste'])->name('inventory.waste');
+        Route::get('inventory/logs', [\App\Http\Controllers\Admin\KhoController::class, 'logs'])->name('inventory.logs');
+
 
         // --- QUẢN LÝ NHÂN VIÊN VÀ PHÂN QUYỀN ---
         Route::get('/nhanvien', [NhanVienController::class, 'index'])->name('nhanvien.index');

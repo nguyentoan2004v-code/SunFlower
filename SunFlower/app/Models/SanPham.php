@@ -4,10 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SanPham extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     // 1. Quy tắc 4 dòng cho khóa chính
     protected $table = 'sanpham';
@@ -37,17 +38,56 @@ class SanPham extends Model
         return $this->hasMany(LichSuGia::class, 'masp', 'masp');
     }
 
-    // 1 Sản phẩm nằm trong NHIỀU Lô hàng nhập
-    public function lohangs()
-    {
-        return $this->hasMany(LoHang::class, 'masp', 'masp');
-    }
+
 
     // 1 Sản phẩm có NHIỀU ảnh phụ (Gallery)
     public function hinhAnhPhu()
     {
         return $this->hasMany(HinhAnhSanPham::class, 'masp', 'masp')->orderBy('thu_tu');
     }
+
+    /**
+     * Quan hệ N-N: 1 Sản phẩm có NHIỀU Nguyên liệu cấu thành (BOM)
+     */
+    public function nguyenLieus()
+    {
+        return $this->belongsToMany(NguyenLieu::class, 'sanpham_nguyenlieu', 'masp', 'id_nguyen_lieu')
+                    ->withPivot('dinh_muc');
+    }
+
+    /**
+     * TỒN KHO ĐỘNG: Tính số lượng sản phẩm có thể tạo ra dựa trên nguyên liệu khả dụng.
+     * Công thức: min( floor( (physical_stock - reserved_stock) / định_mức ) ) cho mỗi NL trong BOM.
+     * Trả về 0 nếu SP chưa có công thức BOM.
+     */
+    public function getAvailableQuantityAttribute(): int
+    {
+        // Lazy load materials nếu chưa được load
+        $materials = $this->relationLoaded('materials') ? $this->nguyenLieus : $this->nguyenLieus()->get();
+
+        // SP chưa có BOM → không thể tính tồn kho → trả về 0
+        if ($materials->isEmpty()) {
+            return 0;
+        }
+
+        $maxQuantity = PHP_INT_MAX;
+
+        foreach ($materials as $material) {
+            $dinhMuc = $material->pivot->dinh_muc;
+
+            // Tránh chia cho 0
+            if ($dinhMuc <= 0) continue;
+
+            $availableStock = max(0, $material->tonkho_thucte - $material->tonkho_datruoc);
+            $canMake = (int) floor($availableStock / $dinhMuc);
+
+            $maxQuantity = min($maxQuantity, $canMake);
+        }
+
+        // Nếu tất cả định mức = 0 thì trả về 0
+        return $maxQuantity === PHP_INT_MAX ? 0 : $maxQuantity;
+    }
+
     protected static function booted()
     {
         // Tự động trim khoảng trắng cho masp khi lấy dữ liệu ra

@@ -30,12 +30,20 @@
                     <i class="fa-solid fa-phone me-1"></i> {{ $khachhang->sdt }} | 
                     <i class="fa-solid fa-map-marker-alt me-1"></i> {{ $khachhang->diachi }}
                 </p>
+                <div class="d-flex gap-3">
+                    <span class="badge bg-primary px-3 py-2"> Tổng mua: {{ $tongDonHang }} đơn</span>
+                    <span class="badge bg-success px-3 py-2"> Hoàn thành: {{ $donHoanThanh }} đơn</span>
+                    <span class="badge bg-danger px-3 py-2"> Đã hủy: {{ $donHuy }} đơn</span>
+                    <span class="badge bg-warning text-dark px-3 py-2">Tổng chi tiêu: {{ number_format($khachhang->tong_chi_tieu, 0, ',', '.') }}đ</span>
+                </div>
             </div>
             <a href="{{ route('admin.khachhang.index') }}" class="btn btn-sm btn-secondary shadow-sm">
                 <i class="fa-solid fa-arrow-left me-1"></i> Quay lại
             </a>
         </div>
     </div>
+
+
 
     <!-- Bảng danh sách đơn hàng -->
     <div class="card shadow-sm border-0 mb-4">

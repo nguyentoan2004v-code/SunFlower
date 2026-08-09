@@ -176,24 +176,43 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @foreach($order->sanphams as $sp)
-                                <tr>
-                                    <td class="ps-4">
-                                        <div class="d-flex align-items-center">
-                                            @php
-                                                $spImg = asset('images/bg-sunflower.jpg');
-                                                if(!empty($sp->hinhanh)){
-                                                    $spImg = str_starts_with($sp->hinhanh, 'http') ? $sp->hinhanh : asset('storage/' . ltrim($sp->hinhanh, '/'));
-                                                }
-                                            @endphp
-                                            <img src="{{ $spImg }}" class="rounded shadow-sm me-3" style="width:50px; height:50px; object-fit:cover;">
-                                            <span class="fw-medium">{{ $sp->sanpham->tensp ?? $sp->masp }}</span>
-                                        </div>
-                                    </td>
-                                    <td class="text-center">{{ number_format($sp->giaban, 0, ',', '.') }} ₫</td>
-                                    <td class="text-center fw-bold">{{ $sp->pivot->soluong }}</td>
-                                    <td class="text-end pe-4 fw-bold text-danger">{{ number_format($sp->giaban * $sp->pivot->soluong, 0, ',', '.') }} ₫</td>
-                                </tr>
+                                @foreach($order->chiTietDonHangs as $ct)
+                                    @php
+                                        $sp = $ct->sanpham;
+                                        $spImg = asset('images/bg-sunflower.jpg');
+                                        if($sp && !empty($sp->hinhanh)){
+                                            $spImg = str_starts_with($sp->hinhanh, 'http') ? $sp->hinhanh : asset('storage/' . ltrim($sp->hinhanh, '/'));
+                                        }
+                                    @endphp
+                                    <tr>
+                                        <td class="ps-4">
+                                            <div class="d-flex align-items-center">
+                                                <img src="{{ $spImg }}" class="rounded shadow-sm me-3" style="width:50px; height:50px; object-fit:cover;">
+                                                <div>
+                                                    <span class="fw-medium">{{ $sp->tensp ?? $ct->masp }}</span>
+                                                    
+                                                    {{-- Hiển thị danh sách nguyên liệu BOM đã chốt cho đơn này --}}
+                                                    @if($ct->chiTietDonHangNguyenLieus->count() > 0)
+                                                        <div class="mt-1 small text-muted">
+                                                            <i class="fa-solid fa-leaf text-success me-1"></i> Nguyên liệu: 
+                                                            @foreach($ct->chiTietDonHangNguyenLieus as $oim)
+                                                                {{ $oim->nguyenLieu->ten_nl ?? 'N/A' }} ({{ $oim->soluong_dung }}), 
+                                                            @endforeach
+                                                            
+                                                            @if($order->trangthai == 'Chờ xác nhận')
+                                                                <button type="button" class="btn btn-link btn-sm p-0 ms-2 text-decoration-none" onclick="openAdjustModal({{ $ct->id }}, {{ json_encode($ct->chiTietDonHangNguyenLieus->load('nguyenLieu')) }})">
+                                                                    <i class="fa-solid fa-pen-to-square"></i> Điều chỉnh
+                                                                </button>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-center">{{ number_format($ct->giaban, 0, ',', '.') }} ₫</td>
+                                        <td class="text-center fw-bold">{{ $ct->soluong }}</td>
+                                        <td class="text-end pe-4 fw-bold text-danger">{{ number_format($ct->giaban * $ct->soluong, 0, ',', '.') }} ₫</td>
+                                    </tr>
                                 @endforeach
                             </tbody>
                         </table>
@@ -203,4 +222,119 @@
         </div>
     </div>
 </div>
+
+{{-- MODAL ĐIỀU CHỈNH NGUYÊN LIỆU --}}
+<div class="modal fade" id="adjustMaterialModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="adjustMaterialForm" method="POST">
+                @csrf
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold text-primary"><i class="fa-solid fa-pen-ruler me-2"></i>Điều chỉnh Thiết kế (Nguyên liệu)</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info py-2">
+                        <i class="fa-solid fa-circle-info me-1"></i> Điều chỉnh này chỉ áp dụng cho sản phẩm trong đơn hàng này.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-borderless align-middle" id="adjustBomTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 50%;">Nguyên liệu</th>
+                                    <th style="width: 30%;">Số lượng sử dụng</th>
+                                    <th style="width: 10%;">Đơn vị</th>
+                                    <th style="width: 10%; text-align: center;">Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="adjustBomBody">
+                                {{-- Load bằng JS --}}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" onclick="addAdjustRow()">
+                        <i class="fa-solid fa-plus"></i> Thêm nguyên liệu
+                    </button>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save me-1"></i> Lưu thay đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const allNguyenLieus = @json($allNguyenLieus);
+    let adjustModal = null;
+
+    document.addEventListener('DOMContentLoaded', function() {
+        adjustModal = new bootstrap.Modal(document.getElementById('adjustMaterialModal'));
+    });
+
+    function openAdjustModal(detailId, currentMaterials) {
+        const form = document.getElementById('adjustMaterialForm');
+        form.action = `/admin/orders/{{ $order->madon }}/adjust-materials/${detailId}`;
+        
+        const tbody = document.getElementById('adjustBomBody');
+        tbody.innerHTML = '';
+        
+        currentMaterials.forEach(oim => {
+            addAdjustRow(oim.id_nguyen_lieu, oim.soluong_dung);
+        });
+        
+        if (currentMaterials.length === 0) {
+            addAdjustRow();
+        }
+        
+        adjustModal.show();
+    }
+
+    function addAdjustRow(selectedId = '', qty = 1) {
+        const tbody = document.getElementById('adjustBomBody');
+        const row = document.createElement('tr');
+        
+        let options = '<option value="">-- Chọn nguyên liệu --</option>';
+        let selectedUnit = '-';
+        
+        allNguyenLieus.forEach(m => {
+            const isSelected = m.id == selectedId ? 'selected' : '';
+            if (isSelected) selectedUnit = m.dvt;
+            options += `<option value="${m.id}" data-unit="${m.dvt}" ${isSelected}>${m.ten_nl} (${m.dvt})</option>`;
+        });
+
+        row.innerHTML = `
+            <td>
+                <select name="id_nguyen_lieus[]" class="form-select bom-select" required onchange="updateAdjustUnit(this)">
+                    ${options}
+                </select>
+            </td>
+            <td>
+                <input type="number" name="quantities[]" class="form-control" value="${qty}" min="1" required>
+            </td>
+            <td>
+                <span class="bom-unit fw-bold text-muted">${selectedUnit}</span>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    function updateAdjustUnit(selectElement) {
+        const unitSpan = selectElement.closest('tr').querySelector('.bom-unit');
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        
+        if (selectedOption.value) {
+            unitSpan.textContent = selectedOption.getAttribute('data-unit');
+        } else {
+            unitSpan.textContent = '-';
+        }
+    }
+</script>
 @endsection

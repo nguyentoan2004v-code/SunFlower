@@ -187,7 +187,7 @@
                                 @endphp
                                 <img src="{{ $chkImg }}" class="w-16 h-16 rounded-xl object-cover">
                                 <div class="flex-1">
-                                    <h4 class="font-bold text-sm text-gray-900 line-clamp-1">{{ $item['name'] }}</h4>
+                                    <h4 class="font-bold text-sm text-gray-900 line-clamp-1">{{ $item['ten_nl'] }}</h4>
                                     <p class="text-xs text-gray-500">Số lượng: {{ $item['quantity'] }}</p>
                                 </div>
                                 <span class="font-bold text-sm text-gray-900">
@@ -204,18 +204,20 @@
                                 SunFlower Voucher
                             </div>
                             
-                            @if(session()->has('voucher'))
-                                <div class="flex items-center gap-3">
-                                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold border border-green-200">
-                                        Đã giảm {{ number_format(session('voucher')['tien_giam'], 0, ',', '.') }} ₫
-                                    </span>
-                                    <button type="button" onclick="document.getElementById('form-go-voucher').submit();" class="text-red-500 hover:text-red-700 text-sm font-medium hover:underline">Gỡ bỏ</button>
-                                </div>
-                            @else
-                                <button type="button" onclick="openVoucherModal()" class="text-blue-600 hover:text-blue-800 font-semibold transition flex items-center gap-1">
-                                    Chọn hoặc nhập mã <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                                </button>
-                            @endif
+                            <div id="voucher-status-area">
+                                @if(session()->has('voucher'))
+                                    <div class="flex items-center gap-3" id="voucher-applied-badge">
+                                        <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold border border-green-200">
+                                            Đã giảm <span id="voucher-giam-badge">{{ number_format(session('voucher')['tien_giam'], 0, ',', '.') }}</span> ₫
+                                        </span>
+                                        <button type="button" onclick="removeVoucherAjax()" class="text-red-500 hover:text-red-700 text-sm font-medium hover:underline">Gỡ bỏ</button>
+                                    </div>
+                                @else
+                                    <button type="button" onclick="openVoucherModal()" class="text-blue-600 hover:text-blue-800 font-semibold transition flex items-center gap-1" id="btn-chon-voucher">
+                                        Chọn hoặc nhập mã <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    </button>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
@@ -255,12 +257,10 @@
                             <span class="font-medium text-gray-950">{{ number_format($tongTienHang, 0, ',', '.') }} đ</span>
                         </div>
 
-                        @if($tienGiamVoucher > 0)
-                            <div class="flex justify-between text-sm text-red-600">
-                                <span>Voucher giảm giá</span>
-                                <span class="font-medium">- {{ number_format($tienGiamVoucher, 0, ',', '.') }} đ</span>
-                            </div>
-                        @endif
+                        <div class="flex justify-between text-sm text-red-600" id="voucher-giam-row" style="{{ $tienGiamVoucher > 0 ? '' : 'display:none' }}">
+                            <span>Voucher giảm giá</span>
+                            <span class="font-medium">- <span id="voucher-giam-amount">{{ number_format($tienGiamVoucher, 0, ',', '.') }}</span> đ</span>
+                        </div>
 
                         @if($tienGiamTheoHang > 0)
                             <div class="flex justify-between text-sm text-orange-600">
@@ -276,7 +276,7 @@
 
                         <div class="flex justify-between items-center border-t border-gray-100 pt-4 mt-2">
                             <span class="text-base font-bold text-gray-900">Tổng thanh toán</span>
-                            <span class="text-2xl font-extrabold text-[#FF6B35]">
+                            <span class="text-2xl font-extrabold text-[#FF6B35]" id="tong-thanh-toan-display">
                                 {{ number_format($tongThanhToanCuoiCung, 0, ',', '.') }} đ
                             </span>
                         </div>
@@ -303,12 +303,13 @@
             </div>
 
             <div class="p-6 overflow-y-auto flex-1 bg-[#f8f9fa]">
-                
-                <form action="{{ route('voucher.apply') }}" method="POST" class="flex gap-2 mb-8">
-                    @csrf
-                    <input type="text" name="mavoucher" placeholder="Nhập mã voucher (nếu có)" class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none uppercase font-medium bg-white shadow-sm" required>
-                    <button type="submit" class="bg-gray-200 hover:bg-[#FF6B35] hover:text-white text-gray-700 font-bold px-6 py-3 rounded-lg transition">ÁP DỤNG</button>
-                </form>
+                {{-- Thông báo trong modal --}}
+                <div id="voucher-modal-alert" class="hidden mb-4 px-4 py-3 rounded-lg text-sm font-medium transition-all"></div>
+
+                <div class="flex gap-2 mb-8">
+                    <input type="text" id="voucher-input-code" placeholder="Nhập mã voucher (nếu có)" class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-[#FF6B35] focus:border-[#FF6B35] outline-none uppercase font-medium bg-white shadow-sm">
+                    <button type="button" onclick="applyVoucherAjax(document.getElementById('voucher-input-code').value)" class="bg-gray-200 hover:bg-[#FF6B35] hover:text-white text-gray-700 font-bold px-6 py-3 rounded-lg transition" id="btn-apply-code">ÁP DỤNG</button>
+                </div>
 
                 <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4">Mã miễn phí có sẵn cho bạn</h4>
                 
@@ -349,13 +350,9 @@
                                     </div>
                                 </div>
                             </div>
-                            <form action="{{ route('voucher.apply') }}" method="POST" class="ml-2 shrink-0">
-                                @csrf
-                                <input type="hidden" name="mavoucher" value="{{ $vc->mavoucher }}">
-                                <button type="submit" class="bg-[#FF6B35] text-white text-sm font-bold px-4 py-2.5 rounded-lg hover:bg-orange-600 transition shadow-sm active:scale-95 whitespace-nowrap">
-                                    Dùng ngay
-                                </button>
-                            </form>
+                            <button type="button" onclick="applyVoucherAjax('{{ $vc->mavoucher }}')" class="ml-2 shrink-0 bg-[#FF6B35] text-white text-sm font-bold px-4 py-2.5 rounded-lg hover:bg-orange-600 transition shadow-sm active:scale-95 whitespace-nowrap">
+                                Dùng ngay
+                            </button>
                         </div>
                     @empty
                         <div class="text-center text-gray-400 py-8 bg-white rounded-xl border border-dashed border-gray-300">
@@ -371,9 +368,122 @@
     <script>
         function openVoucherModal() {
             document.getElementById('voucherModal').classList.remove('hidden');
+            // Xóa thông báo cũ khi mở lại modal
+            hideVoucherAlert();
         }
         function closeVoucherModal() {
             document.getElementById('voucherModal').classList.add('hidden');
+        }
+
+        // ========================================
+        // VOUCHER AJAX FUNCTIONS (KHÔNG RELOAD TRANG)
+        // ========================================
+        function showVoucherAlert(message, type) {
+            const alertEl = document.getElementById('voucher-modal-alert');
+            alertEl.textContent = message;
+            alertEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm font-medium transition-all';
+            if (type === 'error') {
+                alertEl.classList.add('bg-red-50', 'text-red-700', 'border', 'border-red-200');
+            } else {
+                alertEl.classList.add('bg-green-50', 'text-green-700', 'border', 'border-green-200');
+            }
+            alertEl.classList.remove('hidden');
+            // Tự ẩn sau 5 giây
+            setTimeout(() => hideVoucherAlert(), 5000);
+        }
+        function hideVoucherAlert() {
+            const alertEl = document.getElementById('voucher-modal-alert');
+            if (alertEl) alertEl.classList.add('hidden');
+        }
+
+        function applyVoucherAjax(mavoucher) {
+            if (!mavoucher || mavoucher.trim() === '') {
+                showVoucherAlert('Vui lòng nhập mã voucher!', 'error');
+                return;
+            }
+
+            // Disable nút trong lúc xử lý
+            const btnApply = document.getElementById('btn-apply-code');
+            if (btnApply) { btnApply.disabled = true; btnApply.textContent = 'Đang xử lý...'; }
+
+            fetch('{{ route("voucher.apply") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({ mavoucher: mavoucher.trim() })
+            })
+            .then(res => res.json().then(data => ({ status: res.status, body: data })))
+            .then(({ status, body }) => {
+                if (body.status === 'success') {
+                    // Cập nhật UI: hiện badge giảm giá
+                    updateVoucherUI(body);
+                    showVoucherAlert(body.message, 'success');
+                    // Đóng modal sau 1 giây
+                    setTimeout(() => closeVoucherModal(), 1000);
+                } else {
+                    showVoucherAlert(body.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error('Voucher AJAX error:', err);
+                showVoucherAlert('Đã xảy ra lỗi, vui lòng thử lại!', 'error');
+            })
+            .finally(() => {
+                if (btnApply) { btnApply.disabled = false; btnApply.textContent = 'ÁP DỤNG'; }
+            });
+        }
+
+        function removeVoucherAjax() {
+            fetch('{{ route("voucher.remove") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({})
+            })
+            .then(res => res.json())
+            .then(body => {
+                if (body.status === 'success') {
+                    // Reset UI: ẩn badge, hiện lại nút chọn voucher
+                    const statusArea = document.getElementById('voucher-status-area');
+                    statusArea.innerHTML = '<button type="button" onclick="openVoucherModal()" class="text-blue-600 hover:text-blue-800 font-semibold transition flex items-center gap-1" id="btn-chon-voucher">Chọn hoặc nhập mã <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg></button>';
+
+                    // Ẩn dòng voucher giảm giá
+                    document.getElementById('voucher-giam-row').style.display = 'none';
+
+                    // Cập nhật tổng thanh toán
+                    document.getElementById('tong-thanh-toan-display').textContent = body.tong_thanh_toan_formatted + ' đ';
+                }
+            })
+            .catch(err => console.error('Remove voucher error:', err));
+        }
+
+        function updateVoucherUI(data) {
+            // Cập nhật badge voucher đã áp dụng
+            const statusArea = document.getElementById('voucher-status-area');
+            statusArea.innerHTML = `
+                <div class="flex items-center gap-3" id="voucher-applied-badge">
+                    <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-bold border border-green-200">
+                        Đã giảm <span id="voucher-giam-badge">${data.tien_giam_formatted}</span> ₫
+                    </span>
+                    <button type="button" onclick="removeVoucherAjax()" class="text-red-500 hover:text-red-700 text-sm font-medium hover:underline">Gỡ bỏ</button>
+                </div>
+            `;
+
+            // Hiện dòng voucher giảm giá trong bảng tổng
+            const giamRow = document.getElementById('voucher-giam-row');
+            giamRow.style.display = 'flex';
+            document.getElementById('voucher-giam-amount').textContent = data.tien_giam_formatted;
+
+            // Cập nhật tổng thanh toán
+            document.getElementById('tong-thanh-toan-display').textContent = data.tong_thanh_toan_formatted + ' đ';
         }
 
         @if(session('error'))
@@ -689,8 +799,6 @@
         }
     </style>
 
-    </form> <form id="form-go-voucher" action="{{ route('voucher.remove') }}" method="POST" class="hidden">
-        @csrf
     </form>
 </div>
 

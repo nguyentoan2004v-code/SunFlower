@@ -180,6 +180,38 @@
                                     <small class="text-muted mt-1 d-block text-start">Chọn nhiều ảnh để hiển thị Gallery trên trang chi tiết.</small>
                                     <div id="gallery-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
                                 </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- BOM BUILDER: Cấu hình nguyên liệu --}}
+                        <div class="row mt-4">
+                            <div class="col-12">
+                                <div class="card bg-light border-0">
+                                    <div class="card-header bg-transparent border-bottom">
+                                        <h6 class="fw-bold mb-0 text-primary"><i class="fa-solid fa-list-check me-2"></i>Cấu hình Nguyên liệu (BOM)</h6>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="table-responsive">
+                                            <table class="table table-borderless align-middle" id="bomTable">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width: 50%;">Nguyên liệu</th>
+                                                        <th style="width: 30%;">Định mức (Số lượng/1 SP)</th>
+                                                        <th style="width: 10%;">Đơn vị</th>
+                                                        <th style="width: 10%; text-align: center;">Xóa</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="bomBody">
+                                                    {{-- Các dòng nguyên liệu sẽ được thêm bằng JS --}}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-outline-primary mt-2" onclick="addBomRow()">
+                                            <i class="fa-solid fa-plus"></i> Thêm nguyên liệu
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
@@ -285,5 +317,55 @@
             reader.readAsDataURL(files[i]);
         }
     }
+
+    // --- BOM BUILDER SCRIPT ---
+    const materials = @json($nguyenlieus);
+
+    function addBomRow() {
+        const tbody = document.getElementById('bomBody');
+        const row = document.createElement('tr');
+
+        // Tạo options cho select
+        let options = '<option value="">-- Chọn nguyên liệu --</option>';
+        materials.forEach(m => {
+            options += `<option value="${m.id}" data-unit="${m.dvt}">${m.ten_nl} (${m.dvt})</option>`;
+        });
+
+        row.innerHTML = `
+            <td>
+                <select name="id_nguyen_lieus[]" class="form-select bom-select" required onchange="updateUnit(this)">
+                    ${options}
+                </select>
+            </td>
+            <td>
+                <input type="number" name="material_quantities[]" class="form-control" value="1" min="1" required>
+            </td>
+            <td>
+                <span class="bom-unit fw-bold text-muted">-</span>
+            </td>
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove()">
+                    <i class="fa-solid fa-times"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(row);
+    }
+
+    function updateUnit(selectElement) {
+        const unitSpan = selectElement.closest('tr').querySelector('.bom-unit');
+        const selectedOption = selectElement.options[selectElement.selectedIndex];
+        
+        if (selectedOption.value) {
+            unitSpan.textContent = selectedOption.getAttribute('data-unit');
+        } else {
+            unitSpan.textContent = '-';
+        }
+    }
+
+    // Tự động thêm 1 dòng trống khi mở form
+    document.addEventListener('DOMContentLoaded', function() {
+        addBomRow();
+    });
 </script>
 @endsection

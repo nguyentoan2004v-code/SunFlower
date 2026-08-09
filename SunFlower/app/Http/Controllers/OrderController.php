@@ -3,8 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Models\DonHang;
+use App\Models\ChiTietDonHang;
+use App\Models\NguyenLieu;
+use App\Models\ChiTietDonHangNguyenLieu;
+use App\Models\LichSuKho;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class OrderController extends Controller
 {
@@ -65,7 +70,7 @@ class OrderController extends Controller
         $isOwner  = Auth::guard('khachhang')->check()
             && Auth::guard('khachhang')->user()->makh === $donHang->makh;
         $hasToken = !empty($donHang->token)
-            && hash_equals((string) $donHang->token, (string) $request->query('token', ''));
+            && hash_equals((string) $donHang->token, (string) $request->input('token', ''));
 
         if (!$isOwner && !$hasToken) {
             return redirect()->route('home')->with('error', 'Bạn không có quyền hủy đơn hàng này!');
@@ -73,12 +78,34 @@ class OrderController extends Controller
 
         // Tiến hành hủy
         if ($donHang->trangthai == 'Chờ xác nhận') {
-            $donHang->update(['trangthai' => 'Đã hủy']);
+            DB::beginTransaction();
+            try {
+                $donHang->update(['trangthai' => 'Đã hủy']);
 
-            // Thành viên → Lịch sử mua hàng | Khách vãng lai → Ở lại trang chi tiết
-            if (Auth::guard('khachhang')->check()) {
-                return redirect()->route('orders.history')->with('success', 'Đã hủy đơn hàng thành công.');
+                // BOM: Nhả reserved_stock cho tất cả nguyên liệu trong đơn
+                $chiTiets = ChiTietDonHang::where('madon', $madon)->get();
+                foreach ($chiTiets as $ct) {
+                    $oims = OrderItemNguyenLieu::where('id_chitiet_donhang', $ct->id)->get();
+                    foreach ($oims as $oim) {
+                        NguyenLieu::where('id', $oim->id_nguyen_lieu)
+                            ->lockForUpdate()
+                            ->decrement('reserved_stock', $oim->soluong_dung);
+
+                        LichSuKho::create([
+                            'id_nguyen_lieu' => $oim->id_nguyen_lieu,
+                            'type'        => 'order_cancel',
+                            'quantity'    => $oim->soluong_dung,
+                            'note'        => 'Khách hủy đơn ' . $madon,
+                        ]);
+                    }
+                }
+
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                return back()->with('error', 'Có lỗi xảy ra khi hủy đơn: ' . $e->getMessage());
             }
+
             return back()->with('success', 'Đã hủy đơn hàng thành công.');
         }
 

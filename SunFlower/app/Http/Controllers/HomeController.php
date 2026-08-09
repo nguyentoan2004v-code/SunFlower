@@ -3,13 +3,9 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-// 1. Import các Model cần thiết thay vì dùng ApiCaller
 use App\Models\DanhMuc;
 use App\Models\SanPham;
 use App\Models\DanhGia;
-use App\Services\SemanticSearchService;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 
 class HomeController extends Controller {
     
@@ -32,13 +28,11 @@ class HomeController extends Controller {
     return view('home', compact('categories', 'products', 'heroImage'));
     }
 
-    // 1. Trang Tất cả danh mục / sản phẩm
+    // 1. Trang Tất cả danh mục
     public function allCategories() {
-        // Truy vấn thẳng CSDL
         $categories = DanhMuc::all();
-        $products = SanPham::all();
         
-        return view('categories.index', compact('categories', 'products'));
+        return view('categories.index', compact('categories'));
     }
 
     // 2. Trang Chi tiết 1 Danh mục
@@ -136,7 +130,8 @@ class HomeController extends Controller {
     }
 
     // =========================================================
-    // Xử lý luồng Tìm kiếm (Semantic Search + Fallback LIKE)
+    // Tìm kiếm sản phẩm bằng Eloquent LIKE query
+    // Ưu tiên: tên SP khớp keyword → hiện trước
     // =========================================================
     public function search(Request $request) {
         $keyword = trim($request->query('query'));
@@ -146,42 +141,20 @@ class HomeController extends Controller {
         }
 
         // ---------------------------------------------------
-        // Khởi tạo SemanticSearchService
+        // Query LIKE trực tiếp trên DB (không load tất cả vào memory)
+        // Tìm trong tensp (tên sản phẩm) và mota (mô tả ngắn)
         // ---------------------------------------------------
-        $semanticService = app(SemanticSearchService::class);
+        $products = SanPham::where(function ($q) use ($keyword) {
+                $q->where('tensp', 'LIKE', "%{$keyword}%")
+                  ->orWhere('mota', 'LIKE', "%{$keyword}%");
+            })
+            // Ưu tiên sản phẩm có tên chứa keyword (đứng đầu)
+            ->orderByRaw("CASE WHEN tensp LIKE ? THEN 0 ELSE 1 END", ["%{$keyword}%"])
+            ->orderBy('created_at', 'desc')
+            ->paginate(12)
+            ->withQueryString();
 
-        // ---------------------------------------------------
-        // Tải toàn bộ sản phẩm 1 lần (tránh N+1 queries)
-        // SemanticSearch cần duyệt qua tất cả để tính similarity
-        // ---------------------------------------------------
-        $allProducts = SanPham::all();
-
-        // ---------------------------------------------------
-        // Gọi Semantic Search (tự động fallback nếu API lỗi)
-        // ---------------------------------------------------
-        $result      = $semanticService->search($keyword, $allProducts);
-        $rawProducts = $result['products'];   // Mảng sản phẩm đã sort
-        $searchType  = $result['search_type']; // 'semantic' | 'fallback'
-
-        // ---------------------------------------------------
-        // Phân trang thủ công vì SemanticSearch trả về array,
-        // không phải Eloquent Builder
-        // ---------------------------------------------------
-        $perPage     = 12;
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $collection  = new Collection($rawProducts);
-        $sliced      = $collection->slice(($currentPage - 1) * $perPage, $perPage)->values();
-
-        $products = new LengthAwarePaginator(
-            $sliced,
-            $collection->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        // Truyền search_type ra View để hiển thị badge "AI" hoặc "Thường"
-        return view('search.results', compact('products', 'keyword', 'searchType'));
+        return view('search.results', compact('products', 'keyword'));
     }
 
     // Hàm trả về file hình ảnh theo mã danh mục

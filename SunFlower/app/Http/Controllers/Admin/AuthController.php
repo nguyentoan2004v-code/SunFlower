@@ -21,7 +21,7 @@ class AuthController extends Controller
         // Sử dụng guard nhanvien để kiểm tra đăng nhập
         if (Auth::guard('nhanvien')->attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/admin/dashboard');
+            return redirect()->route('admin.dashboard');
         }
 
         return back()->withErrors(['email' => 'Thông tin đăng nhập không chính xác.']);

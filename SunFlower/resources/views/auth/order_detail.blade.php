@@ -31,6 +31,7 @@
         @if($donHang->trangthai == 'Chờ xác nhận')
             <form action="{{ route('orders.cancel', $donHang->madon) }}" method="POST" onsubmit="return confirm('Bạn có chắc muốn hủy đơn hàng này?')">
                 @csrf
+                <input type="hidden" name="token" value="{{ request('token') }}">
                 <button type="submit" class="bg-white border-2 border-red-500 text-red-500 hover:bg-red-50 font-bold py-2.5 px-6 rounded-2xl transition shadow-sm">
                     Hủy đơn hàng
                 </button>

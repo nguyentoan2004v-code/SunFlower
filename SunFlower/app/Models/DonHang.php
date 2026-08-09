@@ -37,6 +37,14 @@ class DonHang extends Model
                     ->withTimestamps();
     }
 
+    /**
+     * BOM: 1 Đơn hàng có NHIỀU dòng Chi tiết (truy cập trực tiếp để load order_item_materials)
+     */
+    public function chiTietDonHangs()
+    {
+        return $this->hasMany(ChiTietDonHang::class, 'madon', 'madon');
+    }
+
     public function voucher()
     {
         return $this->belongsTo(Voucher::class, 'mavoucher', 'mavoucher');

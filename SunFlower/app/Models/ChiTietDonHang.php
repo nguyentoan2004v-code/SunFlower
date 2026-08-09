@@ -10,11 +10,10 @@ class ChiTietDonHang extends Model
     use HasFactory;
 
     protected $table = 'chitiet_donhang';
-    
-    // Tắt tự tăng vì không dùng id
-    public $incrementing = false; 
-    
-    // Cố tình bỏ qua protected $primaryKey để tránh lỗi khóa kép của Laravel
+
+    // BOM REFACTOR: Dùng cột id auto-increment mới thay cho composite PK cũ
+    protected $primaryKey = 'id';
+    public $incrementing = true;
 
     protected $fillable = ['madon', 'masp', 'soluong', 'giaban'];
 
@@ -28,5 +27,23 @@ class ChiTietDonHang extends Model
     public function sanpham()
     {
         return $this->belongsTo(SanPham::class, 'masp', 'masp');
+    }
+
+    /**
+     * BOM: Danh sách nguyên liệu (bản sao) gắn với dòng chi tiết đơn hàng này
+     */
+    public function chiTietDonHangNguyenLieus()
+    {
+        return $this->hasMany(ChiTietDonHangNguyenLieu::class, 'id_chitiet_donhang');
+    }
+
+    /**
+     * BOM: Truy cập nhanh danh sách nguyên liệu qua quan hệ N-N
+     */
+    public function nguyenLieus()
+    {
+        return $this->belongsToMany(NguyenLieu::class, 'chitiet_donhang_nguyenlieu', 'id_chitiet_donhang', 'id_nguyen_lieu')
+                    ->withPivot('soluong_dung')
+                    ->withTimestamps();
     }
 }

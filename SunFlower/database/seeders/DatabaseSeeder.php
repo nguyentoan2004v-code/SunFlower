@@ -9,8 +9,7 @@ use App\Models\NhanVien;
 use App\Models\VaiTro;
 use App\Models\VaiTroNhanVien;
 use App\Models\LichSuGia;
-use App\Models\LoHang;
-use App\Models\PhieuHuyHang;
+
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 
@@ -110,17 +109,6 @@ class DatabaseSeeder extends Seeder
         LichSuGia::create(['magia' => 'LG00000001', 'masp' => 'SP00000002', 'giaban' => 2200000, 'ngay_ap_dung' => $now->copy()->subMonth()]);
         LichSuGia::create(['magia' => 'LG00000002', 'masp' => 'SP00000002', 'giaban' => 2500000, 'ngay_ap_dung' => $now]);
 
-        // 5. LÔ HÀNG (Mỗi sản phẩm 1 lô cho đủ kho)
-        foreach ($sanphams as $index => $sp) {
-            LoHang::create([
-                'malo' => 'LH' . str_pad($index + 1, 8, '0', STR_PAD_LEFT),
-                'masp' => $sp['masp'],
-                'manv' => 'NV00000001',
-                'soluong_nhap' => 100,
-                'soluong_ton' => 100,
-                'ngaynhap' => $now,
-                'ngayhethan' => $now->copy()->addDays(5)
-            ]);
-        }
+
     }
 }

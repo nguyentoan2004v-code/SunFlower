@@ -33,6 +33,16 @@ class NhanVien extends Authenticatable
         return $this->hasMany(NhanVien::class, 'maquanly', 'manv');
     }
 
+    public function phieuHuyLap()
+    {
+        return $this->hasMany(PhieuHuyHang::class, 'manv_lap', 'manv');
+    }
+
+    public function phieuHuyDuyet()
+    {
+        return $this->hasMany(PhieuHuyHang::class, 'manv_duyet', 'manv');
+    }
+
     // 3. QUAN HỆ N-N: Giữ nguyên vì đã chuẩn
     public function lichlamviecs()
     {

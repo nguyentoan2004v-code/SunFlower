@@ -49,4 +49,21 @@ class KhachHang extends Authenticatable implements CanResetPasswordContract
     {
         return $this->hasMany(LichSuDiem::class, 'makh', 'makh');
     }
+
+    public function donhangs()
+    {
+        return $this->hasMany(DonHang::class, 'makh', 'makh');
+    }
+
+    public function chiTietDonHangs()
+    {
+        return $this->hasManyThrough(
+            ChiTietDonHang::class, 
+            DonHang::class, 
+            'makh', // Foreign key on DonHang table
+            'madon', // Foreign key on ChiTietDonHang table
+            'makh', // Local key on KhachHang table
+            'madon' // Local key on DonHang table
+        );
+    }
 }

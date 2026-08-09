@@ -148,6 +148,16 @@
                 </li>
                 
                 <li class="nav-item">
+                    <a href="{{ $canAccessProduct ? route('admin.nguyenlieu.index') : '#' }}" 
+                       class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/nguyenlieu*') ? 'active' : '' }} {{ $canAccessProduct ? '' : 'disabled text-muted' }}"
+                       style="{{ $canAccessProduct ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}"
+                       title="{{ $canAccessProduct ? '' : 'Bạn không có quyền quản lý Nguyên liệu' }}">
+                        <div><i class="fa-solid fa-leaf"></i> Nguyên liệu (BOM)</div>
+                        @if(!$canAccessProduct) <i class="fa-solid fa-lock text-secondary" style="font-size: 0.8em;"></i> @endif
+                    </a>
+                </li>
+                
+                <li class="nav-item">
                     <a href="{{ $canAccessOrder ? route('admin.orders.index') : '#' }}" 
                        class="nav-link d-flex justify-content-between align-items-center {{ request()->is('admin/orders*') ? 'active' : '' }} {{ $canAccessOrder ? '' : 'disabled text-muted' }}"
                        style="{{ $canAccessOrder ? '' : 'pointer-events: none; opacity: 0.5; cursor: not-allowed;' }}"
@@ -159,7 +169,7 @@
                 
                 <li class="nav-item">
                     @php
-                        $isKhoActive = request()->is('admin/lohang*') || request()->is('admin/phieuhuyhang*');
+                        $isKhoActive = request()->is('admin/inventory*') || request()->is('admin/phieunhapkho*') || request()->is('admin/longuyenlieu*');
                     @endphp
                     <a href="{{ $canAccessKho ? '#collapseKhoHang' : '#' }}" 
                        class="nav-link d-flex justify-content-between align-items-center {{ $canAccessKho ? '' : 'disabled text-muted' }}" 
@@ -178,15 +188,26 @@
                     <div class="collapse {{ $isKhoActive ? 'show' : '' }}" id="collapseKhoHang">
                         <ul class="nav flex-column ms-3 mt-1" style="font-size: 0.95em;">
                             <li class="nav-item">
-                                <a href="{{ route('admin.lohang.index') }}" class="nav-link {{ request()->is('admin/lohang*') ? 'active' : '' }}" style="padding: 8px 15px;">
-                                    <i class="fa-solid fa-boxes-packing me-2"></i> Phiếu nhập kho
+                                <a href="{{ route('admin.inventory.logs') }}" class="nav-link {{ request()->is('admin/inventory/logs') ? 'active' : '' }}" style="padding: 8px 15px;">
+                                    <i class="fa-solid fa-clock-rotate-left me-2"></i> Lịch sử Kho BOM
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('admin.phieuhuyhang.index') }}" class="nav-link {{ request()->is('admin/phieuhuyhang*') ? 'active' : '' }}" style="padding: 8px 15px;">
-                                    <i class="fa-solid fa-file-circle-xmark me-2"></i> Phiếu hủy hàng
+                                <a href="{{ route('admin.longuyenlieu.index') }}" class="nav-link {{ request()->is('admin/longuyenlieu*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                                    <i class="fa-solid fa-cubes-stacked me-2"></i> Quản lý Lô Nguyên liệu
                                 </a>
                             </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.phieunhapkho.index') }}" class="nav-link {{ request()->is('admin/phieunhapkho*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                                    <i class="fa-solid fa-box-open me-2"></i> Nhập kho BOM
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="{{ route('admin.inventory.waste.form') }}" class="nav-link {{ request()->is('admin/inventory/waste*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                                    <i class="fa-solid fa-trash me-2"></i> Xuất hủy BOM
+                                </a>
+                            </li>
+
                         </ul>
                     </div>
                     @endif
