@@ -13,12 +13,19 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController as AdminProductController;
 use App\Http\Controllers\Admin\CategoryController as AdminCategoryController;
 use App\Http\Controllers\Admin\OrderController as AdminOrderController;
-
 use App\Http\Controllers\Admin\NhanVienController;
 use App\Http\Controllers\Admin\LichLamViecController;
 use App\Http\Controllers\DanhGiaController;
 use App\Http\Controllers\Admin\KhachHangController;
 use App\Http\Controllers\Admin\VoucherController;
+use App\Http\Controllers\Admin\NguyenLieuController as AdminNguyenLieuController;
+use App\Http\Controllers\Admin\PhieuNhapKhoController;
+use App\Http\Controllers\Admin\PhieuHuyHangController;
+use App\Http\Controllers\Admin\LoNguyenLieuController;
+use App\Http\Controllers\Admin\KhoController;
+use App\Http\Controllers\Admin\DanhGiaController as AdminDanhGiaController;
+use App\Http\Controllers\ChatbotController;
+
 // =====================
 // USER
 // =====================
@@ -73,6 +80,7 @@ Route::middleware('auth:khachhang')->group(function () {
 Route::get('/don-hang/{madon}', [OrderController::class, 'show'])->name('orders.show');
 Route::post('/don-hang/{madon}/huy', [OrderController::class, 'cancel'])->name('orders.cancel')->middleware('throttle:5,1');
 
+
 // =====================
 // 4. GIỎ HÀNG & THANH TOÁN
 // =====================
@@ -118,25 +126,28 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // --- Xuất hóa đơn và in hóa đơn ---
         Route::post('/orders/{madon}/export-invoice', [AdminOrderController::class, 'exportInvoice'])->name('orders.export-invoice');
         Route::get('/invoices/{mahd}/print', [AdminOrderController::class, 'printInvoice'])->name('orders.print-invoice');
-        // --- BOM: Điều chỉnh nguyên        // Quản lý Kho - BOM
+        // --- BOM: Điều chỉnh nguyên liệu theo đơn hàng ---
         Route::post('/orders/{madon}/adjust-materials/{detail_id}', [AdminOrderController::class, 'adjustMaterials'])->name('orders.adjust-materials');
 
-        Route::get('nguyenlieu/info/{id}', [\App\Http\Controllers\Admin\NguyenLieuController::class, 'getInfo'])->name('nguyenlieu.info');
-        Route::resource('nguyenlieu', \App\Http\Controllers\Admin\NguyenLieuController::class);
+        Route::get('nguyenlieu/info/{id}', [AdminNguyenLieuController::class, 'getInfo'])->name('nguyenlieu.info');
+        Route::resource('nguyenlieu', AdminNguyenLieuController::class);
 
-        // --- PHIẾU NHẬP KHO NGUYÊN LIỆU (BOM) ---
-        Route::post('phieunhapkho/{id}/approve', [\App\Http\Controllers\Admin\PhieuNhapKhoController::class, 'approve'])->name('phieunhapkho.approve');
-        Route::post('phieunhapkho/{id}/cancel', [\App\Http\Controllers\Admin\PhieuNhapKhoController::class, 'cancel'])->name('phieunhapkho.cancel');
-        Route::resource('phieunhapkho', \App\Http\Controllers\Admin\PhieuNhapKhoController::class)->except(['edit', 'update', 'destroy']);
+        // --- PHIẼU NHẬP KHO NGUYÊN LIỆU (BOM) ---
+        Route::post('phieunhapkho/{id}/approve', [PhieuNhapKhoController::class, 'approve'])->name('phieunhapkho.approve');
+        Route::post('phieunhapkho/{id}/cancel', [PhieuNhapKhoController::class, 'cancel'])->name('phieunhapkho.cancel');
+        Route::resource('phieunhapkho', PhieuNhapKhoController::class)->except(['edit', 'update', 'destroy']);
         
+        // --- PHIẼU HỦY HÀNG ---
+        Route::post('phieuhuyhang/{id}/approve', [PhieuHuyHangController::class, 'approve'])->name('phieuhuyhang.approve');
+        Route::post('phieuhuyhang/{id}/reject', [PhieuHuyHangController::class, 'reject'])->name('phieuhuyhang.reject');
+        Route::resource('phieuhuyhang', PhieuHuyHangController::class)->except(['edit', 'update', 'destroy']);
+
         // --- QUẢN LÝ LÔ NGUYÊN LIỆU (LOT TRACKING) ---
-        Route::get('longuyenlieu', [\App\Http\Controllers\Admin\LoNguyenLieuController::class, 'index'])->name('longuyenlieu.index');
-        Route::post('longuyenlieu/{id}/extend', [\App\Http\Controllers\Admin\LoNguyenLieuController::class, 'extendExpiry'])->name('longuyenlieu.extend');
-        Route::post('longuyenlieu/{id}/waste', [\App\Http\Controllers\Admin\LoNguyenLieuController::class, 'wasteLot'])->name('longuyenlieu.waste');
-        Route::get('longuyenlieu/{id}/trace', [\App\Http\Controllers\Admin\LoNguyenLieuController::class, 'trace'])->name('longuyenlieu.trace');
-        Route::get('inventory/waste', [\App\Http\Controllers\Admin\KhoController::class, 'wasteForm'])->name('inventory.waste.form');
-        Route::post('inventory/waste', [\App\Http\Controllers\Admin\KhoController::class, 'waste'])->name('inventory.waste');
-        Route::get('inventory/logs', [\App\Http\Controllers\Admin\KhoController::class, 'logs'])->name('inventory.logs');
+        Route::get('longuyenlieu', [LoNguyenLieuController::class, 'index'])->name('longuyenlieu.index');
+        Route::post('longuyenlieu/{id}/extend', [LoNguyenLieuController::class, 'extendExpiry'])->name('longuyenlieu.extend');
+        Route::post('longuyenlieu/{id}/waste', [LoNguyenLieuController::class, 'wasteLot'])->name('longuyenlieu.waste');
+        Route::get('longuyenlieu/{id}/trace', [LoNguyenLieuController::class, 'trace'])->name('longuyenlieu.trace');
+        Route::get('inventory/logs', [KhoController::class, 'logs'])->name('inventory.logs');
 
 
         // --- QUẢN LÝ NHÂN VIÊN VÀ PHÂN QUYỀN ---
@@ -158,7 +169,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::post('/lichlamviec/save-weekly', [LichLamViecController::class, 'saveWeekly'])->name('lichlamviec.saveWeekly');
         // 3. Giao diện xem lịch cá nhân (Dành cho mọi Nhân viên)
         Route::get('/lich-cua-toi', [LichLamViecController::class, 'mySchedule'])->name('lichlamviec.mySchedule');
-        Route::post('/lichlamviec/auto-generate', [App\Http\Controllers\Admin\LichLamViecController::class, 'autoGenerate'])->name('lichlamviec.autoGenerate');
+        Route::post('/lichlamviec/auto-generate', [LichLamViecController::class, 'autoGenerate'])->name('lichlamviec.autoGenerate');
         
         Route::post('/dashboard/refresh-ai', function () {
             \Illuminate\Support\Facades\Cache::forget(
@@ -178,10 +189,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
 
         Route::prefix('danhgia')->name('danhgia.')->group(function () {
-            Route::get('/', [App\Http\Controllers\Admin\DanhGiaController::class, 'index'])->name('index');
-            Route::post('/{id}/reply', [App\Http\Controllers\Admin\DanhGiaController::class, 'reply'])->name('reply');
-            Route::post('/{id}/toggle', [App\Http\Controllers\Admin\DanhGiaController::class, 'toggleStatus'])->name('toggle');
-            Route::delete('/{id}', [App\Http\Controllers\Admin\DanhGiaController::class, 'destroy'])->name('destroy');
+            Route::get('/', [AdminDanhGiaController::class, 'index'])->name('index');
+            Route::post('/{id}/reply', [AdminDanhGiaController::class, 'reply'])->name('reply');
+            Route::post('/{id}/toggle', [AdminDanhGiaController::class, 'toggleStatus'])->name('toggle');
+            Route::delete('/{id}', [AdminDanhGiaController::class, 'destroy'])->name('destroy');
         });
         
     });
@@ -189,5 +200,5 @@ Route::prefix('admin')->name('admin.')->group(function () {
 // ==========================================
 // API ROUTES CHO T�NH N�NG �?C BI?T
 // ==========================================
-Route::post('/chatbot/ask', [\App\Http\Controllers\ChatbotController::class, 'ask'])->name('chatbot.ask')->middleware('throttle:10,1');
+Route::post('/chatbot/ask', [ChatbotController::class, 'ask'])->name('chatbot.ask')->middleware('throttle:10,1');
 

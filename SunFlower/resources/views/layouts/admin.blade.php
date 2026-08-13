@@ -169,7 +169,7 @@
                 
                 <li class="nav-item">
                     @php
-                        $isKhoActive = request()->is('admin/inventory*') || request()->is('admin/phieunhapkho*') || request()->is('admin/longuyenlieu*');
+                        $isKhoActive = request()->is('admin/inventory*') || request()->is('admin/phieunhapkho*') || request()->is('admin/longuyenlieu*') || request()->is('admin/phieuhuyhang*');
                     @endphp
                     <a href="{{ $canAccessKho ? '#collapseKhoHang' : '#' }}" 
                        class="nav-link d-flex justify-content-between align-items-center {{ $canAccessKho ? '' : 'disabled text-muted' }}" 
@@ -203,8 +203,8 @@
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a href="{{ route('admin.inventory.waste.form') }}" class="nav-link {{ request()->is('admin/inventory/waste*') ? 'active' : '' }}" style="padding: 8px 15px;">
-                                    <i class="fa-solid fa-trash me-2"></i> Xuất hủy BOM
+                                <a href="{{ route('admin.phieuhuyhang.index') }}" class="nav-link {{ request()->is('admin/phieuhuyhang*') ? 'active' : '' }}" style="padding: 8px 15px;">
+                                    <i class="fa-solid fa-file-circle-xmark me-2"></i> Phiếu Hủy Hàng
                                 </a>
                             </li>
 
@@ -345,6 +345,8 @@
         });
     });
 </script>
+
+@stack('scripts')
 
 </body>
 </html>

@@ -85,17 +85,17 @@ class OrderController extends Controller
                 // BOM: Nhả reserved_stock cho tất cả nguyên liệu trong đơn
                 $chiTiets = ChiTietDonHang::where('madon', $madon)->get();
                 foreach ($chiTiets as $ct) {
-                    $oims = OrderItemNguyenLieu::where('id_chitiet_donhang', $ct->id)->get();
+                    $oims = ChiTietDonHangNguyenLieu::where('id_chitiet_donhang', $ct->id)->get();
                     foreach ($oims as $oim) {
                         NguyenLieu::where('id', $oim->id_nguyen_lieu)
                             ->lockForUpdate()
-                            ->decrement('reserved_stock', $oim->soluong_dung);
+                            ->decrement('tonkho_datruoc', $oim->soluong_dung);
 
                         LichSuKho::create([
                             'id_nguyen_lieu' => $oim->id_nguyen_lieu,
-                            'type'        => 'order_cancel',
-                            'quantity'    => $oim->soluong_dung,
-                            'note'        => 'Khách hủy đơn ' . $madon,
+                            'loai_gd'     => 'order_cancel',
+                            'soluong'     => $oim->soluong_dung,
+                            'ghichu'      => 'Khách hủy đơn ' . $madon,
                         ]);
                     }
                 }

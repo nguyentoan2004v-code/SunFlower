@@ -180,7 +180,6 @@
                                     <small class="text-muted mt-1 d-block text-start">Chọn nhiều ảnh để hiển thị Gallery trên trang chi tiết.</small>
                                     <div id="gallery-preview" class="d-flex flex-wrap gap-2 mt-2"></div>
                                 </div>
-                                </div>
                             </div>
                         </div>
 
@@ -333,12 +332,12 @@
 
         row.innerHTML = `
             <td>
-                <select name="id_nguyen_lieus[]" class="form-select bom-select" required onchange="updateUnit(this)">
+                <select name="id_nguyen_lieus[]" class="form-select bom-select" onchange="updateUnit(this)">
                     ${options}
                 </select>
             </td>
             <td>
-                <input type="number" name="material_quantities[]" class="form-control" value="1" min="1" required>
+                <input type="number" name="material_quantities[]" class="form-control" value="1" min="1">
             </td>
             <td>
                 <span class="bom-unit fw-bold text-muted">-</span>

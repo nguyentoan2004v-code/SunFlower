@@ -94,7 +94,8 @@ class OrderController extends Controller implements HasMiddleware
                 
                 if (!$invoiceExists) {
                     // --- 1. LOGIC TẠO HÓA ĐƠN ---
-                    $mahd = 'HD' . date('ymd') . rand(10, 99);
+                    // Cột mahd trong DB giới hạn 10 ký tự (char 10)
+                    $mahd = 'HD' . date('ym') . strtoupper(\Illuminate\Support\Str::random(4));
                     $muc_thue = round($order->tongtien * 8 / 108);
 
                     $hoadon = HoaDon::create([
@@ -161,7 +162,7 @@ class OrderController extends Controller implements HasMiddleware
             if (in_array($newStatus, $processingStatuses) && $oldStatus == 'Chờ xác nhận') {
                 $chiTiets = ChiTietDonHang::where('madon', $order->madon)->get();
                 foreach ($chiTiets as $ct) {
-                    $oims = OrderItemNguyenLieu::where('id_chitiet_donhang', $ct->id)->get();
+                    $oims = ChiTietDonHangNguyenLieu::where('id_chitiet_donhang', $ct->id)->get();
                     foreach ($oims as $oim) {
                         $mat = NguyenLieu::lockForUpdate()->find($oim->id_nguyen_lieu);
                         if ($mat) {
@@ -171,7 +172,7 @@ class OrderController extends Controller implements HasMiddleware
                             $mat->save();
 
                             // Trừ Lô theo FEFO
-                            $deductedLots = \App\Models\LoNguyenLieu::deductStock($mat->id, $oim->soluong_dung);
+                            $deductedLots = LoNguyenLieu::deductStock($mat->id, $oim->soluong_dung);
                             $lotNotes = implode(', ', array_map(function($l) {
                                 return $l['malo'] . ' (-' . $l['deducted_qty'] . ')';
                             }, $deductedLots));
@@ -179,10 +180,10 @@ class OrderController extends Controller implements HasMiddleware
                             // Ghi log
                             LichSuKho::create([
                                 'id_nguyen_lieu' => $mat->id,
-                                'type'        => 'order_complete', // Hoặc có thể đặt là order_processing
-                                'quantity'    => -$oim->soluong_dung,
-                                'note'        => 'Xác nhận đơn ' . $order->madon . ' [' . $lotNotes . ']',
-                                'manv'        => Auth::guard('nhanvien')->user()->manv ?? null,
+                                'loai_gd'  => 'order_complete',
+                                'soluong'  => -$oim->soluong_dung,
+                                'ghichu'   => 'Xác nhận đơn ' . $order->madon . ' [' . $lotNotes . ']',
+                                'manv'     => Auth::guard('nhanvien')->user()->manv ?? null,
                             ]);
                         }
                     }
@@ -197,7 +198,7 @@ class OrderController extends Controller implements HasMiddleware
                     // Trường hợp 1: Hủy sớm -> Nhả reserved_stock, nguyên liệu chưa bị lấy đi
                     $chiTiets = ChiTietDonHang::where('madon', $order->madon)->get();
                     foreach ($chiTiets as $ct) {
-                        $oims = OrderItemNguyenLieu::where('id_chitiet_donhang', $ct->id)->get();
+                        $oims = ChiTietDonHangNguyenLieu::where('id_chitiet_donhang', $ct->id)->get();
                         foreach ($oims as $oim) {
                             $mat = NguyenLieu::lockForUpdate()->find($oim->id_nguyen_lieu);
                             if ($mat) {
@@ -206,23 +207,17 @@ class OrderController extends Controller implements HasMiddleware
 
                                 LichSuKho::create([
                                     'id_nguyen_lieu' => $mat->id,
-                                    'type'        => 'order_cancel',
-                                    'quantity'    => $oim->soluong_dung,
-                                    'note'        => 'Hủy đơn sớm ' . $order->madon . ' (Hoàn trả tồn tạm giữ)',
-                                    'manv'        => Auth::guard('nhanvien')->user()->manv ?? null,
+                                    'loai_gd' => 'order_cancel',
+                                    'soluong' => $oim->soluong_dung,
+                                    'ghichu'  => 'Hủy đơn sớm ' . $order->madon . ' (Hoàn trả tồn tạm giữ)',
+                                    'manv'    => Auth::guard('nhanvien')->user()->manv ?? null,
                                 ]);
                             }
                         }
                     }
                 } else {
-                    // Trường hợp 2: Hủy muộn -> Đã lấy hoa ra cắt cắm, không hoàn trả, chỉ ghi log hao hụt
-                    LichSuKho::create([
-                        'id_nguyen_lieu' => 1, // Lưu log tạm vào ID 1 để Admin nhận biết, hoặc không cần ghi nếu không yêu cầu chi tiết
-                        'type'        => 'waste',
-                        'quantity'    => 0,
-                        'note'        => 'Hủy đơn ' . $order->madon . ' sau khi đã cắt hoa (Nguyên liệu hao hụt)',
-                        'manv'        => Auth::guard('nhanvien')->user()->manv ?? null,
-                    ]);
+                    // Trường hợp 2: Hủy muộn -> Đã lấy hoa ra cắt cắm, không hoàn trả
+                    // Không ghi log vô nghĩa vào id_nguyen_lieu=1, admin cần xử lý thủ công
                 }
             }
 
@@ -246,7 +241,7 @@ class OrderController extends Controller implements HasMiddleware
             DB::beginTransaction();
 
             $muc_thue = round($order->tongtien * 8 / 108);
-            $mahd = 'HD' . date('ymd') . rand(10, 99);
+            $mahd = 'HD' . date('ym') . strtoupper(\Illuminate\Support\Str::random(4));
 
             $hoadon = HoaDon::create([
                 'mahd'        => $mahd,
@@ -310,23 +305,23 @@ public function printInvoice($mahd)
         DB::beginTransaction();
         try {
             // 1. Nhả reserved_stock cũ của tất cả nguyên liệu hiện tại
-            $oldOims = OrderItemNguyenLieu::where('id_chitiet_donhang', $chiTiet->id)->get();
+            $oldOims = ChiTietDonHangNguyenLieu::where('id_chitiet_donhang', $chiTiet->id)->get();
             foreach ($oldOims as $oim) {
                 NguyenLieu::where('id', $oim->id_nguyen_lieu)
                     ->lockForUpdate()
-                    ->decrement('reserved_stock', $oim->soluong_dung);
+                    ->decrement('tonkho_datruoc', $oim->soluong_dung);
 
                 LichSuKho::create([
                     'id_nguyen_lieu' => $oim->id_nguyen_lieu,
-                    'type'        => 'order_cancel',
-                    'quantity'    => $oim->soluong_dung,
-                    'note'        => 'Điều chỉnh thiết kế: nhả NL cũ - Đơn ' . $madon,
-                    'manv'        => Auth::guard('nhanvien')->user()->manv,
+                    'loai_gd' => 'order_cancel',
+                    'soluong' => $oim->soluong_dung,
+                    'ghichu'  => 'Điều chỉnh thiết kế: nhả NL cũ - Đơn ' . $madon,
+                    'manv'    => Auth::guard('nhanvien')->user()->manv,
                 ]);
             }
 
             // 2. Xóa bản sao cũ
-            OrderItemNguyenLieu::where('id_chitiet_donhang', $chiTiet->id)->delete();
+            ChiTietDonHangNguyenLieu::where('id_chitiet_donhang', $chiTiet->id)->delete();
 
             // 3. Tạo bản sao mới + cộng reserved_stock mới
             $materialIds = $request->input('new_id_nguyen_lieus', []);
@@ -340,23 +335,23 @@ public function printInvoice($mahd)
                 $mat = NguyenLieu::lockForUpdate()->findOrFail($matId);
                 $khaDung = $mat->tonkho_thucte - $mat->tonkho_datruoc;
                 if ($khaDung < $qty) {
-                    throw new \Exception('Nguyên liệu "' . $mat->name . '" không đủ (Cần: ' . $qty . ', Khả dụng: ' . $khaDung . ')');
+                    throw new \Exception('Nguyên liệu "' . $mat->ten_nl . '" không đủ (Cần: ' . $qty . ', Khả dụng: ' . $khaDung . ')');
                 }
 
-                OrderItemNguyenLieu::create([
+                ChiTietDonHangNguyenLieu::create([
                     'id_chitiet_donhang' => $chiTiet->id,
                     'id_nguyen_lieu'     => $matId,
-                    'quantity'        => $qty,
+                    'soluong_dung'       => $qty,
                 ]);
 
-                $mat->increment('reserved_stock', $qty);
+                $mat->increment('tonkho_datruoc', $qty);
 
                 LichSuKho::create([
                     'id_nguyen_lieu' => $matId,
-                    'type'        => 'order_reserve',
-                    'quantity'    => -$qty,
-                    'note'        => 'Điều chỉnh thiết kế: giữ NL mới - Đơn ' . $madon,
-                    'manv'        => Auth::guard('nhanvien')->user()->manv,
+                    'loai_gd' => 'order_reserve',
+                    'soluong' => -$qty,
+                    'ghichu'  => 'Điều chỉnh thiết kế: giữ NL mới - Đơn ' . $madon,
+                    'manv'    => Auth::guard('nhanvien')->user()->manv,
                 ]);
             }
 

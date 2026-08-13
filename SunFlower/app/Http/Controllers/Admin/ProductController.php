@@ -118,7 +118,8 @@ class ProductController extends Controller implements HasMiddleware
             'hinhanh_phu.*.image' => 'Ảnh phụ phải là định dạng hình ảnh hợp lệ.',
         ]);
 
-        $data = $request->except(['hinhanh_phu']);
+        $data = $request->only(['masp', 'tensp', 'giaban', 'giakm', 'madm', 'mota', 'mota_chitiet']);
+        $data['masp'] = trim($data['masp']);
 
         // XỬ LÝ UPLOAD HÌNH ẢNH CHÍNH LÊN CLOUDINARY
         if ($request->hasFile('hinhanh')) {
@@ -143,9 +144,7 @@ class ProductController extends Controller implements HasMiddleware
                 }
             }
             
-            if (!empty($nguyenlieusData)) {
-                $sanPham->nguyenLieus()->sync($nguyenlieusData);
-            }
+            $sanPham->nguyenLieus()->sync($nguyenlieusData);
         }
 
         // XỬ LÝ UPLOAD ẢNH PHỤ (GALLERY)
@@ -204,10 +203,6 @@ class ProductController extends Controller implements HasMiddleware
         ]);
 
         $data = $request->except(['masp', 'hinhanh_phu', 'xoa_anh_phu']); // Không cho phép sửa mã sản phẩm
-
-        \Log::info('--- PRODUCT UPDATE REQUEST ---', ['masp' => $masp]);
-        \Log::info('Has hinhanh file?', ['has' => $request->hasFile('hinhanh')]);
-        \Log::info('Has hinhanh_phu files?', ['has' => $request->hasFile('hinhanh_phu')]);
 
         // Nếu KHÔNG có ảnh mới upload lên, phải loại bỏ 'hinhanh' khỏi mảng data để giữ nguyên hình cũ
         if (!$request->hasFile('hinhanh')) {

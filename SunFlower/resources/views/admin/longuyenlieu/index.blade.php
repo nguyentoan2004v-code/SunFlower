@@ -138,10 +138,11 @@
                                                     <i class="fa-solid fa-magnifying-glass text-info me-2"></i> Truy vết Lô
                                                 </a>
                                             </li>
+
                                             @if($lot->soluong_hientai > 0)
                                                 <li>
-                                                    <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#wasteModal{{ $lot->id }}">
-                                                        <i class="fa-solid fa-trash-can text-danger me-2"></i> Xuất hủy đích danh
+                                                    <a class="dropdown-item text-danger" href="{{ route('admin.phieuhuyhang.create', ['lot_id' => $lot->id]) }}">
+                                                        <i class="fa-solid fa-file-circle-xmark text-danger me-2"></i> Lập phiếu hủy lô này
                                                     </a>
                                                 </li>
                                             @endif
@@ -155,42 +156,6 @@
                                         </ul>
                                     </div>
                                     
-                                    {{-- Modal Xuất hủy đích danh --}}
-                                    @if($lot->soluong_hientai > 0)
-                                    <div class="modal fade" id="wasteModal{{ $lot->id }}" tabindex="-1" aria-hidden="true">
-                                        <div class="modal-dialog">
-                                            <div class="modal-content text-start">
-                                                <form action="{{ route('admin.longuyenlieu.waste', $lot->id) }}" method="POST">
-                                                    @csrf
-                                                    <div class="modal-header bg-danger text-white">
-                                                        <h5 class="modal-title"><i class="fa-solid fa-trash-can me-2"></i> Xuất hủy đích danh</h5>
-                                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <p>Bạn đang xuất hủy Nguyên liệu: <strong>{{ $lot->nguyenLieu->ten_nl ?? '' }}</strong></p>
-                                                        <p>Mã lô: <strong>{{ $lot->malo }}</strong></p>
-                                                        <hr>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Số lượng hủy (Tối đa: {{ $lot->soluong_hientai }})</label>
-                                                            <input type="number" name="quantity" class="form-control" min="1" max="{{ $lot->soluong_hientai }}" required>
-                                                        </div>
-                                                        <div class="mb-3">
-                                                            <label class="form-label">Lý do hủy</label>
-                                                            <input type="text" name="reason" class="form-control" placeholder="VD: Hoa héo, gãy cành..." required>
-                                                        </div>
-                                                        <div class="alert alert-warning py-2 mb-0">
-                                                            <i class="fa-solid fa-triangle-exclamation me-1"></i> Số lượng tồn của lô này và tổng tồn kho sẽ bị trừ đi lập tức.
-                                                        </div>
-                                                    </div>
-                                                    <div class="modal-footer bg-light">
-                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
-                                                        <button type="submit" class="btn btn-danger">Xác nhận Hủy</button>
-                                                    </div>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endif
 
                                     {{-- Modal Gia hạn --}}
                                     @if($isExpired || $isExpiringSoon)

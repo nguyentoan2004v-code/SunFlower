@@ -14,25 +14,26 @@
             <div class="row g-3">
                 <div class="col-md-6">
                     <label class="form-label fw-semibold">Tên nguyên liệu <span class="text-danger">*</span></label>
-                    <input type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" placeholder="VD: Hoa hồng đỏ, Giấy gói kraft..." required>
-                    @error('name') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    <input type="text" name="ten_nl" class="form-control @error('ten_nl') is-invalid @enderror" value="{{ old('ten_nl') }}" placeholder="VD: Hoa hồng đỏ, Giấy gói kraft..." required>
+                    @error('ten_nl') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Đơn vị tính <span class="text-danger">*</span></label>
-                    <select name="unit" class="form-select @error('unit') is-invalid @enderror" required>
-                        <option value="cành" {{ old('unit') == 'cành' ? 'selected' : '' }}>Cành</option>
-                        <option value="tờ" {{ old('unit') == 'tờ' ? 'selected' : '' }}>Tờ</option>
-                        <option value="xốp" {{ old('unit') == 'xốp' ? 'selected' : '' }}>Xốp</option>
-                        <option value="cuộn" {{ old('unit') == 'cuộn' ? 'selected' : '' }}>Cuộn</option>
-                        <option value="cái" {{ old('unit') == 'cái' ? 'selected' : '' }}>Cái</option>
-                        <option value="bó" {{ old('unit') == 'bó' ? 'selected' : '' }}>Bó</option>
-                        <option value="mét" {{ old('unit') == 'mét' ? 'selected' : '' }}>Mét</option>
+                    <select name="dvt" class="form-select @error('dvt') is-invalid @enderror" required>
+                        <option value="cành" {{ old('dvt') == 'cành' ? 'selected' : '' }}>Cành</option>
+                        <option value="tờ" {{ old('dvt') == 'tờ' ? 'selected' : '' }}>Tờ</option>
+                        <option value="xốp" {{ old('dvt') == 'xốp' ? 'selected' : '' }}>Xốp</option>
+                        <option value="cuộn" {{ old('dvt') == 'cuộn' ? 'selected' : '' }}>Cuộn</option>
+                        <option value="cái" {{ old('dvt') == 'cái' ? 'selected' : '' }}>Cái</option>
+                        <option value="bó" {{ old('dvt') == 'bó' ? 'selected' : '' }}>Bó</option>
+                        <option value="mét" {{ old('dvt') == 'mét' ? 'selected' : '' }}>Mét</option>
+                        
                     </select>
-                    @error('unit') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                    @error('dvt') <div class="invalid-feedback">{{ $message }}</div> @enderror
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold">Giá vốn (đ)</label>
-                    <input type="number" name="cost_price" class="form-control" value="{{ old('cost_price', 0) }}" min="0" step="1000">
+                    <input type="number" name="gia_von" class="form-control" value="{{ old('gia_von', 0) }}" min="0" step="1000">
                 </div>
             </div>
 

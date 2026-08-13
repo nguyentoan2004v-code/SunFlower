@@ -21,7 +21,7 @@ class PhieuNhapKhoController extends Controller
         $query = PhieuNhapKho::with(['nhaCungCap', 'nhanVien'])->orderBy('created_at', 'desc');
 
         if ($request->filled('status')) {
-            $query->where('trangthai', $request->trangthai);
+            $query->where('trangthai', $request->status);
         }
 
         if ($request->filled('search')) {
@@ -158,15 +158,15 @@ class PhieuNhapKhoController extends Controller
 
                 // Sinh ra 1 record Lô Nguyên Liệu (Lot Tracking)
                 LoNguyenLieu::create([
-                    'id_nguyen_lieu' => $material->id,
-                    'id_phieu_nhap' => $phieuNhap->id,
-                    'chi_tiet_id_phieu_nhap' => $detail->id,
-                    'malo' => $detail->malo,
+                    'id_nguyen_lieu'          => $material->id,
+                    'id_phieu_nhap'           => $phieuNhap->id,
+                    'id_chitiet_phieu_nhap'   => $detail->id,
+                    'malo'           => $detail->malo,
                     'soluong_bandau' => $newQty,
-                    'soluong_hientai' => $newQty, // Mới nhập về thì còn nguyên
-                    'dongia' => $newPrice,
-                    'hsd' => $detail->hsd,
-                    'trangthai' => 'Còn hàng',
+                    'soluong_hientai' => $newQty,
+                    'dongia'         => $newPrice,
+                    'hsd'            => $detail->hsd,
+                    'trangthai'      => 'Còn hàng',
                 ]);
 
                 // Ghi Log Nhập kho

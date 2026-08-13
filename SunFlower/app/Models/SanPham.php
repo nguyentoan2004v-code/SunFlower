@@ -62,8 +62,8 @@ class SanPham extends Model
      */
     public function getAvailableQuantityAttribute(): int
     {
-        // Lazy load materials nếu chưa được load
-        $materials = $this->relationLoaded('materials') ? $this->nguyenLieus : $this->nguyenLieus()->get();
+        // Lazy load nguyenLieus nếu chưa được eager-load
+        $materials = $this->relationLoaded('nguyenLieus') ? $this->nguyenLieus : $this->nguyenLieus()->get();
 
         // SP chưa có BOM → không thể tính tồn kho → trả về 0
         if ($materials->isEmpty()) {

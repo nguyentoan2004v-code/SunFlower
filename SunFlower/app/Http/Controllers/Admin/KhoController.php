@@ -77,69 +77,7 @@ class KhoController extends Controller implements HasMiddleware
         }
     }
 
-    /**
-     * Form Xuất hủy
-     */
-    public function wasteForm()
-    {
-        $nguyenlieus = NguyenLieu::where('tonkho_thucte', '>', 0)->orderBy('ten_nl')->get();
-        return view('admin.inventory.waste', compact('nguyenlieus'));
-    }
 
-    /**
-     * Xử lý xuất hủy (Trừ kho, ghi log)
-     */
-    public function waste(Request $request)
-    {
-        $request->validate([
-            'id_nguyen_lieu' => 'required|exists:nguyen_lieu,id',
-            'soluong'        => 'required|integer|min:1',
-            'ghichu'         => 'required|string|max:500',
-        ], [
-            'id_nguyen_lieu.required' => 'Vui lòng chọn nguyên liệu.',
-            'soluong.required'    => 'Vui lòng nhập số lượng hủy.',
-            'ghichu.required'     => 'Vui lòng nhập lý do hủy.',
-        ]);
-
-        DB::beginTransaction();
-        try {
-            $nguyenlieu = NguyenLieu::lockForUpdate()->findOrFail($request->id_nguyen_lieu);
-
-            // Tồn kho khả dụng = thực tế - đặt trước
-            $availableToWaste = $nguyenlieu->tonkho_thucte - $nguyenlieu->tonkho_datruoc;
-
-            if ($request->soluong > $availableToWaste) {
-                return back()->with('error', 'Số lượng hủy (' . $request->soluong . ') vượt quá tồn kho khả dụng (' . $availableToWaste . '). Có ' . $nguyenlieu->tonkho_datruoc . ' đang giữ cho đơn hàng.')->withInput();
-            }
-
-            // Trừ tồn kho thực tế của bảng nguyen_lieu
-            $nguyenlieu->tonkho_thucte -= $request->soluong;
-            $nguyenlieu->save();
-
-            // Trừ tồn kho chi tiết trong bảng lo_nguyen_lieu theo FEFO
-            $deductedLots = \App\Models\LoNguyenLieu::deductStock($nguyenlieu->id, $request->soluong);
-
-            // Tạo ghi chú bao gồm thông tin các lô đã bị trừ
-            $lotNotes = implode(', ', array_map(function($l) {
-                return $l['malo'] . ' (-' . $l['deducted_qty'] . ')';
-            }, $deductedLots));
-
-            // Ghi log
-            LichSuKho::create([
-                'id_nguyen_lieu' => $nguyenlieu->id,
-                'loai_gd'        => 'waste',
-                'soluong'        => -$request->soluong,
-                'ghichu'         => $request->ghichu . ' [' . $lotNotes . ']',
-                'manv'           => Auth::guard('nhanvien')->user()->manv,
-            ]);
-
-            DB::commit();
-            return redirect()->route('admin.inventory.logs')->with('success', 'Xuất hủy thành công! Đã hủy ' . number_format($request->soluong) . ' ' . $nguyenlieu->dvt . ' ' . $nguyenlieu->ten_nl);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            return back()->with('error', 'Lỗi xuất hủy: ' . $e->getMessage())->withInput();
-        }
-    }
 
     /**
      * Xem lịch sử biến động kho (Inventory Logs)

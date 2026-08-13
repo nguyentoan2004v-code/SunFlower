@@ -307,11 +307,11 @@ class CartController extends Controller
 
         // KIỂM TRA TỒN KHO (BOM) TRƯỜC — fail-fast
         foreach ($checkoutItems as $id => $item) {
-            $sanPham = SanPham::with('materials')->find($id);
+            $sanPham = SanPham::with('nguyenLieus')->find($id);
             
             if (!$sanPham || $sanPham->nguyenLieus->isEmpty()) {
                 return redirect()->route('cart.index')
-                    ->with('error', "Sản phẩm \"" . ($item['ten_nl'] ?? '') . "\" chưa có công thức nguyên liệu, không thể đặt hàng.");
+                    ->with('error', "Sản phẩm \"" . ($item['name'] ?? '') . "\" chưa có công thức nguyên liệu, không thể đặt hàng.");
             }
 
             // Kiểm tra từng nguyên liệu có đủ không
@@ -321,9 +321,9 @@ class CartController extends Controller
                 $khaDũng = $material->tonkho_thucte - $material->tonkho_datruoc;
 
                 if ($khaDũng < $canTong) {
-                    $tenSP = $item['ten_nl'];
+                    $tenSP = $item['name'] ?? 'Sản phẩm';
                     return redirect()->route('cart.index')
-                        ->with('error', "Sản phẩm \"$tenSP\" không đủ nguyên liệu \"" . $material->name . "\" (Cần: $canTong " . $material->unit . ", Khả dụng: $khaDũng).");
+                        ->with('error', "Sản phẩm \"$tenSP\" không đủ nguyên liệu \"" . $material->ten_nl . "\" (Cần: $canTong " . $material->dvt . ", Khả dụng: $khaDũng).");
                 }
             }
         }
@@ -404,30 +404,30 @@ class CartController extends Controller
                 $chiTiet->save();
 
                 // BOM: Lấy công thức gốc của sản phẩm và copy sang order_item_materials
-                $sanPham = SanPham::with('materials')->find($id);
+                $sanPham = SanPham::with('nguyenLieus')->find($id);
                 if ($sanPham) {
                     foreach ($sanPham->nguyenLieus as $material) {
                         $dinhMuc = $material->pivot->dinh_muc;
                         $tongCanDung = $dinhMuc * $item['quantity'];
 
                         // 1. Copy công thức vào bảng bản sao
-                        OrderItemNguyenLieu::create([
+                        ChiTietDonHangNguyenLieu::create([
                             'id_chitiet_donhang' => $chiTiet->id,
                             'id_nguyen_lieu'     => $material->id,
-                            'quantity'        => $tongCanDung,
+                            'soluong_dung'       => $tongCanDung,
                         ]);
 
                         // 2. Cộng reserved_stock (giữ hàng cho đơn)
                         NguyenLieu::where('id', $material->id)
                             ->lockForUpdate()
-                            ->increment('reserved_stock', $tongCanDung);
+                            ->increment('tonkho_datruoc', $tongCanDung);
 
                         // 3. Ghi log biến động kho
                         LichSuKho::create([
                             'id_nguyen_lieu' => $material->id,
-                            'type'        => 'order_reserve',
-                            'quantity'    => -$tongCanDung,
-                            'note'        => 'Giữ hàng cho đơn ' . $maDonMoi . ' (SP: ' . $sanPham->tensp . ' x' . $item['quantity'] . ')',
+                            'loai_gd'     => 'order_reserve',
+                            'soluong'     => -$tongCanDung,
+                            'ghichu'      => 'Giữ hàng cho đơn ' . $maDonMoi . ' (SP: ' . $sanPham->tensp . ' x' . $item['quantity'] . ')',
                         ]);
                     }
                 }

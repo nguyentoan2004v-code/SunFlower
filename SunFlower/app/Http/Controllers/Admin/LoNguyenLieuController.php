@@ -103,6 +103,8 @@ class LoNguyenLieuController extends Controller
         }
     }
 
+
+
     // Truy vết lô hàng
     public function trace($id)
     {

@@ -187,7 +187,7 @@
                                 @endphp
                                 <img src="{{ $chkImg }}" class="w-16 h-16 rounded-xl object-cover">
                                 <div class="flex-1">
-                                    <h4 class="font-bold text-sm text-gray-900 line-clamp-1">{{ $item['ten_nl'] }}</h4>
+                                    <h4 class="font-bold text-sm text-gray-900 line-clamp-1">{{ $item['name'] ?? 'Sản phẩm' }}</h4>
                                     <p class="text-xs text-gray-500">Số lượng: {{ $item['quantity'] }}</p>
                                 </div>
                                 <span class="font-bold text-sm text-gray-900">
@@ -550,22 +550,26 @@
                 if (!addressModified) return;
 
                 const detail = detailInput.value.trim();
-                const ward = selectedWard;
-                const district = selectedDistrict;
-                const province = selectedProvince;
+                const province = provinceSelect.selectedIndex > 0 && !provinceSelect.disabled ? provinceSelect.options[provinceSelect.selectedIndex].text : '';
+                const district = districtSelect.selectedIndex > 0 && !districtSelect.disabled ? districtSelect.options[districtSelect.selectedIndex].text : '';
+                const ward = wardSelect.selectedIndex > 0 && !wardSelect.disabled ? wardSelect.options[wardSelect.selectedIndex].text : '';
 
-                const parts = [detail, ward, district, province].filter(p => p.length > 0);
-                const fullAddress = parts.join(', ');
+                // Chỉ cập nhật hiển thị khi đã chọn ít nhất đến Phường/Xã
+                if (province && district && ward) {
+                    const parts = [detail, ward, district, province].filter(p => p.length > 0);
+                    const fullAddress = parts.join(', ');
 
-                hiddenInput.value = fullAddress;
+                    hiddenInput.value = fullAddress;
 
-                // Show/hide preview
-                if (parts.length >= 3 || fullAddress.length > 0) {
-                    previewText.textContent = fullAddress;
-                    previewBox.classList.remove('hidden');
-                    previewBox.style.animation = 'addressFadeIn 0.3s ease-out';
+                    if (fullAddress.length > 0) {
+                        previewText.textContent = fullAddress;
+                        previewBox.classList.remove('hidden');
+                        previewBox.style.animation = 'addressFadeIn 0.3s ease-out';
+                    }
                 } else {
-                    previewBox.classList.add('hidden');
+                    hiddenInput.value = '';
+                    previewText.textContent = 'Vui lòng chọn đầy đủ Phường/Xã...';
+                    previewBox.classList.remove('hidden');
                 }
             }
 
@@ -596,9 +600,6 @@
             provinceSelect.addEventListener('change', async function() {
                 addressModified = true;
                 const code = this.value;
-                selectedProvince = this.options[this.selectedIndex].text;
-                selectedDistrict = '';
-                selectedWard = '';
 
                 resetSelect(districtSelect, '-- Đang tải Quận/Huyện... --');
                 resetSelect(wardSelect, '-- Chọn Phường/Xã --');
@@ -627,8 +628,6 @@
             districtSelect.addEventListener('change', async function() {
                 addressModified = true;
                 const code = this.value;
-                selectedDistrict = this.options[this.selectedIndex].text;
-                selectedWard = '';
 
                 resetSelect(wardSelect, '-- Đang tải Phường/Xã... --');
                 setLoading(wardSelect, true);
@@ -655,7 +654,6 @@
             // Ward changed
             wardSelect.addEventListener('change', function() {
                 addressModified = true;
-                selectedWard = this.options[this.selectedIndex].text;
                 composeAddress();
             });
 
@@ -752,7 +750,8 @@
                 } catch (err) {
                     console.error("Auto fill error:", err);
                 } finally {
-                    addressModified = wasModified;
+                    addressModified = true;
+                    composeAddress();
                 }
             }
 

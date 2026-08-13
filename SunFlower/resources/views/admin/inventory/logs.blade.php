@@ -20,9 +20,7 @@
             <a href="{{ route('admin.phieunhapkho.index') }}" class="btn btn-success btn-sm shadow-sm">
                 <i class="fa-solid fa-plus me-1"></i> Nhập Kho
             </a>
-            <a href="{{ route('admin.inventory.waste.form') }}" class="btn btn-danger btn-sm shadow-sm">
-                <i class="fa-solid fa-trash-can me-1"></i> Xuất Hủy
-            </a>
+
         </div>
     </div>
 
@@ -45,6 +43,8 @@
                         <option value="">-- Tất cả --</option>
                         <option value="import" {{ request('loai_gd') == 'import' ? 'selected' : '' }}>Nhập kho</option>
                         <option value="waste" {{ request('loai_gd') == 'waste' ? 'selected' : '' }}>Xuất hủy</option>
+                        <option value="pending_waste" {{ request('loai_gd') == 'pending_waste' ? 'selected' : '' }}>Chờ hủy</option>
+                        <option value="refund_waste" {{ request('loai_gd') == 'refund_waste' ? 'selected' : '' }}>Hoàn hủy</option>
                         <option value="order_reserve" {{ request('loai_gd') == 'order_reserve' ? 'selected' : '' }}>Giữ đơn</option>
                         <option value="order_complete" {{ request('loai_gd') == 'order_complete' ? 'selected' : '' }}>Xuất bán</option>
                         <option value="order_cancel" {{ request('loai_gd') == 'order_cancel' ? 'selected' : '' }}>Hoàn trả</option>
@@ -100,6 +100,10 @@
                                         <span class="badge bg-primary">Nhập kho</span>
                                     @elseif($log->loai_gd == 'waste')
                                         <span class="badge bg-danger">Xuất hủy</span>
+                                    @elseif($log->loai_gd == 'pending_waste')
+                                        <span class="badge bg-warning text-dark">Chờ hủy</span>
+                                    @elseif($log->loai_gd == 'refund_waste')
+                                        <span class="badge bg-info">Hoàn hủy</span>
                                     @elseif($log->loai_gd == 'order_reserve')
                                         <span class="badge bg-warning text-dark">Giữ hàng</span>
                                     @elseif($log->loai_gd == 'order_complete')

@@ -78,10 +78,12 @@ class DashboardController extends Controller
         // ============================================================
         // 4. BIỂU ĐỒ TRÒN CƠ CẤU SẢN PHẨM
         // ============================================================
-        $categoryDataRaw = SanPham::join('danhmuc', 'sanpham.madm', '=', 'danhmuc.madm')
-            ->selectRaw('danhmuc.tendm, count(sanpham.masp) as total_products')
-            ->groupBy('danhmuc.madm', 'danhmuc.tendm')
-            ->get();
+        $categoryDataRaw = \Illuminate\Support\Facades\Cache::remember('dashboard_category_data', 3600, function () {
+            return SanPham::join('danhmuc', 'sanpham.madm', '=', 'danhmuc.madm')
+                ->selectRaw('danhmuc.tendm, count(sanpham.masp) as total_products')
+                ->groupBy('danhmuc.madm', 'danhmuc.tendm')
+                ->get();
+        });
  
         $catLabels = $categoryDataRaw->pluck('tendm')->toArray();
         $catData   = $categoryDataRaw->pluck('total_products')->toArray();
@@ -97,17 +99,19 @@ class DashboardController extends Controller
         // ============================================================
         // 6. TOP SẢN PHẨM BÁN CHẠY 30 NGÀY
         // ============================================================
-        $topProducts30Days = ChiTietDonHang::join('donhang', 'chitiet_donhang.madon', '=', 'donhang.madon')
-            ->join('sanpham', 'chitiet_donhang.masp', '=', 'sanpham.masp')
-            ->where('donhang.ngaydat', '>=', Carbon::today()->subDays(30))
-            ->where('donhang.trangthai', 'Đã hoàn thành')
-            ->selectRaw('sanpham.masp, sanpham.tensp,
-                        SUM(chitiet_donhang.soluong) as tong_ban,
-                        SUM(chitiet_donhang.soluong * chitiet_donhang.giaban) as doanh_thu')
-            ->groupBy('sanpham.masp', 'sanpham.tensp')
-            ->orderByDesc('tong_ban')
-            ->take(5)
-            ->get();
+        $topProducts30Days = \Illuminate\Support\Facades\Cache::remember('dashboard_top_products', 3600, function () {
+            return ChiTietDonHang::join('donhang', 'chitiet_donhang.madon', '=', 'donhang.madon')
+                ->join('sanpham', 'chitiet_donhang.masp', '=', 'sanpham.masp')
+                ->where('donhang.ngaydat', '>=', Carbon::today()->subDays(30))
+                ->where('donhang.trangthai', 'Đã hoàn thành')
+                ->selectRaw('sanpham.masp, sanpham.tensp,
+                            SUM(chitiet_donhang.soluong) as tong_ban,
+                            SUM(chitiet_donhang.soluong * chitiet_donhang.giaban) as doanh_thu')
+                ->groupBy('sanpham.masp', 'sanpham.tensp')
+                ->orderByDesc('tong_ban')
+                ->take(5)
+                ->get();
+        });
         // ============================================================
         // 7. PHÁT HIỆN NGÀY LỄ SẮP TỚI
         // ============================================================
@@ -145,18 +149,17 @@ class DashboardController extends Controller
         }
  
         // ============================================================
-        // 8. LẤY TỒN KHO TỪNG SẢN PHẨM (dùng cho AI)
+        // 8 & 9. AI GỢI Ý NHẬP KHO (BỌC CACHE THEO NGÀY ĐỂ TRÁNH N+1)
         // ============================================================
-        $stockMap = [];
-        $productsForAI = \App\Models\SanPham::with('nguyenLieus')->whereIn('masp', $topProducts30Days->pluck('masp'))->get();
-        foreach ($productsForAI as $product) {
-            $stockMap[$product->masp] = $product->available_quantity;
-        }
- 
-        // ============================================================
-        // 9. AI GỢI Ý NHẬP KHO – TỰ XÂY DỰNG, KHÔNG CẦN API NGOÀI
-        // ============================================================
-        $aiAdvice = $this->generateAdvice($topProducts30Days, $stockMap, $upcomingHoliday);
+        $aiAdviceCacheKey = 'ai_advice_' . \Carbon\Carbon::today()->format('Y-m-d');
+        $aiAdvice = \Illuminate\Support\Facades\Cache::remember($aiAdviceCacheKey, 86400, function () use ($topProducts30Days, $upcomingHoliday) {
+            $stockMap = [];
+            $productsForAI = \App\Models\SanPham::with('nguyenLieus')->whereIn('masp', $topProducts30Days->pluck('masp'))->get();
+            foreach ($productsForAI as $product) {
+                $stockMap[$product->masp] = $product->available_quantity;
+            }
+            return $this->generateAdvice($topProducts30Days, $stockMap, $upcomingHoliday);
+        });
  
         // ============================================================
         // 10. TRẢ VỀ VIEW
