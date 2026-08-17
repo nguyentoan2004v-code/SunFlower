@@ -19,4 +19,9 @@ class ChiTietDonHangNguyenLieu extends Model
     {
         return $this->belongsTo(NguyenLieu::class, 'id_nguyen_lieu');
     }
+
+    public function pickedLots()
+    {
+        return $this->hasMany(DonHangNguyenLieuLo::class, 'id_chitiet_donhang_nguyenlieu');
+    }
 }

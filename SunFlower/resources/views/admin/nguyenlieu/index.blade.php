@@ -30,7 +30,7 @@
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body text-center">
                 <div class="fs-3 fw-bold text-warning">{{ number_format($stats['sap_het']) }}</div>
-                <small class="text-muted">Sắp hết (≤ 10)</small>
+                <small class="text-muted">Sắp hết</small>
             </div>
         </div>
     </div>
@@ -83,7 +83,7 @@
                         @php
                             $khaDung = max(0, $nl->tonkho_thucte - $nl->tonkho_datruoc);
                             $isHetHang = $khaDung <= 0;
-                            $isSapHet = !$isHetHang && $khaDung <= 10;
+                            $isSapHet = !$isHetHang && $khaDung <= $nl->tonkho_toithieu;
                         @endphp
                         <tr>
                             <td class="text-center text-muted">{{ $nguyenlieus->firstItem() + $index }}</td>
@@ -117,7 +117,10 @@
             </table>
         </div>
     </div>
+    @if($nguyenlieus->hasPages())
+        <div class="card-footer bg-transparent border-top py-3 d-flex justify-content-center">
+            {{ $nguyenlieus->links('pagination::bootstrap-5') }}
+        </div>
+    @endif
 </div>
-
-<div class="d-flex justify-content-center mt-3">{{ $nguyenlieus->links() }}</div>
 @endsection

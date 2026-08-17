@@ -62,8 +62,8 @@ class OrderController extends Controller implements HasMiddleware
     // 2. Xem chi tiết đơn hàng
     public function show($madon)
     {
-        // Lấy đơn hàng kèm chi tiết, nguyên liệu và thông tin khách hàng
-        $order = DonHang::with(['sanphams', 'khachhang', 'chiTietDonHangs.chiTietDonHangNguyenLieus.nguyenLieu'])->findOrFail($madon);
+        // Lấy đơn hàng kèm chi tiết, nguyên liệu, thông tin khách hàng và chi tiết lô đã lấy
+        $order = DonHang::with(['sanphams', 'khachhang', 'chiTietDonHangs.chiTietDonHangNguyenLieus.nguyenLieu', 'chiTietDonHangs.chiTietDonHangNguyenLieus.pickedLots.loNguyenLieu'])->findOrFail($madon);
         
         // Kiểm tra xem đơn này đã có hóa đơn chưa (Sửa thành madon)
         $hoadon = HoaDon::where('madon', $madon)->first();
@@ -172,10 +172,19 @@ class OrderController extends Controller implements HasMiddleware
                             $mat->save();
 
                             // Trừ Lô theo FEFO
-                            $deductedLots = LoNguyenLieu::deductStock($mat->id, $oim->soluong_dung);
+                            $deductedLots = \App\Models\LoNguyenLieu::deductStock($mat->id, $oim->soluong_dung);
                             $lotNotes = implode(', ', array_map(function($l) {
                                 return $l['malo'] . ' (-' . $l['deducted_qty'] . ')';
                             }, $deductedLots));
+
+                            // Lưu chi tiết từng lô đã xuất vào bảng donhang_nguyenlieu_lo
+                            foreach ($deductedLots as $l) {
+                                \App\Models\DonHangNguyenLieuLo::create([
+                                    'id_chitiet_donhang_nguyenlieu' => $oim->id,
+                                    'id_lo' => $l['id_lo'],
+                                    'soluong' => $l['deducted_qty'],
+                                ]);
+                            }
 
                             // Ghi log
                             LichSuKho::create([
@@ -216,13 +225,37 @@ class OrderController extends Controller implements HasMiddleware
                         }
                     }
                 } else {
-                    // Trường hợp 2: Hủy muộn -> Đã lấy hoa ra cắt cắm, không hoàn trả
-                    // Không ghi log vô nghĩa vào id_nguyen_lieu=1, admin cần xử lý thủ công
+                    // Trường hợp 2: Hủy muộn -> Nguyên liệu đã dùng, không hoàn trả
+                    // Bắt buộc nhập lý do hủy
+                    if (!$request->filled('ly_do_huy')) {
+                        DB::rollBack();
+                        return back()->with('error', 'Vui lòng nhập lý do hủy đơn! Đơn hàng này đã được xác nhận, nguyên liệu đã sử dụng.');
+                    }
+
+                    $order->update(['ly_do_huy' => $request->ly_do_huy]);
+
+                    // Ghi log từng nguyên liệu đã mất vào lịch sử kho
+                    $chiTiets = ChiTietDonHang::where('madon', $order->madon)->get();
+                    foreach ($chiTiets as $ct) {
+                        $oims = ChiTietDonHangNguyenLieu::where('id_chitiet_donhang', $ct->id)->get();
+                        foreach ($oims as $oim) {
+                            $mat = NguyenLieu::find($oim->id_nguyen_lieu);
+                            if ($mat) {
+                                LichSuKho::create([
+                                    'id_nguyen_lieu' => $mat->id,
+                                    'loai_gd' => 'order_cancel_late',
+                                    'soluong' => -$oim->soluong_dung, // Ghi nhận số NL đã mất (không thay đổi tồn kho vì đã trừ khi xác nhận)
+                                    'ghichu'  => 'Hủy đơn muộn ' . $order->madon . ' - NL đã sử dụng, không hoàn trả. Lý do: ' . $request->ly_do_huy,
+                                    'manv'    => Auth::guard('nhanvien')->user()->manv ?? null,
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
 
             DB::commit(); 
-            return redirect()->route('admin.orders.show', $madon)->with('success', 'Đã cập nhật trạng thái đơn hàng và tích điểm cho khách!');
+            return redirect()->route('admin.orders.show', $madon)->with('success', 'Đã cập nhật trạng thái đơn hàng thành công!');
 
         } catch (\Exception $e) {
             DB::rollBack(); 
@@ -362,5 +395,77 @@ public function printInvoice($mahd)
             return back()->with('error', 'Lỗi điều chỉnh: ' . $e->getMessage());
         }
     }
-   
+    public function adjustLots(Request $request, $madon, $oim_id)
+    {
+        DB::beginTransaction();
+        try {
+            $order = DonHang::findOrFail($madon);
+            $oim = ChiTietDonHangNguyenLieu::with(['nguyenLieu', 'pickedLots.loNguyenLieu'])->findOrFail($oim_id);
+            $targetQty = $oim->soluong_dung;
+            $newLots = $request->lots ?? []; // format: [lot_id => qty]
+
+            // Validate total quantity
+            $totalNewQty = array_sum($newLots);
+            if ($totalNewQty != $targetQty) {
+                throw new \Exception("Tổng số lượng lô chọn ({$totalNewQty}) không khớp với yêu cầu ({$targetQty})");
+            }
+
+            // 1. Hoàn trả số lượng vào các lô cũ
+            foreach ($oim->pickedLots as $pickedLot) {
+                $oldLot = \App\Models\LoNguyenLieu::lockForUpdate()->find($pickedLot->id_lo);
+                if ($oldLot) {
+                    $oldLot->soluong_hientai += $pickedLot->soluong;
+                    if ($oldLot->trangthai == 'Hết hàng' && $oldLot->soluong_hientai > 0) {
+                        $oldLot->trangthai = 'Đang bán';
+                    }
+                    $oldLot->save();
+                }
+            }
+            
+            // Xóa record cũ
+            \App\Models\DonHangNguyenLieuLo::where('id_chitiet_donhang_nguyenlieu', $oim_id)->delete();
+
+            // 2. Trừ số lượng từ các lô mới và lưu record mới
+            $lotNotes = [];
+            foreach ($newLots as $lotId => $qty) {
+                if ($qty > 0) {
+                    $newLot = \App\Models\LoNguyenLieu::lockForUpdate()->find($lotId);
+                    if (!$newLot) throw new \Exception("Không tìm thấy lô ID {$lotId}");
+                    
+                    if ($newLot->soluong_hientai < $qty) {
+                        throw new \Exception("Lô {$newLot->malo} không đủ số lượng tồn khả dụng (Còn: {$newLot->soluong_hientai})");
+                    }
+
+                    $newLot->soluong_hientai -= $qty;
+                    if ($newLot->soluong_hientai == 0) {
+                        $newLot->trangthai = 'Hết hàng';
+                    }
+                    $newLot->save();
+
+                    \App\Models\DonHangNguyenLieuLo::create([
+                        'id_chitiet_donhang_nguyenlieu' => $oim_id,
+                        'id_lo' => $lotId,
+                        'soluong' => $qty,
+                    ]);
+
+                    $lotNotes[] = $newLot->malo . ' (' . $qty . ')';
+                }
+            }
+
+            // 3. Ghi log lịch sử kho
+            LichSuKho::create([
+                'id_nguyen_lieu' => $oim->id_nguyen_lieu,
+                'loai_gd' => 'adjust_lot', // Lưu ý: Cần thêm loại giao dịch này vào config hoặc xử lý hiển thị ở view
+                'soluong' => 0, // Không thay đổi tổng tồn kho thực tế, chỉ đổi lô
+                'ghichu'  => 'Đổi lô lấy hàng Đơn ' . $madon . '. Lô mới: ' . implode(', ', $lotNotes),
+                'manv'    => Auth::guard('nhanvien')->user()->manv,
+            ]);
+
+            DB::commit();
+            return back()->with('success', 'Đã điều chỉnh lô lấy hàng thành công!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Lỗi điều chỉnh lô: ' . $e->getMessage());
+        }
+    }
 }

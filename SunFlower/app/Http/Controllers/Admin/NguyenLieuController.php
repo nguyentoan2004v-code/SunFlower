@@ -47,7 +47,7 @@ class NguyenLieuController extends Controller implements HasMiddleware
             }
         }
 
-        $nguyenlieus = $query->orderBy('ten_nl', 'asc')->paginate(15)->withQueryString();
+        $nguyenlieus = $query->orderBy('ten_nl', 'asc')->paginate(10)->withQueryString();
 
         // Thống kê tổng quan
         $stats = [

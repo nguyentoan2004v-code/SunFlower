@@ -15,7 +15,7 @@ class DonHang extends Model
     protected $keyType = 'string';
 
     protected $fillable = ['madon', 'ngaydat', 'tongtien', 'trangthai', 'makh', 
-    'sdt_nhan', 'diachi_giao', 'ghichu', 'mavoucher', 'tiengiam'];
+    'sdt_nhan', 'diachi_giao', 'ghichu', 'ly_do_huy', 'mavoucher', 'tiengiam'];
 
     // Đơn hàng THUỘC VỀ 1 Khách hàng (N-1)
     public function khachhang()

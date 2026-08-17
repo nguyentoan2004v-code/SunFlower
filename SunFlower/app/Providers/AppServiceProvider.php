@@ -23,8 +23,8 @@ class AppServiceProvider extends ServiceProvider
      * Bootstrap any application services.
      */
     public function boot(): void
-
 {
+    Paginator::useBootstrapFive();
     
     View::composer('*', function ($view) {
         // Lấy tất cả các biến mà Controller đã truyền sang View

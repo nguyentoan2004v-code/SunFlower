@@ -117,15 +117,38 @@
                                 </form>
                             @endif
 
-                            {{-- Nút Hủy đơn (luôn hiển thị nếu chưa hoàn thành hoặc chưa hủy) --}}
-                            <form action="{{ route('admin.orders.update', $order->madon) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?');">
-                                @csrf
-                                @method('PUT')
-                                <input type="hidden" name="trangthai" value="Đã hủy">
-                                <button type="submit" class="btn btn-outline-secondary w-100">
-                                    <i class="fa-solid fa-ban me-2"></i> Hủy đơn hàng
+                            {{-- Nút Hủy đơn --}}
+                            @if($order->trangthai == 'Chờ xác nhận')
+                                {{-- Hủy sớm: Đơn giản, chỉ cần xác nhận --}}
+                                <form action="{{ route('admin.orders.update', $order->madon) }}" method="POST" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không?\nNguyên liệu sẽ được hoàn trả về kho.');">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="trangthai" value="Đã hủy">
+                                    <button type="submit" class="btn btn-outline-secondary w-100">
+                                        <i class="fa-solid fa-ban me-2"></i> Hủy đơn hàng
+                                    </button>
+                                </form>
+                            @else
+                                {{-- Hủy muộn: Modal cảnh báo + bắt buộc nhập lý do --}}
+                                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#lateCancelModal">
+                                    <i class="fa-solid fa-triangle-exclamation me-2"></i> Hủy đơn hàng (Đã sử dụng NL)
                                 </button>
-                            </form>
+                            @endif
+                        </div>
+                    @endif
+
+                    {{-- Hiển thị thông tin khi đơn đã bị hủy muộn --}}
+                    @if($order->trangthai == 'Đã hủy' && $order->ly_do_huy)
+                        <hr>
+                        <div class="alert alert-danger mb-0 border-0 shadow-sm">
+                            <h6 class="fw-bold mb-2"><i class="fa-solid fa-circle-exclamation me-1"></i> Đơn hàng đã hủy muộn</h6>
+                            <p class="mb-2"><strong>Lý do:</strong> {{ $order->ly_do_huy }}</p>
+                            <hr class="my-2">
+                            <p class="mb-1 small fw-bold"><i class="fa-solid fa-lightbulb text-warning me-1"></i> Hướng xử lý bó hoa đã cắm:</p>
+                            <ul class="small mb-0">
+                                <li>Trưng bày bán lại cho khách vãng lai (giảm 10-30%)</li>
+                                <li>Nếu không bán được trong 1-2 ngày → <a href="{{ route('admin.phieuhuyhang.create') }}" class="text-decoration-none">Lập phiếu hủy hàng</a></li>
+                            </ul>
                         </div>
                     @endif
 
@@ -193,16 +216,62 @@
                                                     
                                                     {{-- Hiển thị danh sách nguyên liệu BOM đã chốt cho đơn này --}}
                                                     @if($ct->chiTietDonHangNguyenLieus->count() > 0)
-                                                        <div class="mt-1 small text-muted">
-                                                            <i class="fa-solid fa-leaf text-success me-1"></i> Nguyên liệu: 
-                                                            @foreach($ct->chiTietDonHangNguyenLieus as $oim)
-                                                                {{ $oim->nguyenLieu->ten_nl ?? 'N/A' }} ({{ $oim->soluong_dung }}), 
-                                                            @endforeach
+                                                        <div class="mt-2 p-2 bg-light rounded border border-light-subtle" style="max-width: 600px;">
+                                                            <div class="small fw-bold text-success mb-2 ps-1">
+                                                                <i class="fa-solid fa-leaf me-1"></i> Chi tiết Nguyên liệu sử dụng:
+                                                            </div>
+                                                            <div class="table-responsive">
+                                                                <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.85rem;">
+                                                                    <tbody>
+                                                                        @foreach($ct->chiTietDonHangNguyenLieus as $oim)
+                                                                            <tr>
+                                                                                <td style="width: 45%; padding-left: 10px;">
+                                                                                    <span class="fw-medium text-dark">{{ $oim->nguyenLieu->ten_nl ?? 'N/A' }}</span>
+                                                                                </td>
+                                                                                <td style="width: 10%;" class="text-center">
+                                                                                    <span class="badge bg-secondary-subtle text-secondary border">x {{ $oim->soluong_dung }}</span>
+                                                                                </td>
+                                                                                <td>
+                                                                                    {{-- Lô lấy hàng --}}
+                                                                                    @if($order->trangthai != 'Chờ xác nhận' && $order->trangthai != 'Đã hủy')
+                                                                                        @if($oim->pickedLots && $oim->pickedLots->count() > 0)
+                                                                                            <div class="d-flex align-items-center gap-1 flex-wrap justify-content-end">
+                                                                                                @foreach($oim->pickedLots as $pickedLot)
+                                                                                                    <span class="badge bg-white text-primary border border-primary-subtle shadow-sm">
+                                                                                                        {{ $pickedLot->loNguyenLieu->malo ?? 'N/A' }} 
+                                                                                                        <span class="text-danger ms-1">(-{{ $pickedLot->soluong }})</span>
+                                                                                                    </span>
+                                                                                                @endforeach
+                                                                                                
+                                                                                                @if(in_array($order->trangthai, ['Đã xác nhận', 'Đang giao']))
+                                                                                                    <button type="button" class="btn btn-sm btn-light border shadow-sm p-1 text-muted" style="line-height: 1;" title="Đổi lô khác" onclick="openAdjustLotModal({{ $oim->id }}, '{{ $oim->nguyenLieu->ten_nl ?? '' }}', {{ json_encode($oim->pickedLots->load('loNguyenLieu')) }}, {{ $oim->id_nguyen_lieu }}, {{ $oim->soluong_dung }})">
+                                                                                                        <i class="fa-solid fa-pen-to-square"></i>
+                                                                                                    </button>
+                                                                                                @endif
+                                                                                            </div>
+                                                                                        @else
+                                                                                            <div class="text-end text-muted fst-italic" style="font-size: 0.8rem;">
+                                                                                                <i class="fa-solid fa-clock-rotate-left me-1"></i> Dữ liệu cũ
+                                                                                            </div>
+                                                                                        @endif
+                                                                                    @else
+                                                                                        <div class="text-end text-muted fst-italic" style="font-size: 0.8rem;">
+                                                                                            Chờ phân bổ
+                                                                                        </div>
+                                                                                    @endif
+                                                                                </td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+                                                            </div>
                                                             
                                                             @if($order->trangthai == 'Chờ xác nhận')
-                                                                <button type="button" class="btn btn-link btn-sm p-0 ms-2 text-decoration-none" onclick="openAdjustModal({{ $ct->id }}, {{ json_encode($ct->chiTietDonHangNguyenLieus->load('nguyenLieu')) }})">
-                                                                    <i class="fa-solid fa-pen-to-square"></i> Điều chỉnh
-                                                                </button>
+                                                                <div class="text-end mt-2 pt-2 border-top border-light-subtle">
+                                                                    <button type="button" class="btn btn-outline-primary btn-sm" onclick="openAdjustModal({{ $ct->id }}, {{ json_encode($ct->chiTietDonHangNguyenLieus->load('nguyenLieu')) }})">
+                                                                        <i class="fa-solid fa-pen-to-square me-1"></i> Điều chỉnh nguyên liệu
+                                                                    </button>
+                                                                </div>
                                                             @endif
                                                         </div>
                                                     @endif
@@ -337,4 +406,215 @@
         }
     }
 </script>
+
+{{-- MODAL HỦY ĐƠN MUỘN --}}
+@if($order->trangthai != 'Đã hoàn thành' && $order->trangthai != 'Đã hủy' && $order->trangthai != 'Chờ xác nhận')
+<div class="modal fade" id="lateCancelModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ route('admin.orders.update', $order->madon) }}" method="POST">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="trangthai" value="Đã hủy">
+                
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title fw-bold">
+                        <i class="fa-solid fa-triangle-exclamation me-2"></i>Cảnh báo: Hủy đơn đã xử lý
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                
+                <div class="modal-body">
+                    <div class="alert alert-warning border-0 shadow-sm mb-3">
+                        <i class="fa-solid fa-exclamation-circle me-1"></i>
+                        <strong>Nguyên liệu đã được sử dụng để cắm hoa và KHÔNG thể hoàn trả về kho.</strong>
+                        <p class="mb-0 mt-1 small">Tồn kho sẽ không thay đổi. Bó hoa đã cắm cần được xử lý riêng.</p>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">
+                            Lý do hủy đơn <span class="text-danger">*</span>
+                        </label>
+                        <textarea name="ly_do_huy" class="form-control" rows="3" required 
+                                  placeholder="VD: Khách gọi điện hủy vì thay đổi kế hoạch..."></textarea>
+                    </div>
+
+                    <div class="card bg-light border-0">
+                        <div class="card-body py-2 px-3">
+                            <p class="mb-1 small fw-bold"><i class="fa-solid fa-lightbulb text-warning me-1"></i> Sau khi hủy, hãy xử lý bó hoa đã cắm:</p>
+                            <ul class="small mb-0 ps-3">
+                                <li>Trưng bày bán lại cho khách vãng lai (giảm 10-30%)</li>
+                                <li>Nếu không bán được trong 1-2 ngày → Lập phiếu hủy hàng</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Đóng</button>
+                    <button type="submit" class="btn btn-danger fw-bold">
+                        <i class="fa-solid fa-ban me-1"></i> Xác nhận hủy đơn
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
+{{-- MODAL ĐIỀU CHỈNH LÔ LẤY HÀNG --}}
+<div class="modal fade" id="adjustLotModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="adjustLotForm" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title fw-bold"><i class="fa-solid fa-boxes-stacked me-2"></i> Điều chỉnh Lô lấy hàng</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body bg-light">
+                    <div class="alert alert-info border-0 shadow-sm mb-3">
+                        <i class="fa-solid fa-circle-info me-1"></i> Đang điều chỉnh lô cho nguyên liệu: <strong id="adjustLotMaterialName" class="text-primary"></strong>
+                        <br>Số lượng cần lấy: <strong id="adjustLotRequiredQty" class="text-danger"></strong>
+                    </div>
+
+                    <div class="table-responsive bg-white rounded shadow-sm border">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Mã lô</th>
+                                    <th>Hạn sử dụng</th>
+                                    <th class="text-center">Tồn khả dụng</th>
+                                    <th class="text-center" style="width: 150px;">SL Lấy</th>
+                                </tr>
+                            </thead>
+                            <tbody id="availableLotsTbody">
+                                <tr><td colspan="4" class="text-center py-3 text-muted">Đang tải danh sách lô...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div class="mt-3 text-end">
+                        Tổng SL đã chọn: <strong id="totalSelectedLotQty" class="text-danger fs-5">0</strong> / <span id="targetLotQty" class="fw-bold">0</span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="btnSubmitAdjustLot" disabled>
+                        <i class="fa-solid fa-check me-1"></i> Lưu thay đổi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentRequiredQty = 0;
+    
+    function openAdjustLotModal(oimId, materialName, currentPickedLots, materialId, requiredQty) {
+        document.getElementById('adjustLotMaterialName').textContent = materialName;
+        document.getElementById('adjustLotRequiredQty').textContent = requiredQty;
+        document.getElementById('targetLotQty').textContent = requiredQty;
+        currentRequiredQty = requiredQty;
+        
+        // Set form action dynamically
+        document.getElementById('adjustLotForm').action = `/admin/orders/{{ $order->madon }}/adjust-lots/${oimId}`;
+        
+        // Show modal immediately with loading state
+        const modal = new bootstrap.Modal(document.getElementById('adjustLotModal'));
+        modal.show();
+        
+        // Fetch available lots via AJAX
+        fetch(`/admin/inventory/lots/available/${materialId}`)
+            .then(response => response.json())
+            .then(data => {
+                renderLotsTable(data.lots, currentPickedLots);
+                validateLotSelection();
+            })
+            .catch(error => {
+                console.error('Error fetching lots:', error);
+                document.getElementById('availableLotsTbody').innerHTML = `<tr><td colspan="4" class="text-center text-danger py-3">Lỗi khi tải danh sách lô!</td></tr>`;
+            });
+    }
+
+    function renderLotsTable(availableLots, currentPickedLots) {
+        const tbody = document.getElementById('availableLotsTbody');
+        tbody.innerHTML = '';
+        
+        if (availableLots.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-3">Không có lô nào còn hàng.</td></tr>`;
+            return;
+        }
+
+        // Tạo map các lô đã chọn để dễ fill giá trị
+        const pickedMap = {};
+        currentPickedLots.forEach(picked => {
+            pickedMap[picked.id_lo] = picked.soluong;
+        });
+
+        availableLots.forEach(lot => {
+            // SL thực tế = SL tồn khả dụng hiện tại + SL đã lấy (nếu lô này đang được chọn)
+            const currentlyPicked = pickedMap[lot.id] || 0;
+            const trueAvailable = lot.soluong_hientai + currentlyPicked;
+            
+            // Format HSD
+            let hsdStr = 'Không có';
+            if (lot.hsd) {
+                const date = new Date(lot.hsd);
+                hsdStr = date.toLocaleDateString('vi-VN');
+            }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="fw-medium">${lot.malo}</td>
+                <td>${hsdStr}</td>
+                <td class="text-center fw-bold text-success">${trueAvailable}</td>
+                <td class="text-center">
+                    <input type="number" name="lots[${lot.id}]" class="form-control form-control-sm text-center lot-input" 
+                           min="0" max="${trueAvailable}" value="${currentlyPicked}" onchange="validateLotSelection()" onkeyup="validateLotSelection()">
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function validateLotSelection() {
+        const inputs = document.querySelectorAll('.lot-input');
+        let total = 0;
+        let hasError = false;
+        
+        inputs.forEach(input => {
+            let val = parseInt(input.value) || 0;
+            let max = parseInt(input.getAttribute('max')) || 0;
+            
+            if (val < 0) val = 0;
+            if (val > max) {
+                input.classList.add('is-invalid');
+                hasError = true;
+            } else {
+                input.classList.remove('is-invalid');
+            }
+            
+            total += val;
+        });
+        
+        const totalEl = document.getElementById('totalSelectedLotQty');
+        totalEl.textContent = total;
+        
+        const btnSubmit = document.getElementById('btnSubmitAdjustLot');
+        
+        if (total === currentRequiredQty && !hasError) {
+            totalEl.classList.remove('text-danger');
+            totalEl.classList.add('text-success');
+            btnSubmit.disabled = false;
+        } else {
+            totalEl.classList.remove('text-success');
+            totalEl.classList.add('text-danger');
+            btnSubmit.disabled = true;
+        }
+    }
+</script>
+
 @endsection

@@ -104,4 +104,26 @@ class KhoController extends Controller implements HasMiddleware
 
         return view('admin.inventory.logs', compact('logs', 'nguyenlieus'));
     }
+    public function availableLots($materialId)
+    {
+        $lots = \App\Models\LoNguyenLieu::where('id_nguyen_lieu', $materialId)
+                    ->where(function($q) {
+                        $q->where('soluong_hientai', '>', 0)
+                          ->orWhereHas('chiTietPhieuHuys'); // Could be complex, just get all lots that have stock or were recently created
+                    })
+                    ->where('trangthai', '!=', 'Hủy')
+                    ->orderByRaw('ISNULL(hsd), hsd ASC')
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+                    
+        // Actually, just returning all lots for this material that are not cancelled is safer
+        // because the user might need to revert stock to a lot that currently has 0 stock.
+        $lots = \App\Models\LoNguyenLieu::where('id_nguyen_lieu', $materialId)
+                    ->where('trangthai', '!=', 'Hủy')
+                    ->orderByRaw('ISNULL(hsd), hsd ASC')
+                    ->orderBy('created_at', 'asc')
+                    ->get();
+
+        return response()->json(['lots' => $lots]);
+    }
 }

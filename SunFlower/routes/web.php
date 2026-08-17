@@ -128,8 +128,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/invoices/{mahd}/print', [AdminOrderController::class, 'printInvoice'])->name('orders.print-invoice');
         // --- BOM: Điều chỉnh nguyên liệu theo đơn hàng ---
         Route::post('/orders/{madon}/adjust-materials/{detail_id}', [AdminOrderController::class, 'adjustMaterials'])->name('orders.adjust-materials');
+        // --- BOM: Điều chỉnh lô lấy hàng ---
+        Route::put('/orders/{madon}/adjust-lots/{oim_id}', [AdminOrderController::class, 'adjustLots'])->name('orders.adjust-lots');
 
         Route::get('nguyenlieu/info/{id}', [AdminNguyenLieuController::class, 'getInfo'])->name('nguyenlieu.info');
+        Route::get('inventory/lots/available/{id}', [\App\Http\Controllers\Admin\KhoController::class, 'availableLots'])->name('inventory.lots.available');
         Route::resource('nguyenlieu', AdminNguyenLieuController::class);
 
         // --- PHIẼU NHẬP KHO NGUYÊN LIỆU (BOM) ---

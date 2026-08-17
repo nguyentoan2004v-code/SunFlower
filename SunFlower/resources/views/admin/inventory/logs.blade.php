@@ -48,6 +48,8 @@
                         <option value="order_reserve" {{ request('loai_gd') == 'order_reserve' ? 'selected' : '' }}>Giữ đơn</option>
                         <option value="order_complete" {{ request('loai_gd') == 'order_complete' ? 'selected' : '' }}>Xuất bán</option>
                         <option value="order_cancel" {{ request('loai_gd') == 'order_cancel' ? 'selected' : '' }}>Hoàn trả</option>
+                        <option value="order_cancel_late" {{ request('loai_gd') == 'order_cancel_late' ? 'selected' : '' }}>Hủy muộn (mất NL)</option>
+                        <option value="adjust_lot" {{ request('loai_gd') == 'adjust_lot' ? 'selected' : '' }}>Điều chỉnh lô lấy</option>
                     </select>
                 </div>
                 <div class="col-md-2">
@@ -110,6 +112,10 @@
                                         <span class="badge bg-success">Xuất bán</span>
                                     @elseif($log->loai_gd == 'order_cancel')
                                         <span class="badge bg-secondary">Hoàn trả</span>
+                                    @elseif($log->loai_gd == 'order_cancel_late')
+                                        <span class="badge bg-danger">Hủy muộn</span>
+                                    @elseif($log->loai_gd == 'adjust_lot')
+                                        <span class="badge bg-info text-dark">Đổi lô</span>
                                     @else
                                         <span class="badge bg-dark">{{ $log->loai_gd_label }}</span>
                                     @endif
